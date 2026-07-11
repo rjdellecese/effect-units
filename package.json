@@ -1,0 +1,36 @@
+{
+  "name": "effect-units",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Typed quantities and unit conversions for Effect",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rjdellecese/effect-units.git"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "import": "./dist/*.js",
+      "default": "./dist/*.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.json",
+    "prepare": "pnpm run build",
+    "typecheck": "tsc --build tsconfig.json",
+    "test": "vitest --run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "effect": "3.21.4"
+  },
+  "devDependencies": {
+    "@effect/vitest": "0.29.0",
+    "typescript": "5.9.3",
+    "vitest": "4.1.10"
+  },
+  "packageManager": "pnpm@11.10.0"
+}
