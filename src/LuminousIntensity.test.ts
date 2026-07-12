@@ -13,12 +13,10 @@ import * as Quantity from "./Quantity";
 import * as SolidAngle from "./SolidAngle";
 
 describe("LuminousFlux and LuminousIntensity", () => {
-  const roundtrip = [
-    { there: LuminousFlux.lumens, back: LuminousFlux.inLumens },
-    { there: LuminousIntensity.candelas, back: LuminousIntensity.inCandelas },
-  ];
-
-  roundtrip.forEach(({ there, back }) => {
+  const testRoundtrip = <Q>(
+    there: (n: BigDecimal.BigDecimal) => Q,
+    back: (q: Q) => BigDecimal.BigDecimal,
+  ) => {
     it(`roundtrips between '${there.name}' and '${back.name}'`, () => {
       FastCheck.assert(
         FastCheck.property(Arbitrary.make(Schema.BigDecimal), (n) => {
@@ -28,7 +26,10 @@ describe("LuminousFlux and LuminousIntensity", () => {
         }),
       );
     });
-  });
+  };
+
+  testRoundtrip(LuminousFlux.lumens, LuminousFlux.inLumens);
+  testRoundtrip(LuminousIntensity.candelas, LuminousIntensity.inCandelas);
 
   it("luminous intensity is a flux per a solid angle", () => {
     assertTrue(

@@ -12,17 +12,10 @@ import * as Pixels from "./Pixels";
 import * as Quantity from "./Quantity";
 
 describe("Pixels", () => {
-  const roundtrip = [
-    { there: Pixels.pixels, back: Pixels.inPixels },
-    { there: Pixels.pixelsPerSecond, back: Pixels.inPixelsPerSecond },
-    {
-      there: Pixels.pixelsPerSecondSquared,
-      back: Pixels.inPixelsPerSecondSquared,
-    },
-    { there: Pixels.squarePixels, back: Pixels.inSquarePixels },
-  ];
-
-  roundtrip.forEach(({ there, back }) => {
+  const testRoundtrip = <Q>(
+    there: (n: BigDecimal.BigDecimal) => Q,
+    back: (q: Q) => BigDecimal.BigDecimal,
+  ) => {
     it(`roundtrips between '${there.name}' and '${back.name}'`, () => {
       FastCheck.assert(
         FastCheck.property(Arbitrary.make(Schema.BigDecimal), (n) => {
@@ -32,7 +25,15 @@ describe("Pixels", () => {
         }),
       );
     });
-  });
+  };
+
+  testRoundtrip(Pixels.pixels, Pixels.inPixels);
+  testRoundtrip(Pixels.pixelsPerSecond, Pixels.inPixelsPerSecond);
+  testRoundtrip(
+    Pixels.pixelsPerSecondSquared,
+    Pixels.inPixelsPerSecondSquared,
+  );
+  testRoundtrip(Pixels.squarePixels, Pixels.inSquarePixels);
 
   it("pixels per second is pixels per a duration", () => {
     assertTrue(
