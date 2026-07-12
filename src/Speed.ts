@@ -1,5 +1,3 @@
-import * as BigDecimal from "effect/BigDecimal";
-
 import * as Duration from "./Duration";
 import * as Length from "./Length";
 import * as Quantity from "./Quantity";
@@ -16,38 +14,35 @@ export type Speed = Quantity.Quantity<MetersPerSecond>;
 export const Speed = Quantity.Quantity(MetersPerSecond);
 export const SpeedFromSelf = Quantity.QuantityFromSelf(MetersPerSecond);
 
-const make = (value: BigDecimal.BigDecimal): Speed =>
-  Quantity.make(MetersPerSecond, value);
+const make = (value: number): Speed => Quantity.make(MetersPerSecond, value);
 
-export const zero = make(BigDecimal.fromBigInt(0n));
+export const zero = make(0);
 
-export const metersPerSecond = (n: BigDecimal.BigDecimal) => make(n);
+export const metersPerSecond = (n: number) => make(n);
 
 export const inMetersPerSecond = (s: Speed) => s.value;
 
-const metersPerSecondPerKilometerPerHour = BigDecimal.unsafeDivide(
-  BigDecimal.fromBigInt(1000n),
-  BigDecimal.fromBigInt(3600n),
-);
+const metersPerSecondPerKilometerPerHour = 1000 / 3600;
 
-export const kilometersPerHour = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, metersPerSecondPerKilometerPerHour));
+export const kilometersPerHour = (n: number) =>
+  make(n * metersPerSecondPerKilometerPerHour);
 
 export const inKilometersPerHour = (s: Speed) =>
-  BigDecimal.unsafeDivide(s.value, metersPerSecondPerKilometerPerHour);
+  s.value / metersPerSecondPerKilometerPerHour;
 
-const metersPerSecondPerFootPerSecond = BigDecimal.make(3048n, 4);
+const metersPerSecondPerFootPerSecond = 0.3048;
 
-export const feetPerSecond = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, metersPerSecondPerFootPerSecond));
+export const feetPerSecond = (n: number) =>
+  make(n * metersPerSecondPerFootPerSecond);
 
 export const inFeetPerSecond = (s: Speed) =>
-  BigDecimal.unsafeDivide(s.value, metersPerSecondPerFootPerSecond);
+  s.value / metersPerSecondPerFootPerSecond;
 
-const metersPerSecondPerMilePerHour = BigDecimal.make(44704n, 5);
+/** One mile per hour is 0.44704 meters per second. */
+const metersPerSecondPerMilePerHour = 1609.344 / 3600;
 
-export const milesPerHour = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, metersPerSecondPerMilePerHour));
+export const milesPerHour = (n: number) =>
+  make(n * metersPerSecondPerMilePerHour);
 
 export const inMilesPerHour = (s: Speed) =>
-  BigDecimal.unsafeDivide(s.value, metersPerSecondPerMilePerHour);
+  s.value / metersPerSecondPerMilePerHour;

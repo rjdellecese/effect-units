@@ -1,5 +1,3 @@
-import * as BigDecimal from "effect/BigDecimal";
-
 import * as Area from "./Area";
 import * as LuminousFlux from "./LuminousFlux";
 import * as Quantity from "./Quantity";
@@ -13,27 +11,17 @@ export type Illuminance = Quantity.Quantity<Lux>;
 export const Illuminance = Quantity.Quantity(Lux);
 export const IlluminanceFromSelf = Quantity.QuantityFromSelf(Lux);
 
-const make = (value: BigDecimal.BigDecimal): Illuminance =>
-  Quantity.make(Lux, value);
+const make = (value: number): Illuminance => Quantity.make(Lux, value);
 
-export const zero = make(BigDecimal.fromBigInt(0n));
+export const zero = make(0);
 
-export const lux = (n: BigDecimal.BigDecimal) => make(n);
+export const lux = (n: number) => make(n);
 
 export const inLux = (i: Illuminance) => i.value;
 
-/**
- * One foot candle is one lumen per square foot. The exact ratio is
- * non-terminating, so it is precomputed once (rounded at 100 significant
- * digits) and used symmetrically, keeping roundtrips exact.
- */
-const luxPerFootCandle = BigDecimal.unsafeDivide(
-  BigDecimal.fromBigInt(1n),
-  BigDecimal.make(9290304n, 8),
-);
+/** One foot candle is one lumen per square foot. */
+const luxPerFootCandle = 1 / (0.3048 * 0.3048);
 
-export const footCandles = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, luxPerFootCandle));
+export const footCandles = (n: number) => make(n * luxPerFootCandle);
 
-export const inFootCandles = (i: Illuminance) =>
-  BigDecimal.unsafeDivide(i.value, luxPerFootCandle);
+export const inFootCandles = (i: Illuminance) => i.value / luxPerFootCandle;

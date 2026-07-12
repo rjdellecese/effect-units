@@ -1,5 +1,3 @@
-import * as BigDecimal from "effect/BigDecimal";
-
 import * as Duration from "./Duration";
 import * as Quantity from "./Quantity";
 import * as Unit from "./Unit";
@@ -30,22 +28,21 @@ export const PixelsPerSecondSquared: PixelsPerSecondSquared = Unit.rate(
 export type SquarePixels = Unit.Squared<"Pixels">;
 export const SquarePixels: SquarePixels = Unit.squared("Pixels");
 
-export const zero = Quantity.make("Pixels", BigDecimal.fromBigInt(0n));
+export const zero = Quantity.make("Pixels", 0);
 
-export const pixels = (n: BigDecimal.BigDecimal): Pixels =>
-  Quantity.make("Pixels", n);
+export const pixels = (n: number): Pixels => Quantity.make("Pixels", n);
 
 export const inPixels = (p: Pixels) => p.value;
 
 export const pixelsPerSecond = (
-  n: BigDecimal.BigDecimal,
+  n: number,
 ): Quantity.Quantity<PixelsPerSecond> => Quantity.make(PixelsPerSecond, n);
 
 export const inPixelsPerSecond = (p: Quantity.Quantity<PixelsPerSecond>) =>
   p.value;
 
 export const pixelsPerSecondSquared = (
-  n: BigDecimal.BigDecimal,
+  n: number,
 ): Quantity.Quantity<PixelsPerSecondSquared> =>
   Quantity.make(PixelsPerSecondSquared, n);
 
@@ -53,8 +50,7 @@ export const inPixelsPerSecondSquared = (
   p: Quantity.Quantity<PixelsPerSecondSquared>,
 ) => p.value;
 
-export const squarePixels = (
-  n: BigDecimal.BigDecimal,
-): Quantity.Quantity<SquarePixels> => Quantity.make(SquarePixels, n);
+export const squarePixels = (n: number): Quantity.Quantity<SquarePixels> =>
+  Quantity.make(SquarePixels, n);
 
 export const inSquarePixels = (p: Quantity.Quantity<SquarePixels>) => p.value;

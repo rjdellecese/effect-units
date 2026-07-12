@@ -1,33 +1,24 @@
 import { describe, it } from "@effect/vitest";
 import { assertEquals, assertTrue } from "@effect/vitest/utils";
-import * as Arbitrary from "effect/Arbitrary";
-import * as BigDecimal from "effect/BigDecimal";
 import * as Equal from "effect/Equal";
 import * as FastCheck from "effect/FastCheck";
 import { pipe } from "effect/Function";
 import * as Schema from "effect/Schema";
 
+import { closeTo, double } from "./internal/testUtils";
 import * as Temperature from "./Temperature";
-
-const bigDecimal = Arbitrary.make(Schema.BigDecimal);
-
-const closeTo = (
-  a: BigDecimal.BigDecimal,
-  b: BigDecimal.BigDecimal,
-  tolerance = BigDecimal.make(1n, 90),
-) => BigDecimal.lessThan(BigDecimal.abs(BigDecimal.subtract(a, b)), tolerance);
 
 describe("Temperature", () => {
   const testRoundtrip = <Q>(
-    there: (n: BigDecimal.BigDecimal) => Q,
-    back: (q: Q) => BigDecimal.BigDecimal,
+    there: (n: number) => Q,
+    back: (q: Q) => number,
   ) => {
     it(`roundtrips between '${there.name}' and '${back.name}'`, () => {
       FastCheck.assert(
-        FastCheck.property(bigDecimal, (n) => {
-          const roundTripped = pipe(n, there, back);
-
-          return assertEquals(roundTripped, n);
+        FastCheck.property(double, (n) => {
+          // Temperature conversions are additive (offset by 273.15), so
+          // their error is absolute, not relative to the input.
+          assertTrue(closeTo(pipe(n, there, back), n, 1e-9, 1e-9));
         }),
       );
     });
@@ -45,71 +36,70 @@ describe("Temperature", () => {
     Temperature.inFahrenheitDegrees,
   );
 
-  // The Fahrenheit factor (5/9) is non-terminating, so cross-scale
-  // identities hold to the precision of the rounded constant (~100 digits)
-  // rather than exactly; same-scale roundtrips are exact.
   it("relates the Celsius, Fahrenheit, and Kelvin scales", () => {
     assertTrue(
-      Temperature.equals(
-        Temperature.degreesFahrenheit(BigDecimal.fromBigInt(32n)),
-        Temperature.degreesCelsius(BigDecimal.fromBigInt(0n)),
+      closeTo(
+        Temperature.inDegreesCelsius(Temperature.degreesFahrenheit(32)),
+        0,
+        1e-9,
+        1e-9,
       ),
     );
     assertTrue(
       closeTo(
-        Temperature.inDegreesCelsius(
-          Temperature.degreesFahrenheit(BigDecimal.fromBigInt(212n)),
-        ),
-        BigDecimal.fromBigInt(100n),
+        Temperature.inDegreesCelsius(Temperature.degreesFahrenheit(212)),
+        100,
       ),
     );
-    assertEquals(
-      Temperature.inKelvins(
-        Temperature.degreesCelsius(BigDecimal.make(-27315n, 2)),
+    assertTrue(
+      closeTo(
+        Temperature.inKelvins(Temperature.degreesCelsius(-273.15)),
+        0,
+        1e-9,
+        1e-9,
       ),
-      BigDecimal.normalize(BigDecimal.fromBigInt(0n)),
     );
   });
 
   it("plus and minus are inverses", () => {
     FastCheck.assert(
-      FastCheck.property(bigDecimal, bigDecimal, (a, b) => {
+      FastCheck.property(double, double, (a, b) => {
         const temperature = Temperature.kelvins(a);
         const delta = Temperature.celsiusDegrees(b);
         const raised = Temperature.plus(temperature, delta);
 
-        assertEquals(
-          Temperature.minus(raised, temperature).value,
-          delta.value,
+        assertTrue(
+          closeTo(
+            Temperature.minus(raised, temperature).value,
+            delta.value,
+            1e-9,
+            // Absolute fallback: adding then subtracting a large temperature
+            // absorbs deltas far below its own magnitude.
+            1e-9 * Math.max(Math.abs(a), 1),
+          ),
         );
       }),
     );
   });
 
   it("a Fahrenheit degree is five ninths of a Celsius degree", () => {
-    const delta = Temperature.fahrenheitDegrees(BigDecimal.fromBigInt(9n));
-
     assertTrue(
       closeTo(
-        Temperature.inCelsiusDegrees(delta),
-        BigDecimal.fromBigInt(5n),
+        Temperature.inCelsiusDegrees(Temperature.fahrenheitDegrees(9)),
+        5,
       ),
     );
   });
 
   it("orders temperatures", () => {
-    const cold = Temperature.degreesCelsius(BigDecimal.fromBigInt(0n));
-    const warm = Temperature.degreesCelsius(BigDecimal.fromBigInt(20n));
-    const hot = Temperature.degreesCelsius(BigDecimal.fromBigInt(100n));
+    const cold = Temperature.degreesCelsius(0);
+    const warm = Temperature.degreesCelsius(20);
+    const hot = Temperature.degreesCelsius(100);
 
     assertTrue(Temperature.lessThan(cold, warm));
     assertTrue(Temperature.greaterThan(hot, warm));
-    assertTrue(
-      Temperature.equals(Temperature.min(cold, warm), cold),
-    );
-    assertTrue(
-      Temperature.equals(Temperature.max(cold, warm), warm),
-    );
+    assertTrue(Temperature.equals(Temperature.min(cold, warm), cold));
+    assertTrue(Temperature.equals(Temperature.max(cold, warm), warm));
     assertTrue(
       Temperature.equals(
         Temperature.clamp(hot, { minimum: cold, maximum: warm }),
@@ -120,7 +110,7 @@ describe("Temperature", () => {
 
   it("encodes and decodes through the schema", () => {
     FastCheck.assert(
-      FastCheck.property(bigDecimal, (n) => {
+      FastCheck.property(double, (n) => {
         const temperature = Temperature.kelvins(n);
         const decoded = Schema.decodeSync(Temperature.Temperature)(
           Schema.encodeSync(Temperature.Temperature)(temperature),
@@ -129,5 +119,9 @@ describe("Temperature", () => {
         assertTrue(Equal.equals(decoded, temperature));
       }),
     );
+  });
+
+  it("absolute zero is zero kelvins", () => {
+    assertEquals(Temperature.inKelvins(Temperature.absoluteZero), 0);
   });
 });

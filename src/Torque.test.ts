@@ -1,13 +1,10 @@
 import { describe, it } from "@effect/vitest";
-import { assertEquals, assertTrue } from "@effect/vitest/utils";
-import * as Arbitrary from "effect/Arbitrary";
-import * as BigDecimal from "effect/BigDecimal";
-import * as Equal from "effect/Equal";
+import { assertTrue } from "@effect/vitest/utils";
 import * as FastCheck from "effect/FastCheck";
 import { pipe } from "effect/Function";
-import * as Schema from "effect/Schema";
 
 import * as Force from "./Force";
+import { closeTo, double, quantityCloseTo } from "./internal/testUtils";
 import * as Length from "./Length";
 import * as Quantity from "./Quantity";
 import * as Torque from "./Torque";
@@ -21,10 +18,8 @@ describe("Torque", () => {
   roundtrip.forEach(({ there, back }) => {
     it(`roundtrips between '${there.name}' and '${back.name}'`, () => {
       FastCheck.assert(
-        FastCheck.property(Arbitrary.make(Schema.BigDecimal), (n) => {
-          const roundTripped = pipe(n, there, back);
-
-          return assertEquals(roundTripped, n);
+        FastCheck.property(double, (n) => {
+          assertTrue(closeTo(pipe(n, there, back), n));
         }),
       );
     });
@@ -32,12 +27,9 @@ describe("Torque", () => {
 
   it("is a force times a length", () => {
     assertTrue(
-      Equal.equals(
-        Quantity.times(
-          Force.pounds(BigDecimal.fromBigInt(1n)),
-          Length.feet(BigDecimal.fromBigInt(1n)),
-        ),
-        Torque.poundFeet(BigDecimal.fromBigInt(1n)),
+      quantityCloseTo(
+        Quantity.times(Force.pounds(1), Length.feet(1)),
+        Torque.poundFeet(1),
       ),
     );
   });

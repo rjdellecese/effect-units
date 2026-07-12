@@ -1,10 +1,9 @@
 import { describe, it } from "@effect/vitest";
-import { assertEquals } from "@effect/vitest/utils";
-import * as Arbitrary from "effect/Arbitrary";
+import { assertTrue } from "@effect/vitest/utils";
 import * as FastCheck from "effect/FastCheck";
 import { pipe } from "effect/Function";
-import * as Schema from "effect/Schema";
 
+import { closeTo, double } from "./internal/testUtils";
 import * as Mass from "./Mass";
 
 describe("Mass", () => {
@@ -27,12 +26,14 @@ describe("Mass", () => {
   roundtrip.forEach(({ there, back }) => {
     it(`roundtrips between '${there.name}' and '${back.name}'`, () => {
       FastCheck.assert(
-        FastCheck.property(Arbitrary.make(Schema.BigDecimal), (n) => {
-          const roundTripped = pipe(n, there, back);
-
-          return assertEquals(roundTripped, n);
+        FastCheck.property(double, (n) => {
+          assertTrue(closeTo(pipe(n, there, back), n));
         }),
       );
     });
+  });
+
+  it("relates pounds to ounces", () => {
+    assertTrue(closeTo(Mass.inOunces(Mass.pounds(1)), 16));
   });
 });

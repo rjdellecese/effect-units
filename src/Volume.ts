@@ -1,5 +1,3 @@
-import * as BigDecimal from "effect/BigDecimal";
-
 import * as Length from "./Length";
 import * as Quantity from "./Quantity";
 import * as Unit from "./Unit";
@@ -12,157 +10,144 @@ export type Volume = Quantity.Quantity<CubicMeters>;
 export const Volume = Quantity.Quantity(CubicMeters);
 export const VolumeFromSelf = Quantity.QuantityFromSelf(CubicMeters);
 
-const make = (value: BigDecimal.BigDecimal): Volume =>
-  Quantity.make(CubicMeters, value);
+const make = (value: number): Volume => Quantity.make(CubicMeters, value);
 
-export const zero = make(BigDecimal.fromBigInt(0n));
+export const zero = make(0);
 
 // Metric
 
-export const cubicMeters = (n: BigDecimal.BigDecimal) => make(n);
+export const cubicMeters = (n: number) => make(n);
 
 export const inCubicMeters = (v: Volume) => v.value;
 
-const cubicMetersPerLiter = BigDecimal.make(1n, 3);
+const cubicMetersPerLiter = 0.001;
 
-export const liters = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, cubicMetersPerLiter));
+export const liters = (n: number) => make(n * cubicMetersPerLiter);
 
-export const inLiters = (v: Volume) =>
-  BigDecimal.unsafeDivide(v.value, cubicMetersPerLiter);
+export const inLiters = (v: Volume) => v.value / cubicMetersPerLiter;
 
-const cubicMetersPerMilliliter = BigDecimal.make(1n, 6);
+const cubicMetersPerMilliliter = 1e-6;
 
-export const milliliters = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, cubicMetersPerMilliliter));
+export const milliliters = (n: number) => make(n * cubicMetersPerMilliliter);
 
 export const inMilliliters = (v: Volume) =>
-  BigDecimal.unsafeDivide(v.value, cubicMetersPerMilliliter);
+  v.value / cubicMetersPerMilliliter;
 
-export const cubicCentimeters = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, cubicMetersPerMilliliter));
+export const cubicCentimeters = (n: number) =>
+  make(n * cubicMetersPerMilliliter);
 
 export const inCubicCentimeters = (v: Volume) =>
-  BigDecimal.unsafeDivide(v.value, cubicMetersPerMilliliter);
+  v.value / cubicMetersPerMilliliter;
 
 // Imperial
 
-const cubicMetersPerCubicInch = BigDecimal.make(16387064n, 12);
+const cubicMetersPerCubicInch = 0.0254 * 0.0254 * 0.0254;
 
-export const cubicInches = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, cubicMetersPerCubicInch));
+export const cubicInches = (n: number) => make(n * cubicMetersPerCubicInch);
 
-export const inCubicInches = (v: Volume) =>
-  BigDecimal.unsafeDivide(v.value, cubicMetersPerCubicInch);
+export const inCubicInches = (v: Volume) => v.value / cubicMetersPerCubicInch;
 
-const cubicMetersPerCubicFoot = BigDecimal.make(28316846592n, 12);
+const cubicMetersPerCubicFoot = 0.3048 * 0.3048 * 0.3048;
 
-export const cubicFeet = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, cubicMetersPerCubicFoot));
+export const cubicFeet = (n: number) => make(n * cubicMetersPerCubicFoot);
 
-export const inCubicFeet = (v: Volume) =>
-  BigDecimal.unsafeDivide(v.value, cubicMetersPerCubicFoot);
+export const inCubicFeet = (v: Volume) => v.value / cubicMetersPerCubicFoot;
 
-const cubicMetersPerCubicYard = BigDecimal.make(764554857984n, 12);
+const cubicMetersPerCubicYard = 0.9144 * 0.9144 * 0.9144;
 
-export const cubicYards = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, cubicMetersPerCubicYard));
+export const cubicYards = (n: number) => make(n * cubicMetersPerCubicYard);
 
-export const inCubicYards = (v: Volume) =>
-  BigDecimal.unsafeDivide(v.value, cubicMetersPerCubicYard);
+export const inCubicYards = (v: Volume) => v.value / cubicMetersPerCubicYard;
 
 // US liquid
 
-const cubicMetersPerUsLiquidGallon = BigDecimal.make(3785411784n, 12);
+const cubicMetersPerUsLiquidGallon = 0.003785411784;
 
-export const usLiquidGallons = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, cubicMetersPerUsLiquidGallon));
+export const usLiquidGallons = (n: number) =>
+  make(n * cubicMetersPerUsLiquidGallon);
 
 export const inUsLiquidGallons = (v: Volume) =>
-  BigDecimal.unsafeDivide(v.value, cubicMetersPerUsLiquidGallon);
+  v.value / cubicMetersPerUsLiquidGallon;
 
-const cubicMetersPerUsLiquidQuart = BigDecimal.make(946352946n, 12);
+const cubicMetersPerUsLiquidQuart = cubicMetersPerUsLiquidGallon / 4;
 
-export const usLiquidQuarts = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, cubicMetersPerUsLiquidQuart));
+export const usLiquidQuarts = (n: number) =>
+  make(n * cubicMetersPerUsLiquidQuart);
 
 export const inUsLiquidQuarts = (v: Volume) =>
-  BigDecimal.unsafeDivide(v.value, cubicMetersPerUsLiquidQuart);
+  v.value / cubicMetersPerUsLiquidQuart;
 
-const cubicMetersPerUsLiquidPint = BigDecimal.make(473176473n, 12);
+const cubicMetersPerUsLiquidPint = cubicMetersPerUsLiquidGallon / 8;
 
-export const usLiquidPints = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, cubicMetersPerUsLiquidPint));
+export const usLiquidPints = (n: number) =>
+  make(n * cubicMetersPerUsLiquidPint);
 
 export const inUsLiquidPints = (v: Volume) =>
-  BigDecimal.unsafeDivide(v.value, cubicMetersPerUsLiquidPint);
+  v.value / cubicMetersPerUsLiquidPint;
 
 /** One US fluid ounce is 1/128 of a US liquid gallon. */
-const cubicMetersPerUsFluidOunce = BigDecimal.make(295735295625n, 16);
+const cubicMetersPerUsFluidOunce = cubicMetersPerUsLiquidGallon / 128;
 
-export const usFluidOunces = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, cubicMetersPerUsFluidOunce));
+export const usFluidOunces = (n: number) =>
+  make(n * cubicMetersPerUsFluidOunce);
 
 export const inUsFluidOunces = (v: Volume) =>
-  BigDecimal.unsafeDivide(v.value, cubicMetersPerUsFluidOunce);
+  v.value / cubicMetersPerUsFluidOunce;
 
 // US dry
 
-const cubicMetersPerUsDryGallon = BigDecimal.make(440488377086n, 14);
+const cubicMetersPerUsDryGallon = 0.00440488377086;
 
-export const usDryGallons = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, cubicMetersPerUsDryGallon));
+export const usDryGallons = (n: number) =>
+  make(n * cubicMetersPerUsDryGallon);
 
 export const inUsDryGallons = (v: Volume) =>
-  BigDecimal.unsafeDivide(v.value, cubicMetersPerUsDryGallon);
+  v.value / cubicMetersPerUsDryGallon;
 
-const cubicMetersPerUsDryQuart = BigDecimal.make(1101220942715n, 15);
+const cubicMetersPerUsDryQuart = cubicMetersPerUsDryGallon / 4;
 
-export const usDryQuarts = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, cubicMetersPerUsDryQuart));
+export const usDryQuarts = (n: number) => make(n * cubicMetersPerUsDryQuart);
 
 export const inUsDryQuarts = (v: Volume) =>
-  BigDecimal.unsafeDivide(v.value, cubicMetersPerUsDryQuart);
+  v.value / cubicMetersPerUsDryQuart;
 
-const cubicMetersPerUsDryPint = BigDecimal.make(5506104713575n, 16);
+const cubicMetersPerUsDryPint = cubicMetersPerUsDryGallon / 8;
 
-export const usDryPints = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, cubicMetersPerUsDryPint));
+export const usDryPints = (n: number) => make(n * cubicMetersPerUsDryPint);
 
-export const inUsDryPints = (v: Volume) =>
-  BigDecimal.unsafeDivide(v.value, cubicMetersPerUsDryPint);
+export const inUsDryPints = (v: Volume) => v.value / cubicMetersPerUsDryPint;
 
 // Imperial (UK)
 
-const cubicMetersPerImperialGallon = BigDecimal.make(454609n, 8);
+const cubicMetersPerImperialGallon = 0.00454609;
 
-export const imperialGallons = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, cubicMetersPerImperialGallon));
+export const imperialGallons = (n: number) =>
+  make(n * cubicMetersPerImperialGallon);
 
 export const inImperialGallons = (v: Volume) =>
-  BigDecimal.unsafeDivide(v.value, cubicMetersPerImperialGallon);
+  v.value / cubicMetersPerImperialGallon;
 
-const cubicMetersPerImperialQuart = BigDecimal.make(11365225n, 10);
+const cubicMetersPerImperialQuart = cubicMetersPerImperialGallon / 4;
 
-export const imperialQuarts = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, cubicMetersPerImperialQuart));
+export const imperialQuarts = (n: number) =>
+  make(n * cubicMetersPerImperialQuart);
 
 export const inImperialQuarts = (v: Volume) =>
-  BigDecimal.unsafeDivide(v.value, cubicMetersPerImperialQuart);
+  v.value / cubicMetersPerImperialQuart;
 
-const cubicMetersPerImperialPint = BigDecimal.make(56826125n, 11);
+const cubicMetersPerImperialPint = cubicMetersPerImperialGallon / 8;
 
-export const imperialPints = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, cubicMetersPerImperialPint));
+export const imperialPints = (n: number) =>
+  make(n * cubicMetersPerImperialPint);
 
 export const inImperialPints = (v: Volume) =>
-  BigDecimal.unsafeDivide(v.value, cubicMetersPerImperialPint);
+  v.value / cubicMetersPerImperialPint;
 
 /** One imperial fluid ounce is 1/160 of an imperial gallon. */
-const cubicMetersPerImperialFluidOunce = BigDecimal.make(284130625n, 13);
+const cubicMetersPerImperialFluidOunce = cubicMetersPerImperialGallon / 160;
 
-export const imperialFluidOunces = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, cubicMetersPerImperialFluidOunce));
+export const imperialFluidOunces = (n: number) =>
+  make(n * cubicMetersPerImperialFluidOunce);
 
 export const inImperialFluidOunces = (v: Volume) =>
-  BigDecimal.unsafeDivide(v.value, cubicMetersPerImperialFluidOunce);
+  v.value / cubicMetersPerImperialFluidOunce;

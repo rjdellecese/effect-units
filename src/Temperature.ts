@@ -1,10 +1,8 @@
-import * as BigDecimal from "effect/BigDecimal";
-import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Function from "effect/Function";
 import * as Hash from "effect/Hash";
+import * as Number_ from "effect/Number";
 import * as order from "effect/Order";
-import * as ParseResult from "effect/ParseResult";
 import * as Pipeable from "effect/Pipeable";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
@@ -22,11 +20,14 @@ export type TypeId = typeof TypeId;
  */
 export interface Temperature extends Equal.Equal, Pipeable.Pipeable {
   readonly [TypeId]: TypeId;
-  readonly value: BigDecimal.BigDecimal;
+  readonly value: number;
 }
 
 export const isTemperature = (u: unknown): u is Temperature =>
   Predicate.hasProperty(u, TypeId);
+
+const valueEquals = (a: number, b: number): boolean =>
+  a === b || (Number.isNaN(a) && Number.isNaN(b));
 
 const Proto = {
   [TypeId]: TypeId,
@@ -34,72 +35,55 @@ const Proto = {
     return isTemperature(that) && equals(this, that);
   },
   [Hash.symbol](this: Temperature): number {
-    return Hash.hash(this.value);
+    return Hash.number(this.value);
   },
   pipe() {
     return Pipeable.pipeArguments(this, arguments);
   },
 } as const;
 
-const make = (value: BigDecimal.BigDecimal): Temperature =>
-  Object.assign(Object.create(Proto), { value });
+const make = (value: number): Temperature =>
+  Object.assign(Object.create(Proto), { value: value === 0 ? 0 : value });
 
 export const equals = (a: Temperature, b: Temperature): boolean =>
-  Equal.equals(a.value, b.value);
+  valueEquals(a.value, b.value);
 
 export const TemperatureFromSelf = Schema.declare(isTemperature);
 
-export const Temperature = Schema.transformOrFail(
-  Schema.Struct({ value: Schema.String }),
+export const Temperature = Schema.transform(
+  Schema.Struct({ value: Schema.Number }),
   TemperatureFromSelf,
   {
-    decode: ({ value }) =>
-      Effect.gen(function* () {
-        return make(yield* ParseResult.decode(Schema.BigDecimal)(value));
-      }),
-    encode: ({ value }) =>
-      Effect.gen(function* () {
-        return { value: yield* ParseResult.encode(Schema.BigDecimal)(value) };
-      }),
+    strict: true,
+    decode: ({ value }) => make(value),
+    encode: ({ value }) => ({ value }),
   },
 );
 
 // Absolute temperatures
 
-export const kelvins = (n: BigDecimal.BigDecimal): Temperature => make(n);
+export const kelvins = (n: number): Temperature => make(n);
 
 export const inKelvins = (t: Temperature) => t.value;
 
-export const absoluteZero = kelvins(BigDecimal.fromBigInt(0n));
+export const absoluteZero = kelvins(0);
 
-const zeroCelsiusInKelvins = BigDecimal.make(27315n, 2);
+const zeroCelsiusInKelvins = 273.15;
 
-export const degreesCelsius = (n: BigDecimal.BigDecimal): Temperature =>
-  make(BigDecimal.sum(n, zeroCelsiusInKelvins));
+export const degreesCelsius = (n: number): Temperature =>
+  make(n + zeroCelsiusInKelvins);
 
 export const inDegreesCelsius = (t: Temperature) =>
-  BigDecimal.subtract(t.value, zeroCelsiusInKelvins);
+  t.value - zeroCelsiusInKelvins;
 
-/**
- * The size of a Fahrenheit degree relative to a Celsius degree (5/9). The
- * ratio is non-terminating, so it is precomputed once (rounded at 100
- * significant digits) and used symmetrically, keeping roundtrips exact.
- */
-const fiveNinths = BigDecimal.unsafeDivide(
-  BigDecimal.fromBigInt(5n),
-  BigDecimal.fromBigInt(9n),
-);
+/** The size of a Fahrenheit degree relative to a Celsius degree. */
+const fiveNinths = 5 / 9;
 
-const thirtyTwo = BigDecimal.fromBigInt(32n);
-
-export const degreesFahrenheit = (n: BigDecimal.BigDecimal): Temperature =>
-  degreesCelsius(BigDecimal.multiply(BigDecimal.subtract(n, thirtyTwo), fiveNinths));
+export const degreesFahrenheit = (n: number): Temperature =>
+  degreesCelsius((n - 32) * fiveNinths);
 
 export const inDegreesFahrenheit = (t: Temperature) =>
-  BigDecimal.sum(
-    BigDecimal.unsafeDivide(inDegreesCelsius(t), fiveNinths),
-    thirtyTwo,
-  );
+  inDegreesCelsius(t) / fiveNinths + 32;
 
 // Deltas
 
@@ -113,16 +97,15 @@ export type Delta = Quantity.Quantity<"CelsiusDegrees">;
 export const Delta = Quantity.Quantity("CelsiusDegrees");
 export const DeltaFromSelf = Quantity.QuantityFromSelf("CelsiusDegrees");
 
-export const celsiusDegrees = (n: BigDecimal.BigDecimal): Delta =>
+export const celsiusDegrees = (n: number): Delta =>
   Quantity.make("CelsiusDegrees", n);
 
 export const inCelsiusDegrees = (d: Delta) => d.value;
 
-export const fahrenheitDegrees = (n: BigDecimal.BigDecimal): Delta =>
-  celsiusDegrees(BigDecimal.multiply(n, fiveNinths));
+export const fahrenheitDegrees = (n: number): Delta =>
+  celsiusDegrees(n * fiveNinths);
 
-export const inFahrenheitDegrees = (d: Delta) =>
-  BigDecimal.unsafeDivide(d.value, fiveNinths);
+export const inFahrenheitDegrees = (d: Delta) => d.value / fiveNinths;
 
 // Arithmetic
 
@@ -130,7 +113,7 @@ export const plus: {
   (delta: Delta): (t: Temperature) => Temperature;
   (t: Temperature, delta: Delta): Temperature;
 } = Function.dual(2, (t: Temperature, delta: Delta): Temperature =>
-  make(BigDecimal.sum(t.value, delta.value)),
+  make(t.value + delta.value),
 );
 
 /** The delta from `b` up to `a` (i.e. `a` minus `b`). */
@@ -138,13 +121,13 @@ export const minus: {
   (b: Temperature): (a: Temperature) => Delta;
   (a: Temperature, b: Temperature): Delta;
 } = Function.dual(2, (a: Temperature, b: Temperature): Delta =>
-  celsiusDegrees(BigDecimal.subtract(a.value, b.value)),
+  celsiusDegrees(a.value - b.value),
 );
 
 // Comparison
 
 export const Order: order.Order<Temperature> = order.mapInput(
-  BigDecimal.Order,
+  Number_.Order,
   (t: Temperature) => t.value,
 );
 

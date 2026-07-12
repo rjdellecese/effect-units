@@ -4,22 +4,17 @@ import {
   assertTrue,
   deepStrictEqual,
 } from "@effect/vitest/utils";
-import * as Arbitrary from "effect/Arbitrary";
-import * as BigDecimal from "effect/BigDecimal";
 import * as Equal from "effect/Equal";
 import * as FastCheck from "effect/FastCheck";
-import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
+import { closeTo, double } from "./internal/testUtils";
 import * as Length from "./Length";
 import * as Mass from "./Mass";
 import * as Quantity from "./Quantity";
 import * as Unit from "./Unit";
 
-const bigDecimal = Arbitrary.make(Schema.BigDecimal);
-const nonZeroBigDecimal = bigDecimal.filter(
-  (n) => !BigDecimal.isZero(BigDecimal.normalize(n)),
-);
+const nonZeroDouble = double.filter((n) => n !== 0);
 
 describe("multiply", () => {
   const baseQuantities = [
@@ -28,30 +23,28 @@ describe("multiply", () => {
   ];
 
   baseQuantities.forEach((baseQuantity) => {
-    it(`BigDecimal * Quantity (${baseQuantity.label})`, () => {
+    it(`number * Quantity (${baseQuantity.label})`, () => {
       FastCheck.assert(
-        FastCheck.property(bigDecimal, bigDecimal, (a, b) => {
+        FastCheck.property(double, double, (a, b) => {
           const quantityProduct = Quantity.multiply(
             baseQuantity.constructor(a),
             b,
           );
-          const bigDecimalProduct = BigDecimal.multiply(a, b);
 
-          assertEquals(quantityProduct.value, bigDecimalProduct);
+          assertTrue(closeTo(quantityProduct.value, a * b));
         }),
       );
     });
 
-    it(`Quantity * BigDecimal (${baseQuantity.label})`, () => {
+    it(`Quantity * number (${baseQuantity.label})`, () => {
       FastCheck.assert(
-        FastCheck.property(bigDecimal, bigDecimal, (a, b) => {
+        FastCheck.property(double, double, (a, b) => {
           const quantityProduct = Quantity.multiply(
             a,
             baseQuantity.constructor(b),
           );
-          const bigDecimalProduct = BigDecimal.multiply(a, b);
 
-          assertEquals(quantityProduct.value, bigDecimalProduct);
+          assertTrue(closeTo(quantityProduct.value, a * b));
         }),
       );
     });
@@ -61,10 +54,10 @@ describe("multiply", () => {
 describe("times", () => {
   it("multiplies values and forms a Product unit", () => {
     FastCheck.assert(
-      FastCheck.property(bigDecimal, bigDecimal, (a, b) => {
+      FastCheck.property(double, double, (a, b) => {
         const product = Quantity.times(Length.meters(a), Mass.kilograms(b));
 
-        assertEquals(product.value, BigDecimal.multiply(a, b));
+        assertEquals(product.value, a * b);
         assertTrue(
           Unit.equals(
             product.unit,
@@ -75,26 +68,26 @@ describe("times", () => {
     );
   });
 
-  it("over recovers the left factor exactly", () => {
+  it("over recovers the left factor", () => {
     FastCheck.assert(
-      FastCheck.property(bigDecimal, nonZeroBigDecimal, (a, b) => {
+      FastCheck.property(double, nonZeroDouble, (a, b) => {
         const product = Quantity.times(Length.meters(a), Mass.kilograms(b));
         const recovered = Quantity.over(product, Mass.kilograms(b));
 
-        assertTrue(Option.isSome(recovered));
-        assertTrue(Equal.equals(Option.getOrThrow(recovered), Length.meters(a)));
+        assertTrue(Unit.equals(recovered.unit, Length.Meters));
+        assertTrue(closeTo(recovered.value, a));
       }),
     );
   });
 
-  it("over_ recovers the right factor exactly", () => {
+  it("over_ recovers the right factor", () => {
     FastCheck.assert(
-      FastCheck.property(nonZeroBigDecimal, bigDecimal, (a, b) => {
+      FastCheck.property(nonZeroDouble, double, (a, b) => {
         const product = Quantity.times(Length.meters(a), Mass.kilograms(b));
         const recovered = Quantity.over_(product, Length.meters(a));
 
-        assertTrue(Option.isSome(recovered));
-        assertTrue(Equal.equals(Option.getOrThrow(recovered), Mass.kilograms(b)));
+        assertTrue(Unit.equals(recovered.unit, Mass.Kilograms));
+        assertTrue(closeTo(recovered.value, b));
       }),
     );
   });
@@ -103,10 +96,10 @@ describe("times", () => {
 describe("squared / cubed", () => {
   it("squared multiplies a quantity by itself", () => {
     FastCheck.assert(
-      FastCheck.property(bigDecimal, (a) => {
+      FastCheck.property(double, (a) => {
         const squared = Quantity.squared(Length.meters(a));
 
-        assertEquals(squared.value, BigDecimal.multiply(a, a));
+        assertEquals(squared.value, a * a);
         assertTrue(Unit.equals(squared.unit, Unit.squared(Length.Meters)));
       }),
     );
@@ -114,13 +107,10 @@ describe("squared / cubed", () => {
 
   it("cubed multiplies a quantity by itself twice", () => {
     FastCheck.assert(
-      FastCheck.property(bigDecimal, (a) => {
+      FastCheck.property(double, (a) => {
         const cubed = Quantity.cubed(Length.meters(a));
 
-        assertEquals(
-          cubed.value,
-          BigDecimal.multiply(BigDecimal.multiply(a, a), a),
-        );
+        assertEquals(cubed.value, a * a * a);
         assertTrue(Unit.equals(cubed.unit, Unit.cubed(Length.Meters)));
       }),
     );
@@ -128,14 +118,14 @@ describe("squared / cubed", () => {
 });
 
 describe("rates", () => {
-  const seconds = (n: BigDecimal.BigDecimal) => Quantity.make("Seconds", n);
+  const seconds = (n: number) => Quantity.make("Seconds", n);
 
   it("per divides values and forms a Rate unit", () => {
     FastCheck.assert(
-      FastCheck.property(bigDecimal, nonZeroBigDecimal, (a, b) => {
-        const rate = Quantity.unsafePer(Length.meters(a), seconds(b));
+      FastCheck.property(double, nonZeroDouble, (a, b) => {
+        const rate = Quantity.per(Length.meters(a), seconds(b));
 
-        assertEquals(rate.value, BigDecimal.unsafeDivide(a, b));
+        assertEquals(rate.value, a / b);
         assertTrue(
           Unit.equals(rate.unit, Unit.rate(Length.Meters, "Seconds")),
         );
@@ -143,40 +133,28 @@ describe("rates", () => {
     );
   });
 
-  it("per is none for a zero divisor", () => {
-    FastCheck.assert(
-      FastCheck.property(bigDecimal, (a) => {
-        const rate = Quantity.per(
-          Length.meters(a),
-          seconds(BigDecimal.fromBigInt(0n)),
-        );
+  it("per by zero is Infinity", () => {
+    const rate = Quantity.per(Length.meters(1), seconds(0));
 
-        assertTrue(Option.isNone(rate));
-      }),
-    );
+    assertTrue(Quantity.isInfinite(rate));
+    assertTrue(Quantity.isNaN(Quantity.per(Length.meters(0), seconds(0))));
   });
 
   it("at multiplies a rate by an independent quantity", () => {
     // Compile-time inference check: `at` on a Rate<"Meters", "Seconds">
     // quantity infers Quantity<"Meters">.
     const inferred: Quantity.Quantity<Length.Meters> = Quantity.at(
-      Quantity.make(
-        Unit.rate(Length.Meters, "Seconds"),
-        BigDecimal.fromBigInt(1n),
-      ),
-      seconds(BigDecimal.fromBigInt(1n)),
+      Quantity.make(Unit.rate(Length.Meters, "Seconds"), 1),
+      seconds(1),
     );
-    assertEquals(inferred.value, BigDecimal.fromBigInt(1n));
+    assertEquals(inferred.value, 1);
 
     FastCheck.assert(
-      FastCheck.property(bigDecimal, bigDecimal, (r, i) => {
-        const rate = Quantity.make(
-          Unit.rate(Length.Meters, "Seconds"),
-          r,
-        );
+      FastCheck.property(double, double, (r, i) => {
+        const rate = Quantity.make(Unit.rate(Length.Meters, "Seconds"), r);
         const dependent = Quantity.at(rate, seconds(i));
 
-        assertEquals(dependent.value, BigDecimal.multiply(r, i));
+        assertEquals(dependent.value, r * i);
         assertTrue(Unit.equals(dependent.unit, Length.Meters));
       }),
     );
@@ -184,11 +162,8 @@ describe("rates", () => {
 
   it("for_ matches at with flipped arguments", () => {
     FastCheck.assert(
-      FastCheck.property(bigDecimal, bigDecimal, (r, i) => {
-        const rate = Quantity.make(
-          Unit.rate(Length.Meters, "Seconds"),
-          r,
-        );
+      FastCheck.property(double, double, (r, i) => {
+        const rate = Quantity.make(Unit.rate(Length.Meters, "Seconds"), r);
 
         assertTrue(
           Equal.equals(
@@ -200,41 +175,15 @@ describe("rates", () => {
     );
   });
 
-  it("at_ inverts at exactly", () => {
+  it("at_ inverts at", () => {
     FastCheck.assert(
-      FastCheck.property(nonZeroBigDecimal, bigDecimal, (r, i) => {
-        const rate = Quantity.make(
-          Unit.rate(Length.Meters, "Seconds"),
-          r,
-        );
+      FastCheck.property(nonZeroDouble, double, (r, i) => {
+        const rate = Quantity.make(Unit.rate(Length.Meters, "Seconds"), r);
         const dependent = Quantity.at(rate, seconds(i));
         const recovered = Quantity.at_(dependent, rate);
 
-        assertTrue(Option.isSome(recovered));
-        assertTrue(Equal.equals(Option.getOrThrow(recovered), seconds(i)));
-      }),
-    );
-  });
-});
-
-describe("exactness", () => {
-  // Validates the library-wide conversion-factor convention: multiplying by a
-  // fixed high-precision constant and dividing by the same constant roundtrips
-  // exactly, because the quotient terminates.
-  it("multiply-then-divide by a 100-digit constant roundtrips exactly", () => {
-    const k = BigDecimal.unsafeDivide(
-      BigDecimal.fromBigInt(1n),
-      BigDecimal.fromBigInt(3n),
-    );
-
-    FastCheck.assert(
-      FastCheck.property(bigDecimal, (n) => {
-        const roundTripped = BigDecimal.unsafeDivide(
-          BigDecimal.multiply(n, k),
-          k,
-        );
-
-        assertEquals(roundTripped, n);
+        assertTrue(Unit.equals(recovered.unit, "Seconds"));
+        assertTrue(closeTo(recovered.value, i));
       }),
     );
   });
@@ -243,7 +192,7 @@ describe("exactness", () => {
 describe("schema", () => {
   it("encodes and decodes a base-unit quantity", () => {
     FastCheck.assert(
-      FastCheck.property(bigDecimal, (n) => {
+      FastCheck.property(double, (n) => {
         const quantity = Length.meters(n);
         const encoded = Schema.encodeSync(Length.Length)(quantity);
         const decoded = Schema.decodeSync(Length.Length)(encoded);
@@ -258,32 +207,88 @@ describe("schema", () => {
     const MetersPerSecond = Unit.rate(Length.Meters, "Seconds");
     const Speed = Quantity.Quantity(MetersPerSecond);
 
-    const quantity = Quantity.make(MetersPerSecond, BigDecimal.fromBigInt(1n));
+    const quantity = Quantity.make(MetersPerSecond, 1);
     const encoded = Schema.encodeSync(Speed)(quantity);
 
-    deepStrictEqual(encoded, { unit: "(Meters/Seconds)", value: "1" });
+    deepStrictEqual(encoded, { unit: "(Meters/Seconds)", value: 1 });
     assertTrue(Equal.equals(Schema.decodeSync(Speed)(encoded), quantity));
   });
 });
 
 describe("equals", () => {
   it("compares structurally equal units", () => {
-    const a = Quantity.make(
-      Unit.rate(Length.Meters, "Seconds"),
-      BigDecimal.fromBigInt(1n),
-    );
-    const b = Quantity.make(
-      Unit.rate(Length.Meters, "Seconds"),
-      BigDecimal.fromBigInt(1n),
-    );
+    const a = Quantity.make(Unit.rate(Length.Meters, "Seconds"), 1);
+    const b = Quantity.make(Unit.rate(Length.Meters, "Seconds"), 1);
 
     assertTrue(Equal.equals(a, b));
   });
 
   it("distinguishes different units", () => {
-    const a = Quantity.make("Meters", BigDecimal.fromBigInt(1n));
-    const b = Quantity.make("Seconds", BigDecimal.fromBigInt(1n));
+    const a = Quantity.make("Meters", 1);
+    const b = Quantity.make("Seconds", 1);
 
     assertTrue(!Equal.equals(a, b));
+  });
+
+  it("treats NaN quantities as equal to themselves", () => {
+    const a = Quantity.make("Meters", NaN);
+
+    assertTrue(Equal.equals(a, Quantity.make("Meters", NaN)));
+  });
+
+  it("normalizes negative zero", () => {
+    assertTrue(Equal.equals(Quantity.make("Meters", -0), Length.zero));
+    assertEquals(Quantity.make("Meters", -0).value, 0);
+  });
+});
+
+describe("equalWithin", () => {
+  it("compares within a tolerance quantity", () => {
+    assertTrue(
+      Quantity.equalWithin(
+        Length.meters(1),
+        Length.meters(1.0005),
+        Length.millimeters(1),
+      ),
+    );
+    assertTrue(
+      !Quantity.equalWithin(
+        Length.meters(1),
+        Length.meters(1.002),
+        Length.millimeters(1),
+      ),
+    );
+  });
+
+  it("is false for NaN", () => {
+    assertTrue(
+      !Quantity.equalWithin(
+        Quantity.make("Meters", NaN),
+        Length.meters(1),
+        Length.meters(1),
+      ),
+    );
+  });
+});
+
+describe("comparison", () => {
+  it("orders quantities", () => {
+    const short = Length.meters(1);
+    const long = Length.meters(2);
+
+    assertTrue(Quantity.lessThan(short, long));
+    assertTrue(Quantity.lessThanOrEqualTo(short, short));
+    assertTrue(Quantity.greaterThan(long, short));
+    assertTrue(Quantity.greaterThanOrEqualTo(long, long));
+    assertTrue(Equal.equals(Quantity.min(short, long), short));
+    assertTrue(Equal.equals(Quantity.max(short, long), long));
+  });
+
+  it("comparisons involving NaN are false", () => {
+    const nan = Quantity.make("Meters", NaN);
+
+    assertTrue(!Quantity.lessThan(nan, Length.meters(1)));
+    assertTrue(!Quantity.greaterThan(nan, Length.meters(1)));
+    assertTrue(!Quantity.lessThanOrEqualTo(nan, nan));
   });
 });

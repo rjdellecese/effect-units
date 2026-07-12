@@ -1,13 +1,10 @@
 import { describe, it } from "@effect/vitest";
-import { assertEquals, assertTrue } from "@effect/vitest/utils";
-import * as Arbitrary from "effect/Arbitrary";
-import * as BigDecimal from "effect/BigDecimal";
-import * as Equal from "effect/Equal";
+import { assertTrue } from "@effect/vitest/utils";
 import * as FastCheck from "effect/FastCheck";
 import { pipe } from "effect/Function";
-import * as Schema from "effect/Schema";
 
 import * as Duration from "./Duration";
+import { closeTo, double, quantityCloseTo } from "./internal/testUtils";
 import * as Length from "./Length";
 import * as Quantity from "./Quantity";
 import * as Speed from "./Speed";
@@ -23,10 +20,8 @@ describe("Speed", () => {
   roundtrip.forEach(({ there, back }) => {
     it(`roundtrips between '${there.name}' and '${back.name}'`, () => {
       FastCheck.assert(
-        FastCheck.property(Arbitrary.make(Schema.BigDecimal), (n) => {
-          const roundTripped = pipe(n, there, back);
-
-          return assertEquals(roundTripped, n);
+        FastCheck.property(double, (n) => {
+          assertTrue(closeTo(pipe(n, there, back), n));
         }),
       );
     });
@@ -34,50 +29,32 @@ describe("Speed", () => {
 
   it("is a length per a duration", () => {
     assertTrue(
-      Equal.equals(
-        Quantity.unsafePer(
-          Length.meters(BigDecimal.fromBigInt(10n)),
-          Duration.seconds(BigDecimal.fromBigInt(2n)),
-        ),
-        Speed.metersPerSecond(BigDecimal.fromBigInt(5n)),
+      quantityCloseTo(
+        Quantity.per(Length.meters(10), Duration.seconds(2)),
+        Speed.metersPerSecond(5),
       ),
     );
   });
 
   it("travels a length over a duration", () => {
     assertTrue(
-      Equal.equals(
-        Quantity.at(
-          Speed.metersPerSecond(BigDecimal.fromBigInt(5n)),
-          Duration.seconds(BigDecimal.fromBigInt(2n)),
-        ),
-        Length.meters(BigDecimal.fromBigInt(10n)),
+      quantityCloseTo(
+        Quantity.at(Speed.metersPerSecond(5), Duration.seconds(2)),
+        Length.meters(10),
       ),
     );
   });
 
-  // The kilometers-per-hour factor (1000/3600) is non-terminating, so this
-  // identity holds to the precision of the rounded constant (~100 digits)
-  // rather than exactly.
-  it("relates kilometers per hour to kilometers and hours to ~100 digits", () => {
+  it("relates kilometers per hour to kilometers and hours", () => {
     const distance = Quantity.at(
-      Speed.kilometersPerHour(BigDecimal.fromBigInt(90n)),
-      Duration.hours(BigDecimal.fromBigInt(2n)),
-    );
-    const difference = BigDecimal.abs(
-      BigDecimal.subtract(
-        Length.inKilometers(distance),
-        BigDecimal.fromBigInt(180n),
-      ),
+      Speed.kilometersPerHour(90),
+      Duration.hours(2),
     );
 
-    assertTrue(BigDecimal.lessThan(difference, BigDecimal.make(1n, 90)));
+    assertTrue(closeTo(Length.inKilometers(distance), 180));
   });
 
-  it("relates miles per hour to meters per second exactly", () => {
-    assertEquals(
-      Speed.inMetersPerSecond(Speed.milesPerHour(BigDecimal.fromBigInt(1n))),
-      BigDecimal.make(44704n, 5),
-    );
+  it("relates miles per hour to meters per second", () => {
+    assertTrue(closeTo(Speed.inMetersPerSecond(Speed.milesPerHour(1)), 0.44704));
   });
 });

@@ -1,5 +1,3 @@
-import * as BigDecimal from "effect/BigDecimal";
-
 import * as Acceleration from "./Acceleration";
 import * as Mass from "./Mass";
 import * as Prefix from "./Prefix";
@@ -20,39 +18,32 @@ export type Force = Quantity.Quantity<Newtons>;
 export const Force = Quantity.Quantity(Newtons);
 export const ForceFromSelf = Quantity.QuantityFromSelf(Newtons);
 
-const make = (value: BigDecimal.BigDecimal): Force =>
-  Quantity.make(Newtons, value);
+const make = (value: number): Force => Quantity.make(Newtons, value);
 
-export const zero = make(BigDecimal.fromBigInt(0n));
+export const zero = make(0);
 
-export const newtons = (n: BigDecimal.BigDecimal) => make(n);
+export const newtons = (n: number) => make(n);
 
 export const inNewtons = (f: Force) => f.value;
 
-export const kilonewtons = (n: BigDecimal.BigDecimal) =>
-  make(Prefix.toBase("Kilo", n));
+export const kilonewtons = (n: number) => make(Prefix.toBase("Kilo", n));
 
 export const inKilonewtons = (f: Force) => Prefix.toPrefixed("Kilo", f.value);
 
-export const meganewtons = (n: BigDecimal.BigDecimal) =>
-  make(Prefix.toBase("Mega", n));
+export const meganewtons = (n: number) => make(Prefix.toBase("Mega", n));
 
 export const inMeganewtons = (f: Force) => Prefix.toPrefixed("Mega", f.value);
 
-/** One pound of force is 0.45359237 kg times 9.80665 m/s², exactly. */
-const newtonsPerPound = BigDecimal.make(44482216152605n, 13);
+/** One pound of force is 0.45359237 kg times 9.80665 m/s². */
+const newtonsPerPound = 0.45359237 * 9.80665;
 
-export const pounds = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, newtonsPerPound));
+export const pounds = (n: number) => make(n * newtonsPerPound);
 
-export const inPounds = (f: Force) =>
-  BigDecimal.unsafeDivide(f.value, newtonsPerPound);
+export const inPounds = (f: Force) => f.value / newtonsPerPound;
 
 /** One kip is 1000 pounds of force. */
-const newtonsPerKip = BigDecimal.make(44482216152605n, 10);
+const newtonsPerKip = newtonsPerPound * 1000;
 
-export const kips = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, newtonsPerKip));
+export const kips = (n: number) => make(n * newtonsPerKip);
 
-export const inKips = (f: Force) =>
-  BigDecimal.unsafeDivide(f.value, newtonsPerKip);
+export const inKips = (f: Force) => f.value / newtonsPerKip;

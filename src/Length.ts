@@ -1,6 +1,3 @@
-import * as BigDecimal from "effect/BigDecimal";
-
-import { pi } from "./internal/constants";
 import * as Prefix from "./Prefix";
 import * as Quantity from "./Quantity";
 
@@ -12,163 +9,119 @@ export type Length = Quantity.Quantity<Meters>;
 export const Length = Quantity.Quantity(Meters);
 export const LengthFromSelf = Quantity.QuantityFromSelf(Meters);
 
-const make = (value: BigDecimal.BigDecimal): Length =>
-  Quantity.make(Meters, value);
+const make = (value: number): Length => Quantity.make(Meters, value);
 
-export const zero = make(BigDecimal.fromBigInt(0n));
+export const zero = make(0);
 
 // Metric
 
-export const angstroms = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, BigDecimal.make(1n, 10)));
+const metersPerAngstrom = 1e-10;
 
-export const inAngstroms = (l: Length) =>
-  BigDecimal.unsafeDivide(l.value, BigDecimal.make(1n, 10));
+export const angstroms = (n: number) => make(n * metersPerAngstrom);
 
-export const nanometers = (n: BigDecimal.BigDecimal) =>
-  make(Prefix.toBase("Nano", n));
+export const inAngstroms = (l: Length) => l.value / metersPerAngstrom;
 
-export const inNanometers = (l: Length) =>
-  Prefix.toPrefixed("Nano", l.value);
+export const nanometers = (n: number) => make(Prefix.toBase("Nano", n));
 
-export const microns = (n: BigDecimal.BigDecimal) =>
-  make(Prefix.toBase("Micro", n));
+export const inNanometers = (l: Length) => Prefix.toPrefixed("Nano", l.value);
+
+export const microns = (n: number) => make(Prefix.toBase("Micro", n));
 
 export const inMicrons = (l: Length) => Prefix.toPrefixed("Micro", l.value);
 
-export const kilometers = (n: BigDecimal.BigDecimal) =>
-  make(Prefix.toBase("Kilo", n));
+export const kilometers = (n: number) => make(Prefix.toBase("Kilo", n));
 
 export const inKilometers = (l: Length) => Prefix.toPrefixed("Kilo", l.value);
 
-export const meters = (n: BigDecimal.BigDecimal) => make(n);
+export const meters = (n: number) => make(n);
 
 export const inMeters = (l: Length) => l.value;
 
-export const centimeters = (n: BigDecimal.BigDecimal) =>
-  make(Prefix.toBase("Centi", n));
+export const centimeters = (n: number) => make(Prefix.toBase("Centi", n));
 
 export const inCentimeters = (l: Length) =>
   Prefix.toPrefixed("Centi", l.value);
 
-export const millimeters = (n: BigDecimal.BigDecimal) =>
-  make(Prefix.toBase("Milli", n));
+export const millimeters = (n: number) => make(Prefix.toBase("Milli", n));
 
 export const inMillimeters = (l: Length) =>
   Prefix.toPrefixed("Milli", l.value);
 
 // Imperial
 
+const metersPerInch = 0.0254;
+
 /** One thou is one thousandth of an inch. */
-export const thou = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, BigDecimal.make(254n, 7)));
+const metersPerThou = metersPerInch / 1000;
 
-export const inThou = (l: Length) =>
-  BigDecimal.unsafeDivide(l.value, BigDecimal.make(254n, 7));
+export const thou = (n: number) => make(n * metersPerThou);
 
-export const inches = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, BigDecimal.make(254n, 4)));
+export const inThou = (l: Length) => l.value / metersPerThou;
 
-export const inInches = (l: Length) =>
-  l.value.pipe(
-    BigDecimal.multiply(BigDecimal.fromBigInt(5000n)),
-    BigDecimal.unsafeDivide(BigDecimal.fromBigInt(127n)),
-  );
+export const inches = (n: number) => make(n * metersPerInch);
 
-export const feet = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, BigDecimal.make(3048n, 4)));
+export const inInches = (l: Length) => l.value / metersPerInch;
 
-export const inFeet = (l: Length) =>
-  l.value.pipe(
-    BigDecimal.multiply(BigDecimal.fromBigInt(1250n)),
-    BigDecimal.unsafeDivide(BigDecimal.fromBigInt(381n)),
-  );
+const metersPerFoot = 0.3048;
 
-const metersPerYard = BigDecimal.make(9144n, 4);
+export const feet = (n: number) => make(n * metersPerFoot);
 
-export const yards = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, metersPerYard));
+export const inFeet = (l: Length) => l.value / metersPerFoot;
 
-export const inYards = (l: Length) =>
-  BigDecimal.unsafeDivide(l.value, metersPerYard);
+const metersPerYard = 0.9144;
 
-const metersPerMile = BigDecimal.make(1609344n, 3);
+export const yards = (n: number) => make(n * metersPerYard);
 
-export const miles = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, metersPerMile));
+export const inYards = (l: Length) => l.value / metersPerYard;
 
-export const inMiles = (l: Length) =>
-  BigDecimal.unsafeDivide(l.value, metersPerMile);
+const metersPerMile = 1609.344;
+
+export const miles = (n: number) => make(n * metersPerMile);
+
+export const inMiles = (l: Length) => l.value / metersPerMile;
 
 // Typography
 
-const metersPerInch = BigDecimal.make(254n, 4);
-
 /** One CSS pixel is 1/96 of an inch. */
-const metersPerCssPixel = BigDecimal.unsafeDivide(
-  metersPerInch,
-  BigDecimal.fromBigInt(96n),
-);
+const metersPerCssPixel = metersPerInch / 96;
 
-export const cssPixels = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, metersPerCssPixel));
+export const cssPixels = (n: number) => make(n * metersPerCssPixel);
 
-export const inCssPixels = (l: Length) =>
-  BigDecimal.unsafeDivide(l.value, metersPerCssPixel);
+export const inCssPixels = (l: Length) => l.value / metersPerCssPixel;
 
 /** One point is 1/72 of an inch. */
-const metersPerPoint = BigDecimal.unsafeDivide(
-  metersPerInch,
-  BigDecimal.fromBigInt(72n),
-);
+const metersPerPoint = metersPerInch / 72;
 
-export const points = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, metersPerPoint));
+export const points = (n: number) => make(n * metersPerPoint);
 
-export const inPoints = (l: Length) =>
-  BigDecimal.unsafeDivide(l.value, metersPerPoint);
+export const inPoints = (l: Length) => l.value / metersPerPoint;
 
 /** One pica is 1/6 of an inch. */
-const metersPerPica = BigDecimal.unsafeDivide(
-  metersPerInch,
-  BigDecimal.fromBigInt(6n),
-);
+const metersPerPica = metersPerInch / 6;
 
-export const picas = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, metersPerPica));
+export const picas = (n: number) => make(n * metersPerPica);
 
-export const inPicas = (l: Length) =>
-  BigDecimal.unsafeDivide(l.value, metersPerPica);
+export const inPicas = (l: Length) => l.value / metersPerPica;
 
 // Astronomical
 
-const metersPerAstronomicalUnit = BigDecimal.fromBigInt(149597870700n);
+const metersPerAstronomicalUnit = 149597870700;
 
-export const astronomicalUnits = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, metersPerAstronomicalUnit));
+export const astronomicalUnits = (n: number) =>
+  make(n * metersPerAstronomicalUnit);
 
 export const inAstronomicalUnits = (l: Length) =>
-  BigDecimal.unsafeDivide(l.value, metersPerAstronomicalUnit);
+  l.value / metersPerAstronomicalUnit;
 
 /** One parsec is 648,000/π astronomical units. */
-const metersPerParsec = BigDecimal.unsafeDivide(
-  BigDecimal.multiply(
-    metersPerAstronomicalUnit,
-    BigDecimal.fromBigInt(648000n),
-  ),
-  pi,
-);
+const metersPerParsec = (metersPerAstronomicalUnit * 648000) / Math.PI;
 
-export const parsecs = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, metersPerParsec));
+export const parsecs = (n: number) => make(n * metersPerParsec);
 
-export const inParsecs = (l: Length) =>
-  BigDecimal.unsafeDivide(l.value, metersPerParsec);
+export const inParsecs = (l: Length) => l.value / metersPerParsec;
 
-const metersPerLightYear = BigDecimal.fromBigInt(9460730472580800n);
+const metersPerLightYear = 9460730472580800;
 
-export const lightYears = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, metersPerLightYear));
+export const lightYears = (n: number) => make(n * metersPerLightYear);
 
-export const inLightYears = (l: Length) =>
-  BigDecimal.unsafeDivide(l.value, metersPerLightYear);
+export const inLightYears = (l: Length) => l.value / metersPerLightYear;

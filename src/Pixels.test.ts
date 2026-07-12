@@ -1,27 +1,22 @@
 import { describe, it } from "@effect/vitest";
-import { assertEquals, assertTrue } from "@effect/vitest/utils";
-import * as Arbitrary from "effect/Arbitrary";
-import * as BigDecimal from "effect/BigDecimal";
-import * as Equal from "effect/Equal";
+import { assertTrue } from "@effect/vitest/utils";
 import * as FastCheck from "effect/FastCheck";
 import { pipe } from "effect/Function";
-import * as Schema from "effect/Schema";
 
 import * as Duration from "./Duration";
+import { closeTo, double, quantityCloseTo } from "./internal/testUtils";
 import * as Pixels from "./Pixels";
 import * as Quantity from "./Quantity";
 
 describe("Pixels", () => {
   const testRoundtrip = <Q>(
-    there: (n: BigDecimal.BigDecimal) => Q,
-    back: (q: Q) => BigDecimal.BigDecimal,
+    there: (n: number) => Q,
+    back: (q: Q) => number,
   ) => {
     it(`roundtrips between '${there.name}' and '${back.name}'`, () => {
       FastCheck.assert(
-        FastCheck.property(Arbitrary.make(Schema.BigDecimal), (n) => {
-          const roundTripped = pipe(n, there, back);
-
-          return assertEquals(roundTripped, n);
+        FastCheck.property(double, (n) => {
+          assertTrue(closeTo(pipe(n, there, back), n));
         }),
       );
     });
@@ -37,24 +32,18 @@ describe("Pixels", () => {
 
   it("pixels per second is pixels per a duration", () => {
     assertTrue(
-      Equal.equals(
-        Quantity.unsafePer(
-          Pixels.pixels(BigDecimal.fromBigInt(10n)),
-          Duration.seconds(BigDecimal.fromBigInt(2n)),
-        ),
-        Pixels.pixelsPerSecond(BigDecimal.fromBigInt(5n)),
+      quantityCloseTo(
+        Quantity.per(Pixels.pixels(10), Duration.seconds(2)),
+        Pixels.pixelsPerSecond(5),
       ),
     );
   });
 
   it("square pixels is the product of two pixel quantities", () => {
     assertTrue(
-      Equal.equals(
-        Quantity.times(
-          Pixels.pixels(BigDecimal.fromBigInt(3n)),
-          Pixels.pixels(BigDecimal.fromBigInt(4n)),
-        ),
-        Pixels.squarePixels(BigDecimal.fromBigInt(12n)),
+      quantityCloseTo(
+        Quantity.times(Pixels.pixels(3), Pixels.pixels(4)),
+        Pixels.squarePixels(12),
       ),
     );
   });

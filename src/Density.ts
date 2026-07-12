@@ -1,5 +1,3 @@
-import * as BigDecimal from "effect/BigDecimal";
-
 import * as Mass from "./Mass";
 import * as Quantity from "./Quantity";
 import * as Unit from "./Unit";
@@ -21,63 +19,37 @@ export const DensityFromSelf = Quantity.QuantityFromSelf(
   KilogramsPerCubicMeter,
 );
 
-const make = (value: BigDecimal.BigDecimal): Density =>
+const make = (value: number): Density =>
   Quantity.make(KilogramsPerCubicMeter, value);
 
-export const zero = make(BigDecimal.fromBigInt(0n));
+export const zero = make(0);
 
-export const kilogramsPerCubicMeter = (n: BigDecimal.BigDecimal) => make(n);
+export const kilogramsPerCubicMeter = (n: number) => make(n);
 
 export const inKilogramsPerCubicMeter = (d: Density) => d.value;
 
-const kilogramsPerCubicMeterPerGramPerCubicCentimeter =
-  BigDecimal.fromBigInt(1000n);
+const kilogramsPerCubicMeterPerGramPerCubicCentimeter = 1000;
 
-export const gramsPerCubicCentimeter = (n: BigDecimal.BigDecimal) =>
-  make(
-    BigDecimal.multiply(n, kilogramsPerCubicMeterPerGramPerCubicCentimeter),
-  );
+export const gramsPerCubicCentimeter = (n: number) =>
+  make(n * kilogramsPerCubicMeterPerGramPerCubicCentimeter);
 
 export const inGramsPerCubicCentimeter = (d: Density) =>
-  BigDecimal.unsafeDivide(
-    d.value,
-    kilogramsPerCubicMeterPerGramPerCubicCentimeter,
-  );
+  d.value / kilogramsPerCubicMeterPerGramPerCubicCentimeter;
 
-/**
- * One pound per cubic inch, as a non-terminating ratio, is precomputed once
- * (rounded at 100 significant digits) and used symmetrically, keeping
- * roundtrips exact.
- */
-const kilogramsPerCubicMeterPerPoundPerCubicInch = BigDecimal.unsafeDivide(
-  BigDecimal.make(45359237n, 8),
-  BigDecimal.make(16387064n, 12),
-);
+const kilogramsPerCubicMeterPerPoundPerCubicInch =
+  0.45359237 / (0.0254 * 0.0254 * 0.0254);
 
-export const poundsPerCubicInch = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, kilogramsPerCubicMeterPerPoundPerCubicInch));
+export const poundsPerCubicInch = (n: number) =>
+  make(n * kilogramsPerCubicMeterPerPoundPerCubicInch);
 
 export const inPoundsPerCubicInch = (d: Density) =>
-  BigDecimal.unsafeDivide(
-    d.value,
-    kilogramsPerCubicMeterPerPoundPerCubicInch,
-  );
+  d.value / kilogramsPerCubicMeterPerPoundPerCubicInch;
 
-/**
- * One pound per cubic foot, as a non-terminating ratio, is precomputed once
- * (rounded at 100 significant digits) and used symmetrically, keeping
- * roundtrips exact.
- */
-const kilogramsPerCubicMeterPerPoundPerCubicFoot = BigDecimal.unsafeDivide(
-  BigDecimal.make(45359237n, 8),
-  BigDecimal.make(28316846592n, 12),
-);
+const kilogramsPerCubicMeterPerPoundPerCubicFoot =
+  0.45359237 / (0.3048 * 0.3048 * 0.3048);
 
-export const poundsPerCubicFoot = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, kilogramsPerCubicMeterPerPoundPerCubicFoot));
+export const poundsPerCubicFoot = (n: number) =>
+  make(n * kilogramsPerCubicMeterPerPoundPerCubicFoot);
 
 export const inPoundsPerCubicFoot = (d: Density) =>
-  BigDecimal.unsafeDivide(
-    d.value,
-    kilogramsPerCubicMeterPerPoundPerCubicFoot,
-  );
+  d.value / kilogramsPerCubicMeterPerPoundPerCubicFoot;

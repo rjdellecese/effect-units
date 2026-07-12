@@ -1,8 +1,5 @@
-import * as BigDecimal from "effect/BigDecimal";
-
 import * as AngularSpeed from "./AngularSpeed";
 import * as Duration from "./Duration";
-import { pi } from "./internal/constants";
 import * as Quantity from "./Quantity";
 import * as Unit from "./Unit";
 
@@ -22,30 +19,27 @@ export const AngularAccelerationFromSelf = Quantity.QuantityFromSelf(
   RadiansPerSecondSquared,
 );
 
-const make = (value: BigDecimal.BigDecimal): AngularAcceleration =>
+const make = (value: number): AngularAcceleration =>
   Quantity.make(RadiansPerSecondSquared, value);
 
-export const zero = make(BigDecimal.fromBigInt(0n));
+export const zero = make(0);
 
-export const radiansPerSecondSquared = (n: BigDecimal.BigDecimal) => make(n);
+export const radiansPerSecondSquared = (n: number) => make(n);
 
 export const inRadiansPerSecondSquared = (a: AngularAcceleration) => a.value;
 
-const radiansPerDegree = BigDecimal.unsafeDivide(
-  pi,
-  BigDecimal.fromBigInt(180n),
-);
+const radiansPerDegree = Math.PI / 180;
 
-export const degreesPerSecondSquared = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, radiansPerDegree));
+export const degreesPerSecondSquared = (n: number) =>
+  make(n * radiansPerDegree);
 
 export const inDegreesPerSecondSquared = (a: AngularAcceleration) =>
-  BigDecimal.unsafeDivide(a.value, radiansPerDegree);
+  a.value / radiansPerDegree;
 
-const radiansPerTurn = BigDecimal.multiply(pi, BigDecimal.fromBigInt(2n));
+const radiansPerTurn = 2 * Math.PI;
 
-export const turnsPerSecondSquared = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, radiansPerTurn));
+export const turnsPerSecondSquared = (n: number) =>
+  make(n * radiansPerTurn);
 
 export const inTurnsPerSecondSquared = (a: AngularAcceleration) =>
-  BigDecimal.unsafeDivide(a.value, radiansPerTurn);
+  a.value / radiansPerTurn;

@@ -1,14 +1,11 @@
 import { describe, it } from "@effect/vitest";
-import { assertEquals, assertTrue } from "@effect/vitest/utils";
-import * as Arbitrary from "effect/Arbitrary";
-import * as BigDecimal from "effect/BigDecimal";
-import * as Equal from "effect/Equal";
+import { assertTrue } from "@effect/vitest/utils";
 import * as FastCheck from "effect/FastCheck";
 import { pipe } from "effect/Function";
-import * as Schema from "effect/Schema";
 
 import * as Acceleration from "./Acceleration";
 import * as Force from "./Force";
+import { closeTo, double, quantityCloseTo } from "./internal/testUtils";
 import * as Mass from "./Mass";
 import * as Quantity from "./Quantity";
 
@@ -24,10 +21,8 @@ describe("Force", () => {
   roundtrip.forEach(({ there, back }) => {
     it(`roundtrips between '${there.name}' and '${back.name}'`, () => {
       FastCheck.assert(
-        FastCheck.property(Arbitrary.make(Schema.BigDecimal), (n) => {
-          const roundTripped = pipe(n, there, back);
-
-          return assertEquals(roundTripped, n);
+        FastCheck.property(double, (n) => {
+          assertTrue(closeTo(pipe(n, there, back), n));
         }),
       );
     });
@@ -35,24 +30,21 @@ describe("Force", () => {
 
   it("is a mass times an acceleration", () => {
     assertTrue(
-      Equal.equals(
+      quantityCloseTo(
         Quantity.times(
-          Mass.kilograms(BigDecimal.fromBigInt(1n)),
-          Acceleration.metersPerSecondSquared(BigDecimal.fromBigInt(1n)),
+          Mass.kilograms(1),
+          Acceleration.metersPerSecondSquared(1),
         ),
-        Force.newtons(BigDecimal.fromBigInt(1n)),
+        Force.newtons(1),
       ),
     );
   });
 
   it("relates pounds of force to mass under standard gravity", () => {
     assertTrue(
-      Equal.equals(
-        Quantity.times(
-          Mass.pounds(BigDecimal.fromBigInt(1n)),
-          Acceleration.gees(BigDecimal.fromBigInt(1n)),
-        ),
-        Force.pounds(BigDecimal.fromBigInt(1n)),
+      quantityCloseTo(
+        Quantity.times(Mass.pounds(1), Acceleration.gees(1)),
+        Force.pounds(1),
       ),
     );
   });

@@ -65,41 +65,44 @@ pnpm add github:rjdellecese/effect-units#main
 ## Example
 
 ```ts
-import * as BigDecimal from "effect/BigDecimal";
 import * as Duration from "effect-units/Duration";
 import * as Length from "effect-units/Length";
 import * as Quantity from "effect-units/Quantity";
 import * as Speed from "effect-units/Speed";
 
-const height = Length.centimeters(BigDecimal.unsafeFromNumber(180));
+const height = Length.centimeters(180);
 const inInches = Length.inInches(height);
 
 const area = Quantity.times(height, height); // Quantity<Squared<"Meters">>
 
-const speed = Quantity.unsafePer(
-  Length.miles(BigDecimal.unsafeFromNumber(3)),
-  Duration.hours(BigDecimal.unsafeFromNumber(1)),
+const speed = Quantity.per(
+  Length.miles(3),
+  Duration.hours(1),
 ); // Quantity<Rate<"Meters", "Seconds">>, usable as a Speed
 
-const distance = Quantity.at(speed, Duration.minutes(BigDecimal.unsafeFromNumber(20)));
+const distance = Quantity.at(speed, Duration.minutes(20));
 ```
 
-## Precision
+## Numbers, precision, and equality
 
-All values are `effect/BigDecimal`s, and every constructor/extractor pair
-roundtrips **exactly** — including units whose conversion factors are
-irrational (degrees, parsecs, ...) or non-terminating (kilometers per hour,
-pounds per square inch, ...). Those factors are precomputed once per module
-(π is stored to 100 decimal places in `effect-units/internal/constants`) and
-used symmetrically, multiplying on the way in and dividing by the identical
-constant on the way out.
+Values are plain 64-bit floats (as in `elm-units`), and arithmetic follows
+IEEE 754 semantics: division by zero yields ±Infinity, invalid operations
+yield NaN, and every operation carries ordinary float rounding (~15-16
+significant digits). Check results with `Quantity.isNaN`, `isInfinite`, and
+`isFinite`.
 
-Two boundaries are lossy by design:
+Equality is two-tier:
 
-- Cross-unit identities that pass through a rounded factor (e.g. 360 degrees
-  vs. 1 turn) agree to roughly 100 significant digits rather than exactly.
-- Trigonometry (`Angle.sin`, `SolidAngle.conical`, ...) and `DateTime`
-  interop go through 64-bit floats.
+- `Equal.equals` / `Quantity.equals` is **exact** — identical value (NaN
+  equals itself; -0 is normalized to 0) and structurally equal units. This
+  is identity, suitable for `HashMap` keys, not for comparing computed
+  measurements.
+- `Quantity.equalWithin(a, b, tolerance)` is the domain-level comparison —
+  the tolerance is itself a quantity in the same units, e.g.
+  `Quantity.equalWithin(a, b, Length.millimeters(1))`.
+
+Comparisons (`lessThan`, `min`, `max`, ...) follow IEEE NaN semantics: any
+comparison involving NaN is false.
 
 ## Scripts
 

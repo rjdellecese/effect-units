@@ -1,4 +1,3 @@
-import * as BigDecimal from "effect/BigDecimal";
 import * as DateTime from "effect/DateTime";
 import * as EffectDuration from "effect/Duration";
 import * as Option from "effect/Option";
@@ -14,95 +13,70 @@ export type Duration = Quantity.Quantity<Seconds>;
 export const Duration = Quantity.Quantity(Seconds);
 export const DurationFromSelf = Quantity.QuantityFromSelf(Seconds);
 
-const make = (value: BigDecimal.BigDecimal): Duration =>
-  Quantity.make(Seconds, value);
+const make = (value: number): Duration => Quantity.make(Seconds, value);
 
-export const zero = make(BigDecimal.fromBigInt(0n));
+export const zero = make(0);
 
-export const seconds = (n: BigDecimal.BigDecimal) => make(n);
+export const seconds = (n: number) => make(n);
 
 export const inSeconds = (d: Duration) => d.value;
 
-export const milliseconds = (n: BigDecimal.BigDecimal) =>
-  make(Prefix.toBase("Milli", n));
+export const milliseconds = (n: number) => make(Prefix.toBase("Milli", n));
 
 export const inMilliseconds = (d: Duration) =>
   Prefix.toPrefixed("Milli", d.value);
 
-const secondsPerMinute = BigDecimal.fromBigInt(60n);
+const secondsPerMinute = 60;
 
-export const minutes = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, secondsPerMinute));
+export const minutes = (n: number) => make(n * secondsPerMinute);
 
-export const inMinutes = (d: Duration) =>
-  BigDecimal.unsafeDivide(d.value, secondsPerMinute);
+export const inMinutes = (d: Duration) => d.value / secondsPerMinute;
 
-const secondsPerHour = BigDecimal.fromBigInt(3600n);
+const secondsPerHour = 3600;
 
-export const hours = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, secondsPerHour));
+export const hours = (n: number) => make(n * secondsPerHour);
 
-export const inHours = (d: Duration) =>
-  BigDecimal.unsafeDivide(d.value, secondsPerHour);
+export const inHours = (d: Duration) => d.value / secondsPerHour;
 
-const secondsPerDay = BigDecimal.fromBigInt(86400n);
+const secondsPerDay = 86400;
 
-export const days = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, secondsPerDay));
+export const days = (n: number) => make(n * secondsPerDay);
 
-export const inDays = (d: Duration) =>
-  BigDecimal.unsafeDivide(d.value, secondsPerDay);
+export const inDays = (d: Duration) => d.value / secondsPerDay;
 
-const secondsPerWeek = BigDecimal.fromBigInt(604800n);
+const secondsPerWeek = 604800;
 
-export const weeks = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, secondsPerWeek));
+export const weeks = (n: number) => make(n * secondsPerWeek);
 
-export const inWeeks = (d: Duration) =>
-  BigDecimal.unsafeDivide(d.value, secondsPerWeek);
+export const inWeeks = (d: Duration) => d.value / secondsPerWeek;
 
 /** One Julian year is exactly 365.25 days. */
-const secondsPerJulianYear = BigDecimal.fromBigInt(31557600n);
+const secondsPerJulianYear = 31557600;
 
-export const julianYears = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, secondsPerJulianYear));
+export const julianYears = (n: number) => make(n * secondsPerJulianYear);
 
-export const inJulianYears = (d: Duration) =>
-  BigDecimal.unsafeDivide(d.value, secondsPerJulianYear);
+export const inJulianYears = (d: Duration) => d.value / secondsPerJulianYear;
 
 // Interop
 
-const nanosPerSecond = BigDecimal.fromBigInt(1_000_000_000n);
-
 /**
- * Converts an `effect/Duration` to a `Duration` quantity. Returns
- * `Option.none()` for non-finite durations.
+ * Converts an `effect/Duration` to a `Duration` quantity. Infinite durations
+ * become `Infinity` seconds.
  */
-export const fromDuration = (
-  duration: EffectDuration.Duration,
-): Option.Option<Duration> =>
-  EffectDuration.toNanos(duration).pipe(
-    Option.map((nanos) => make(BigDecimal.make(nanos, 9))),
-  );
+export const fromDuration = (duration: EffectDuration.Duration): Duration =>
+  make(EffectDuration.toMillis(duration) / 1000);
 
 /**
- * Converts a `Duration` quantity to an `effect/Duration`. Returns
- * `Option.none()` when the quantity is negative or not a whole number of
- * nanoseconds (the resolution of `effect/Duration`).
+ * Converts a `Duration` quantity to an `effect/Duration`, rounding to the
+ * nearest nanosecond. Returns `Option.none()` when the quantity is negative
+ * or not finite (`effect/Duration`s are non-negative).
  */
 export const toDuration = (
   d: Duration,
-): Option.Option<EffectDuration.Duration> => {
-  const nanos = BigDecimal.normalize(
-    BigDecimal.multiply(d.value, nanosPerSecond),
-  );
-
-  return BigDecimal.isInteger(nanos) && !BigDecimal.isNegative(nanos)
-    ? Option.some(
-        EffectDuration.nanos(nanos.value * 10n ** BigInt(-nanos.scale)),
-      )
+): Option.Option<EffectDuration.Duration> =>
+  Number.isFinite(d.value) && d.value >= 0
+    ? Option.some(EffectDuration.nanos(BigInt(Math.round(d.value * 1e9))))
     : Option.none();
-};
 
 /**
  * The signed duration from `start` to `end` (negative when `end` is earlier
@@ -112,26 +86,14 @@ export const between = (
   start: DateTime.DateTime,
   end: DateTime.DateTime,
 ): Duration =>
-  make(
-    BigDecimal.make(
-      BigInt(DateTime.toEpochMillis(end) - DateTime.toEpochMillis(start)),
-      3,
-    ),
-  );
+  make((DateTime.toEpochMillis(end) - DateTime.toEpochMillis(start)) / 1000);
 
 /**
  * Adds a duration to a `DateTime`, rounding to the nearest millisecond (the
- * resolution of `DateTime`). Lossy for durations with sub-millisecond
- * precision or magnitudes beyond the safe integer range of milliseconds.
+ * resolution of `DateTime`).
  */
 export const addTo = (
   dateTime: DateTime.DateTime,
   duration: Duration,
 ): DateTime.DateTime =>
-  DateTime.add(dateTime, {
-    millis: Math.round(
-      BigDecimal.unsafeToNumber(
-        BigDecimal.multiply(duration.value, BigDecimal.fromBigInt(1000n)),
-      ),
-    ),
-  });
+  DateTime.add(dateTime, { millis: Math.round(duration.value * 1000) });

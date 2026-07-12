@@ -1,11 +1,7 @@
-import * as BigDecimal from "effect/BigDecimal";
-import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Function from "effect/Function";
 import * as Hash from "effect/Hash";
 import * as Match from "effect/Match";
-import * as Option from "effect/Option";
-import * as ParseResult from "effect/ParseResult";
 import * as Pipeable from "effect/Pipeable";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
@@ -19,35 +15,29 @@ export const QuantityFromSelf = <const U extends Unit.Unit>(unit: U) =>
   Schema.declare((u: unknown): u is Quantity<U> => isQuantity(unit)(u));
 
 export const Quantity = <const U extends Unit.Unit>(unit: U) =>
-  Schema.transformOrFail(
+  Schema.transform(
     Schema.Struct({
       unit: Schema.Literal(Unit.print(unit)),
-      value: Schema.String,
+      value: Schema.Number,
     }),
     QuantityFromSelf(unit),
     {
-      decode: ({ value }) =>
-        Effect.gen(function* () {
-          return make(
-            unit,
-            yield* ParseResult.decode(Schema.BigDecimal)(value),
-          );
-        }),
-      encode: ({ value }) =>
-        Effect.gen(function* () {
-          return {
-            unit: Unit.print(unit),
-            value: yield* ParseResult.encode(Schema.BigDecimal)(value),
-          };
-        }),
+      strict: true,
+      decode: ({ value }) => make(unit, value),
+      encode: ({ value }) => ({ unit: Unit.print(unit), value }),
     },
   );
 
+/**
+ * A quantity is a plain 64-bit float tagged with a unit tree. Arithmetic
+ * follows IEEE 754 semantics: division by zero yields ±Infinity, and invalid
+ * operations yield NaN — check with {@link isNaN} and {@link isInfinite}.
+ */
 export interface Quantity<U extends Unit.Unit>
   extends Equal.Equal, Pipeable.Pipeable {
   readonly [TypeId]: TypeId;
   readonly unit: U;
-  readonly value: BigDecimal.BigDecimal;
+  readonly value: number;
 }
 
 const isQuantity =
@@ -60,6 +50,9 @@ const isQuantity =
         Unit.equals(u.unit, unit)
       : true);
 
+const valueEquals = (a: number, b: number): boolean =>
+  a === b || (Number.isNaN(a) && Number.isNaN(b));
+
 const Proto = {
   [TypeId]: TypeId,
   [Equal.symbol](this: Quantity<Unit.Unit>, that: unknown): boolean {
@@ -67,7 +60,7 @@ const Proto = {
   },
   [Hash.symbol](this: Quantity<Unit.Unit>): number {
     return Hash.combine(Hash.string(Unit.print(this.unit)))(
-      Hash.hash(this.value),
+      Hash.number(this.value),
     );
   },
   pipe() {
@@ -77,87 +70,83 @@ const Proto = {
 
 export const make = <U extends Unit.Unit>(
   unit: U,
-  value: BigDecimal.BigDecimal,
+  value: number,
 ): Quantity<U> =>
   Object.assign(Object.create(Proto), {
     unit,
-    value,
+    // Normalize -0 to 0 so the two float zeros are one value for
+    // equality and hashing.
+    value: value === 0 ? 0 : value,
   });
 
+/**
+ * Exact equality: identical values (with NaN equal to itself, so equality is
+ * reflexive) and structurally equal units. For float quantities this is
+ * identity, not "approximately the same measurement" — domain logic and
+ * tests usually want {@link equalWithin} instead.
+ */
 export const equals = <U extends Unit.Unit>(
   a: Quantity<U>,
   b: Quantity<U>,
-): boolean => Equal.equals(a.value, b.value) && Unit.equals(a.unit, b.unit);
+): boolean => valueEquals(a.value, b.value) && Unit.equals(a.unit, b.unit);
 
-export const multiply: {
+/**
+ * Tolerance-based equality: whether `a` and `b` differ by no more than
+ * `tolerance` (a quantity in the same units). Returns false if any value
+ * involved is NaN.
+ */
+export const equalWithin: {
   <U extends Unit.Unit>(
-    b: BigDecimal.BigDecimal,
-  ): (a: Quantity<U>) => Quantity<U>;
+    b: Quantity<U>,
+    tolerance: Quantity<U>,
+  ): (a: Quantity<U>) => boolean;
   <U extends Unit.Unit>(
     a: Quantity<U>,
-    b: BigDecimal.BigDecimal,
-  ): Quantity<U>;
+    b: Quantity<U>,
+    tolerance: Quantity<U>,
+  ): boolean;
+} = Function.dual(
+  3,
+  (
+    a: Quantity<Unit.Unit>,
+    b: Quantity<Unit.Unit>,
+    tolerance: Quantity<Unit.Unit>,
+  ): boolean => Math.abs(a.value - b.value) <= Math.abs(tolerance.value),
+);
 
-  <U extends Unit.Unit>(
-    b: Quantity<U>,
-  ): (a: BigDecimal.BigDecimal) => Quantity<U>;
-  <U extends Unit.Unit>(
-    a: BigDecimal.BigDecimal,
-    b: Quantity<U>,
-  ): Quantity<U>;
+export const multiply: {
+  <U extends Unit.Unit>(b: number): (a: Quantity<U>) => Quantity<U>;
+  <U extends Unit.Unit>(a: Quantity<U>, b: number): Quantity<U>;
+
+  <U extends Unit.Unit>(b: Quantity<U>): (a: number) => Quantity<U>;
+  <U extends Unit.Unit>(a: number, b: Quantity<U>): Quantity<U>;
 } = Function.dual(
   2,
   (
-    a: Quantity<Unit.Unit> | BigDecimal.BigDecimal,
-    b: Quantity<Unit.Unit> | BigDecimal.BigDecimal,
+    a: Quantity<Unit.Unit> | number,
+    b: Quantity<Unit.Unit> | number,
   ): Quantity<Unit.Unit> =>
     Match.value({ a, b }).pipe(
       Match.when(
-        { a: isQuantity(), b: BigDecimal.isBigDecimal },
-        ({ a: a_, b: b_ }) => make(a_.unit, BigDecimal.multiply(a_.value, b_)),
+        { a: isQuantity(), b: Predicate.isNumber },
+        ({ a: a_, b: b_ }) => make(a_.unit, a_.value * b_),
       ),
       Match.when(
-        { a: BigDecimal.isBigDecimal, b: isQuantity() },
-        ({ a: a_, b: b_ }) => make(b_.unit, BigDecimal.multiply(a_, b_.value)),
+        { a: Predicate.isNumber, b: isQuantity() },
+        ({ a: a_, b: b_ }) => make(b_.unit, a_ * b_.value),
       ),
       Match.orElseAbsurd,
     ),
 );
 
-export const unsafeDivide: {
-  <U extends Unit.Unit>(
-    b: BigDecimal.BigDecimal,
-  ): (a: Quantity<U>) => Quantity<U>;
-  <U extends Unit.Unit>(
-    a: Quantity<U>,
-    b: BigDecimal.BigDecimal,
-  ): Quantity<U>;
-} = Function.dual(
-  2,
-  (
-    a: Quantity<Unit.Unit>,
-    b: BigDecimal.BigDecimal,
-  ): Quantity<Unit.Unit> =>
-    make(a.unit, BigDecimal.unsafeDivide(a.value, b)),
-);
-
+/** Division by zero yields ±Infinity (or NaN for 0/0). */
 export const divide: {
-  <U extends Unit.Unit>(
-    b: BigDecimal.BigDecimal,
-  ): (a: Quantity<U>) => Option.Option<Quantity<U>>;
-  <U extends Unit.Unit>(
-    a: Quantity<U>,
-    b: BigDecimal.BigDecimal,
-  ): Option.Option<Quantity<U>>;
+  <U extends Unit.Unit>(b: number): (a: Quantity<U>) => Quantity<U>;
+  <U extends Unit.Unit>(a: Quantity<U>, b: number): Quantity<U>;
 } = Function.dual(
   2,
-  (
-    a: Quantity<Unit.Unit>,
-    b: BigDecimal.BigDecimal,
-  ): Option.Option<Quantity<Unit.Unit>> =>
-    BigDecimal.divide(a.value, b).pipe(
-      Option.map((value) => make(a.unit, value)),
-    ),
+  (a: Quantity<Unit.Unit>, b: number): Quantity<Unit.Unit> =>
+    make(a.unit, a.value / b),
 );
 
 export const sum: {
@@ -166,7 +155,7 @@ export const sum: {
 } = Function.dual(
   2,
   (a: Quantity<Unit.Unit>, b: Quantity<Unit.Unit>): Quantity<Unit.Unit> =>
-    make(a.unit, BigDecimal.sum(a.value, b.value)),
+    make(a.unit, a.value + b.value),
 );
 
 export const subtract: {
@@ -175,7 +164,7 @@ export const subtract: {
 } = Function.dual(
   2,
   (a: Quantity<Unit.Unit>, b: Quantity<Unit.Unit>): Quantity<Unit.Unit> =>
-    make(a.unit, BigDecimal.subtract(a.value, b.value)),
+    make(a.unit, a.value - b.value),
 );
 
 export const times: {
@@ -194,51 +183,26 @@ export const times: {
     a: Quantity<Unit.Unit>,
     b: Quantity<Unit.Unit>,
   ): Quantity<Unit.Product<Unit.Unit, Unit.Unit>> =>
-    make(Unit.product(a.unit, b.unit), BigDecimal.multiply(a.value, b.value)),
+    make(Unit.product(a.unit, b.unit), a.value * b.value),
 );
 
 export const squared = <U extends Unit.Unit>(
   a: Quantity<U>,
 ): Quantity<Unit.Squared<U>> =>
-  make(Unit.squared(a.unit), BigDecimal.multiply(a.value, a.value));
+  make(Unit.squared(a.unit), a.value * a.value);
 
 export const cubed = <U extends Unit.Unit>(
   a: Quantity<U>,
 ): Quantity<Unit.Cubed<U>> =>
-  make(
-    Unit.cubed(a.unit),
-    BigDecimal.multiply(BigDecimal.multiply(a.value, a.value), a.value),
-  );
+  make(Unit.cubed(a.unit), a.value * a.value * a.value);
 
 /**
- * Divides one quantity by another, producing a rate: `per(dep, indep)` is the
- * rate of change of `dep` per unit of `indep` (e.g. `per(length, duration)`
- * is a speed). Returns `Option.none()` when `indep` is zero. Non-terminating
- * quotients are rounded (at 100 significant digits, by `BigDecimal.divide`).
+ * Divides one quantity by another, producing a rate: `per(dep, indep)` is
+ * the rate of change of `dep` per unit of `indep` (e.g. `per(length,
+ * duration)` is a speed). Division by zero yields ±Infinity (or NaN for
+ * 0/0).
  */
 export const per: {
-  <Indep extends Unit.Unit>(
-    indep: Quantity<Indep>,
-  ): <Dep extends Unit.Unit>(
-    dep: Quantity<Dep>,
-  ) => Option.Option<Quantity<Unit.Rate<Dep, Indep>>>;
-  <Dep extends Unit.Unit, Indep extends Unit.Unit>(
-    dep: Quantity<Dep>,
-    indep: Quantity<Indep>,
-  ): Option.Option<Quantity<Unit.Rate<Dep, Indep>>>;
-} = Function.dual(
-  2,
-  (
-    dep: Quantity<Unit.Unit>,
-    indep: Quantity<Unit.Unit>,
-  ): Option.Option<Quantity<Unit.Rate<Unit.Unit, Unit.Unit>>> =>
-    BigDecimal.divide(dep.value, indep.value).pipe(
-      Option.map((value) => make(Unit.rate(dep.unit, indep.unit), value)),
-    ),
-);
-
-/** Like {@link per}, but throws when `indep` is zero. */
-export const unsafePer: {
   <Indep extends Unit.Unit>(
     indep: Quantity<Indep>,
   ): <Dep extends Unit.Unit>(
@@ -254,10 +218,7 @@ export const unsafePer: {
     dep: Quantity<Unit.Unit>,
     indep: Quantity<Unit.Unit>,
   ): Quantity<Unit.Rate<Unit.Unit, Unit.Unit>> =>
-    make(
-      Unit.rate(dep.unit, indep.unit),
-      BigDecimal.unsafeDivide(dep.value, indep.value),
-    ),
+    make(Unit.rate(dep.unit, indep.unit), dep.value / indep.value),
 );
 
 /**
@@ -280,35 +241,15 @@ export const at: {
     rate: Quantity<Unit.Rate<Unit.Unit, Unit.Unit>>,
     indep: Quantity<Unit.Unit>,
   ): Quantity<Unit.Unit> =>
-    make(rate.unit.dependent, BigDecimal.multiply(rate.value, indep.value)),
+    make(rate.unit.dependent, rate.value * indep.value),
 );
 
 /**
  * Divides a quantity in a rate's dependent units by the rate, producing a
  * quantity in its independent units: `at_(length, speed)` is a duration.
- * Returns `Option.none()` when the rate is zero.
+ * Division by zero yields ±Infinity (or NaN for 0/0).
  */
 export const at_: {
-  <Dep extends Unit.Unit, Indep extends Unit.Unit>(
-    rate: Quantity<Unit.Rate<Dep, Indep>>,
-  ): (dep: Quantity<Dep>) => Option.Option<Quantity<Indep>>;
-  <Dep extends Unit.Unit, Indep extends Unit.Unit>(
-    dep: Quantity<Dep>,
-    rate: Quantity<Unit.Rate<Dep, Indep>>,
-  ): Option.Option<Quantity<Indep>>;
-} = Function.dual(
-  2,
-  (
-    dep: Quantity<Unit.Unit>,
-    rate: Quantity<Unit.Rate<Unit.Unit, Unit.Unit>>,
-  ): Option.Option<Quantity<Unit.Unit>> =>
-    BigDecimal.divide(dep.value, rate.value).pipe(
-      Option.map((value) => make(rate.unit.independent, value)),
-    ),
-);
-
-/** Like {@link at_}, but throws when the rate is zero. */
-export const unsafeAt_: {
   <Dep extends Unit.Unit, Indep extends Unit.Unit>(
     rate: Quantity<Unit.Rate<Dep, Indep>>,
   ): (dep: Quantity<Dep>) => Quantity<Indep>;
@@ -322,10 +263,7 @@ export const unsafeAt_: {
     dep: Quantity<Unit.Unit>,
     rate: Quantity<Unit.Rate<Unit.Unit, Unit.Unit>>,
   ): Quantity<Unit.Unit> =>
-    make(
-      rate.unit.independent,
-      BigDecimal.unsafeDivide(dep.value, rate.value),
-    ),
+    make(rate.unit.independent, dep.value / rate.value),
 );
 
 /**
@@ -347,36 +285,14 @@ export const for_: {
     indep: Quantity<Unit.Unit>,
     rate: Quantity<Unit.Rate<Unit.Unit, Unit.Unit>>,
   ): Quantity<Unit.Unit> =>
-    make(rate.unit.dependent, BigDecimal.multiply(rate.value, indep.value)),
+    make(rate.unit.dependent, rate.value * indep.value),
 );
 
 /**
  * Divides a product quantity by its right factor: `over(area, length)` is a
- * length. Returns `Option.none()` when the divisor is zero.
+ * length. Division by zero yields ±Infinity (or NaN for 0/0).
  */
 export const over: {
-  <U2 extends Unit.Unit>(
-    b: Quantity<U2>,
-  ): <U1 extends Unit.Unit>(
-    product: Quantity<Unit.Product<U1, U2>>,
-  ) => Option.Option<Quantity<U1>>;
-  <U1 extends Unit.Unit, U2 extends Unit.Unit>(
-    product: Quantity<Unit.Product<U1, U2>>,
-    b: Quantity<U2>,
-  ): Option.Option<Quantity<U1>>;
-} = Function.dual(
-  2,
-  (
-    product: Quantity<Unit.Product<Unit.Unit, Unit.Unit>>,
-    b: Quantity<Unit.Unit>,
-  ): Option.Option<Quantity<Unit.Unit>> =>
-    BigDecimal.divide(product.value, b.value).pipe(
-      Option.map((value) => make(product.unit.left, value)),
-    ),
-);
-
-/** Like {@link over}, but throws when the divisor is zero. */
-export const unsafeOver: {
   <U2 extends Unit.Unit>(
     b: Quantity<U2>,
   ): <U1 extends Unit.Unit>(
@@ -391,37 +307,14 @@ export const unsafeOver: {
   (
     product: Quantity<Unit.Product<Unit.Unit, Unit.Unit>>,
     b: Quantity<Unit.Unit>,
-  ): Quantity<Unit.Unit> =>
-    make(product.unit.left, BigDecimal.unsafeDivide(product.value, b.value)),
+  ): Quantity<Unit.Unit> => make(product.unit.left, product.value / b.value),
 );
 
 /**
  * Divides a product quantity by its left factor: `over_(area, length)` is a
- * length. Returns `Option.none()` when the divisor is zero.
+ * length. Division by zero yields ±Infinity (or NaN for 0/0).
  */
 export const over_: {
-  <U1 extends Unit.Unit>(
-    b: Quantity<U1>,
-  ): <U2 extends Unit.Unit>(
-    product: Quantity<Unit.Product<U1, U2>>,
-  ) => Option.Option<Quantity<U2>>;
-  <U1 extends Unit.Unit, U2 extends Unit.Unit>(
-    product: Quantity<Unit.Product<U1, U2>>,
-    b: Quantity<U1>,
-  ): Option.Option<Quantity<U2>>;
-} = Function.dual(
-  2,
-  (
-    product: Quantity<Unit.Product<Unit.Unit, Unit.Unit>>,
-    b: Quantity<Unit.Unit>,
-  ): Option.Option<Quantity<Unit.Unit>> =>
-    BigDecimal.divide(product.value, b.value).pipe(
-      Option.map((value) => make(product.unit.right, value)),
-    ),
-);
-
-/** Like {@link over_}, but throws when the divisor is zero. */
-export const unsafeOver_: {
   <U1 extends Unit.Unit>(
     b: Quantity<U1>,
   ): <U2 extends Unit.Unit>(
@@ -436,6 +329,75 @@ export const unsafeOver_: {
   (
     product: Quantity<Unit.Product<Unit.Unit, Unit.Unit>>,
     b: Quantity<Unit.Unit>,
-  ): Quantity<Unit.Unit> =>
-    make(product.unit.right, BigDecimal.unsafeDivide(product.value, b.value)),
+  ): Quantity<Unit.Unit> => make(product.unit.right, product.value / b.value),
 );
+
+// Comparison
+//
+// All comparisons follow IEEE semantics for NaN: every comparison involving
+// NaN is false.
+
+export const lessThan: {
+  <U extends Unit.Unit>(b: Quantity<U>): (a: Quantity<U>) => boolean;
+  <U extends Unit.Unit>(a: Quantity<U>, b: Quantity<U>): boolean;
+} = Function.dual(
+  2,
+  (a: Quantity<Unit.Unit>, b: Quantity<Unit.Unit>): boolean =>
+    a.value < b.value,
+);
+
+export const lessThanOrEqualTo: {
+  <U extends Unit.Unit>(b: Quantity<U>): (a: Quantity<U>) => boolean;
+  <U extends Unit.Unit>(a: Quantity<U>, b: Quantity<U>): boolean;
+} = Function.dual(
+  2,
+  (a: Quantity<Unit.Unit>, b: Quantity<Unit.Unit>): boolean =>
+    a.value <= b.value,
+);
+
+export const greaterThan: {
+  <U extends Unit.Unit>(b: Quantity<U>): (a: Quantity<U>) => boolean;
+  <U extends Unit.Unit>(a: Quantity<U>, b: Quantity<U>): boolean;
+} = Function.dual(
+  2,
+  (a: Quantity<Unit.Unit>, b: Quantity<Unit.Unit>): boolean =>
+    a.value > b.value,
+);
+
+export const greaterThanOrEqualTo: {
+  <U extends Unit.Unit>(b: Quantity<U>): (a: Quantity<U>) => boolean;
+  <U extends Unit.Unit>(a: Quantity<U>, b: Quantity<U>): boolean;
+} = Function.dual(
+  2,
+  (a: Quantity<Unit.Unit>, b: Quantity<Unit.Unit>): boolean =>
+    a.value >= b.value,
+);
+
+export const min: {
+  <U extends Unit.Unit>(b: Quantity<U>): (a: Quantity<U>) => Quantity<U>;
+  <U extends Unit.Unit>(a: Quantity<U>, b: Quantity<U>): Quantity<U>;
+} = Function.dual(
+  2,
+  (a: Quantity<Unit.Unit>, b: Quantity<Unit.Unit>): Quantity<Unit.Unit> =>
+    b.value < a.value ? b : a,
+);
+
+export const max: {
+  <U extends Unit.Unit>(b: Quantity<U>): (a: Quantity<U>) => Quantity<U>;
+  <U extends Unit.Unit>(a: Quantity<U>, b: Quantity<U>): Quantity<U>;
+} = Function.dual(
+  2,
+  (a: Quantity<Unit.Unit>, b: Quantity<Unit.Unit>): Quantity<Unit.Unit> =>
+    b.value > a.value ? b : a,
+);
+
+// Guards
+
+export const isNaN = <U extends Unit.Unit>(q: Quantity<U>): boolean =>
+  Number.isNaN(q.value);
+
+export const isInfinite = <U extends Unit.Unit>(q: Quantity<U>): boolean =>
+  q.value === Infinity || q.value === -Infinity;
+
+export const isFinite = <U extends Unit.Unit>(q: Quantity<U>): boolean =>
+  Number.isFinite(q.value);

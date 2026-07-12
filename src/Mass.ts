@@ -1,5 +1,3 @@
-import * as BigDecimal from "effect/BigDecimal";
-
 import * as Quantity from "./Quantity";
 
 export type Kilograms = "Kilograms";
@@ -10,89 +8,71 @@ export type Mass = Quantity.Quantity<Kilograms>;
 export const Mass = Quantity.Quantity(Kilograms);
 export const MassFromSelf = Quantity.QuantityFromSelf(Kilograms);
 
-const make = (value: BigDecimal.BigDecimal): Mass =>
-  Quantity.make(Kilograms, value);
+const make = (value: number): Mass => Quantity.make(Kilograms, value);
 
-export const zero = make(BigDecimal.fromBigInt(0n));
+export const zero = make(0);
 
 // Metric
 
-export const kilograms = (n: BigDecimal.BigDecimal) => make(n);
+export const kilograms = (n: number) => make(n);
 
 export const inKilograms = (m: Mass) => m.value;
 
-const kilogramsPerGram = BigDecimal.make(1n, 3);
+const kilogramsPerGram = 0.001;
 
-export const grams = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, kilogramsPerGram));
+export const grams = (n: number) => make(n * kilogramsPerGram);
 
-export const inGrams = (m: Mass) =>
-  BigDecimal.unsafeDivide(m.value, kilogramsPerGram);
+export const inGrams = (m: Mass) => m.value / kilogramsPerGram;
 
-const kilogramsPerMilligram = BigDecimal.make(1n, 6);
+const kilogramsPerMilligram = 1e-6;
 
-export const milligrams = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, kilogramsPerMilligram));
+export const milligrams = (n: number) => make(n * kilogramsPerMilligram);
 
-export const inMilligrams = (m: Mass) =>
-  BigDecimal.unsafeDivide(m.value, kilogramsPerMilligram);
+export const inMilligrams = (m: Mass) => m.value / kilogramsPerMilligram;
 
-const kilogramsPerMicrogram = BigDecimal.make(1n, 9);
+const kilogramsPerMicrogram = 1e-9;
 
-export const micrograms = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, kilogramsPerMicrogram));
+export const micrograms = (n: number) => make(n * kilogramsPerMicrogram);
 
-export const inMicrograms = (m: Mass) =>
-  BigDecimal.unsafeDivide(m.value, kilogramsPerMicrogram);
+export const inMicrograms = (m: Mass) => m.value / kilogramsPerMicrogram;
 
-const kilogramsPerNanogram = BigDecimal.make(1n, 12);
+const kilogramsPerNanogram = 1e-12;
 
-export const nanograms = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, kilogramsPerNanogram));
+export const nanograms = (n: number) => make(n * kilogramsPerNanogram);
 
-export const inNanograms = (m: Mass) =>
-  BigDecimal.unsafeDivide(m.value, kilogramsPerNanogram);
+export const inNanograms = (m: Mass) => m.value / kilogramsPerNanogram;
 
-const kilogramsPerMetricTon = BigDecimal.fromBigInt(1000n);
+const kilogramsPerMetricTon = 1000;
 
-export const metricTons = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, kilogramsPerMetricTon));
+export const metricTons = (n: number) => make(n * kilogramsPerMetricTon);
 
-export const inMetricTons = (m: Mass) =>
-  BigDecimal.unsafeDivide(m.value, kilogramsPerMetricTon);
+export const inMetricTons = (m: Mass) => m.value / kilogramsPerMetricTon;
 
 // Imperial
 
-const kilogramsPerOunce = BigDecimal.make(28349523125n, 12);
+const kilogramsPerPound = 0.45359237;
 
-export const ounces = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, kilogramsPerOunce));
+/** One ounce is 1/16 of a pound. */
+const kilogramsPerOunce = kilogramsPerPound / 16;
 
-export const inOunces = (m: Mass) =>
-  BigDecimal.unsafeDivide(m.value, kilogramsPerOunce);
+export const ounces = (n: number) => make(n * kilogramsPerOunce);
 
-const kilogramsPerPound = BigDecimal.make(45359237n, 8);
+export const inOunces = (m: Mass) => m.value / kilogramsPerOunce;
 
-export const pounds = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, kilogramsPerPound));
+export const pounds = (n: number) => make(n * kilogramsPerPound);
 
-export const inPounds = (m: Mass) =>
-  BigDecimal.unsafeDivide(m.value, kilogramsPerPound);
+export const inPounds = (m: Mass) => m.value / kilogramsPerPound;
 
 /** One long ton (UK) is 2240 pounds. */
-const kilogramsPerLongTon = BigDecimal.make(10160469088n, 7);
+const kilogramsPerLongTon = kilogramsPerPound * 2240;
 
-export const longTons = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, kilogramsPerLongTon));
+export const longTons = (n: number) => make(n * kilogramsPerLongTon);
 
-export const inLongTons = (m: Mass) =>
-  BigDecimal.unsafeDivide(m.value, kilogramsPerLongTon);
+export const inLongTons = (m: Mass) => m.value / kilogramsPerLongTon;
 
 /** One short ton (US) is 2000 pounds. */
-const kilogramsPerShortTon = BigDecimal.make(90718474n, 5);
+const kilogramsPerShortTon = kilogramsPerPound * 2000;
 
-export const shortTons = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, kilogramsPerShortTon));
+export const shortTons = (n: number) => make(n * kilogramsPerShortTon);
 
-export const inShortTons = (m: Mass) =>
-  BigDecimal.unsafeDivide(m.value, kilogramsPerShortTon);
+export const inShortTons = (m: Mass) => m.value / kilogramsPerShortTon;

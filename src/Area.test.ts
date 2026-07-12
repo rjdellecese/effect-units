@@ -1,13 +1,10 @@
 import { describe, it } from "@effect/vitest";
-import { assertEquals, assertTrue } from "@effect/vitest/utils";
-import * as Arbitrary from "effect/Arbitrary";
-import * as BigDecimal from "effect/BigDecimal";
-import * as Equal from "effect/Equal";
+import { assertTrue } from "@effect/vitest/utils";
 import * as FastCheck from "effect/FastCheck";
 import { pipe } from "effect/Function";
-import * as Schema from "effect/Schema";
 
 import * as Area from "./Area";
+import { closeTo, double, quantityCloseTo } from "./internal/testUtils";
 import * as Length from "./Length";
 import * as Quantity from "./Quantity";
 
@@ -31,10 +28,8 @@ describe("Area", () => {
   roundtrip.forEach(({ there, back }) => {
     it(`roundtrips between '${there.name}' and '${back.name}'`, () => {
       FastCheck.assert(
-        FastCheck.property(Arbitrary.make(Schema.BigDecimal), (n) => {
-          const roundTripped = pipe(n, there, back);
-
-          return assertEquals(roundTripped, n);
+        FastCheck.property(double, (n) => {
+          assertTrue(closeTo(pipe(n, there, back), n));
         }),
       );
     });
@@ -42,29 +37,23 @@ describe("Area", () => {
 
   it("is the product of two lengths", () => {
     assertTrue(
-      Equal.equals(
-        Quantity.times(
-          Length.meters(BigDecimal.fromBigInt(3n)),
-          Length.meters(BigDecimal.fromBigInt(4n)),
-        ),
-        Area.squareMeters(BigDecimal.fromBigInt(12n)),
+      quantityCloseTo(
+        Quantity.times(Length.meters(3), Length.meters(4)),
+        Area.squareMeters(12),
       ),
     );
   });
 
   it("is the square of a length", () => {
     assertTrue(
-      Equal.equals(
-        Quantity.squared(Length.feet(BigDecimal.fromBigInt(1n))),
-        Area.squareFeet(BigDecimal.fromBigInt(1n)),
+      quantityCloseTo(
+        Quantity.squared(Length.feet(1)),
+        Area.squareFeet(1),
       ),
     );
   });
 
-  it("relates acres to square yards exactly", () => {
-    assertEquals(
-      Area.inSquareYards(Area.acres(BigDecimal.fromBigInt(1n))),
-      BigDecimal.normalize(BigDecimal.fromBigInt(4840n)),
-    );
+  it("relates acres to square yards", () => {
+    assertTrue(closeTo(Area.inSquareYards(Area.acres(1)), 4840));
   });
 });

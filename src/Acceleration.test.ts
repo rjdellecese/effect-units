@@ -1,14 +1,11 @@
 import { describe, it } from "@effect/vitest";
-import { assertEquals, assertTrue } from "@effect/vitest/utils";
-import * as Arbitrary from "effect/Arbitrary";
-import * as BigDecimal from "effect/BigDecimal";
-import * as Equal from "effect/Equal";
+import { assertTrue } from "@effect/vitest/utils";
 import * as FastCheck from "effect/FastCheck";
 import { pipe } from "effect/Function";
-import * as Schema from "effect/Schema";
 
 import * as Acceleration from "./Acceleration";
 import * as Duration from "./Duration";
+import { closeTo, double, quantityCloseTo } from "./internal/testUtils";
 import * as Quantity from "./Quantity";
 import * as Speed from "./Speed";
 
@@ -28,10 +25,8 @@ describe("Acceleration", () => {
   roundtrip.forEach(({ there, back }) => {
     it(`roundtrips between '${there.name}' and '${back.name}'`, () => {
       FastCheck.assert(
-        FastCheck.property(Arbitrary.make(Schema.BigDecimal), (n) => {
-          const roundTripped = pipe(n, there, back);
-
-          return assertEquals(roundTripped, n);
+        FastCheck.property(double, (n) => {
+          assertTrue(closeTo(pipe(n, there, back), n));
         }),
       );
     });
@@ -39,24 +34,21 @@ describe("Acceleration", () => {
 
   it("is a speed per a duration", () => {
     assertTrue(
-      Equal.equals(
-        Quantity.unsafePer(
-          Speed.metersPerSecond(BigDecimal.fromBigInt(10n)),
-          Duration.seconds(BigDecimal.fromBigInt(2n)),
-        ),
-        Acceleration.metersPerSecondSquared(BigDecimal.fromBigInt(5n)),
+      quantityCloseTo(
+        Quantity.per(Speed.metersPerSecond(10), Duration.seconds(2)),
+        Acceleration.metersPerSecondSquared(5),
       ),
     );
   });
 
   it("accumulates speed over a duration", () => {
     assertTrue(
-      Equal.equals(
+      quantityCloseTo(
         Quantity.at(
-          Acceleration.metersPerSecondSquared(BigDecimal.fromBigInt(3n)),
-          Duration.seconds(BigDecimal.fromBigInt(4n)),
+          Acceleration.metersPerSecondSquared(3),
+          Duration.seconds(4),
         ),
-        Speed.metersPerSecond(BigDecimal.fromBigInt(12n)),
+        Speed.metersPerSecond(12),
       ),
     );
   });

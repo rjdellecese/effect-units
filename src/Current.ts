@@ -1,5 +1,3 @@
-import * as BigDecimal from "effect/BigDecimal";
-
 import * as Charge from "./Charge";
 import * as Duration from "./Duration";
 import * as Prefix from "./Prefix";
@@ -14,17 +12,15 @@ export type Current = Quantity.Quantity<Amperes>;
 export const Current = Quantity.Quantity(Amperes);
 export const CurrentFromSelf = Quantity.QuantityFromSelf(Amperes);
 
-const make = (value: BigDecimal.BigDecimal): Current =>
-  Quantity.make(Amperes, value);
+const make = (value: number): Current => Quantity.make(Amperes, value);
 
-export const zero = make(BigDecimal.fromBigInt(0n));
+export const zero = make(0);
 
-export const amperes = (n: BigDecimal.BigDecimal) => make(n);
+export const amperes = (n: number) => make(n);
 
 export const inAmperes = (c: Current) => c.value;
 
-export const milliamperes = (n: BigDecimal.BigDecimal) =>
-  make(Prefix.toBase("Milli", n));
+export const milliamperes = (n: number) => make(Prefix.toBase("Milli", n));
 
 export const inMilliamperes = (c: Current) =>
   Prefix.toPrefixed("Milli", c.value);

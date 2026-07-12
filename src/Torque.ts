@@ -1,5 +1,3 @@
-import * as BigDecimal from "effect/BigDecimal";
-
 import * as Force from "./Force";
 import * as Length from "./Length";
 import * as Quantity from "./Quantity";
@@ -20,20 +18,17 @@ export type Torque = Quantity.Quantity<NewtonMeters>;
 export const Torque = Quantity.Quantity(NewtonMeters);
 export const TorqueFromSelf = Quantity.QuantityFromSelf(NewtonMeters);
 
-const make = (value: BigDecimal.BigDecimal): Torque =>
-  Quantity.make(NewtonMeters, value);
+const make = (value: number): Torque => Quantity.make(NewtonMeters, value);
 
-export const zero = make(BigDecimal.fromBigInt(0n));
+export const zero = make(0);
 
-export const newtonMeters = (n: BigDecimal.BigDecimal) => make(n);
+export const newtonMeters = (n: number) => make(n);
 
 export const inNewtonMeters = (t: Torque) => t.value;
 
-/** One pound foot is one pound of force times one foot, exactly. */
-const newtonMetersPerPoundFoot = BigDecimal.make(13558179483314004n, 16);
+/** One pound foot is one pound of force times one foot. */
+const newtonMetersPerPoundFoot = 0.45359237 * 9.80665 * 0.3048;
 
-export const poundFeet = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, newtonMetersPerPoundFoot));
+export const poundFeet = (n: number) => make(n * newtonMetersPerPoundFoot);
 
-export const inPoundFeet = (t: Torque) =>
-  BigDecimal.unsafeDivide(t.value, newtonMetersPerPoundFoot);
+export const inPoundFeet = (t: Torque) => t.value / newtonMetersPerPoundFoot;

@@ -1,15 +1,13 @@
 import { describe, it } from "@effect/vitest";
-import { assertEquals, assertTrue } from "@effect/vitest/utils";
-import * as Arbitrary from "effect/Arbitrary";
-import * as BigDecimal from "effect/BigDecimal";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Equal from "effect/Equal";
 import * as FastCheck from "effect/FastCheck";
 import { pipe } from "effect/Function";
-import * as Schema from "effect/Schema";
 
 import * as Angle from "./Angle";
 import * as AngularSpeed from "./AngularSpeed";
 import * as Duration from "./Duration";
+import { closeTo, double, quantityCloseTo } from "./internal/testUtils";
 import * as Quantity from "./Quantity";
 
 describe("AngularSpeed", () => {
@@ -37,10 +35,8 @@ describe("AngularSpeed", () => {
   roundtrip.forEach(({ there, back }) => {
     it(`roundtrips between '${there.name}' and '${back.name}'`, () => {
       FastCheck.assert(
-        FastCheck.property(Arbitrary.make(Schema.BigDecimal), (n) => {
-          const roundTripped = pipe(n, there, back);
-
-          return assertEquals(roundTripped, n);
+        FastCheck.property(double, (n) => {
+          assertTrue(closeTo(pipe(n, there, back), n));
         }),
       );
     });
@@ -48,19 +44,16 @@ describe("AngularSpeed", () => {
 
   it("is an angle per a duration", () => {
     assertTrue(
-      Equal.equals(
-        Quantity.unsafePer(
-          Angle.radians(BigDecimal.fromBigInt(10n)),
-          Duration.seconds(BigDecimal.fromBigInt(2n)),
-        ),
-        AngularSpeed.radiansPerSecond(BigDecimal.fromBigInt(5n)),
+      quantityCloseTo(
+        Quantity.per(Angle.radians(10), Duration.seconds(2)),
+        AngularSpeed.radiansPerSecond(5),
       ),
     );
   });
 
   it("treats revolutions as turns", () => {
     FastCheck.assert(
-      FastCheck.property(Arbitrary.make(Schema.BigDecimal), (n) => {
+      FastCheck.property(double, (n) => {
         assertTrue(
           Equal.equals(
             AngularSpeed.revolutionsPerSecond(n),
