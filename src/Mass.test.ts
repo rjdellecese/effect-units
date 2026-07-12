@@ -15,10 +15,13 @@ describe("Mass", () => {
     { there: Mass.milligrams, back: Mass.inMilligrams },
     { there: Mass.micrograms, back: Mass.inMicrograms },
     { there: Mass.nanograms, back: Mass.inNanograms },
+    { there: Mass.metricTons, back: Mass.inMetricTons },
 
     // Imperial
     { there: Mass.ounces, back: Mass.inOunces },
     { there: Mass.pounds, back: Mass.inPounds },
+    { there: Mass.longTons, back: Mass.inLongTons },
+    { there: Mass.shortTons, back: Mass.inShortTons },
   ];
 
   roundtrip.forEach(({ there, back }) => {

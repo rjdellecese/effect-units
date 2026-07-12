@@ -42,6 +42,14 @@ export const nanograms = (n: BigDecimal.BigDecimal) =>
 
 export const inNanograms = (m: Mass) => Prefix.toPrefixed("Nano", m.value);
 
+const gramsPerMetricTon = BigDecimal.fromBigInt(1_000_000n);
+
+export const metricTons = (n: BigDecimal.BigDecimal) =>
+  make(BigDecimal.multiply(n, gramsPerMetricTon));
+
+export const inMetricTons = (m: Mass) =>
+  BigDecimal.unsafeDivide(m.value, gramsPerMetricTon);
+
 // Imperial
 
 export const ounces = (n: BigDecimal.BigDecimal) =>
@@ -71,3 +79,21 @@ export const inPounds = (m: Mass) =>
     BigDecimal.multiply(BigDecimal.fromBigInt(100000n)),
     BigDecimal.unsafeDivide(BigDecimal.fromBigInt(45359237n)),
   );
+
+/** One long ton (UK) is 2240 pounds. */
+const gramsPerLongTon = BigDecimal.make(10160469088n, 4);
+
+export const longTons = (n: BigDecimal.BigDecimal) =>
+  make(BigDecimal.multiply(n, gramsPerLongTon));
+
+export const inLongTons = (m: Mass) =>
+  BigDecimal.unsafeDivide(m.value, gramsPerLongTon);
+
+/** One short ton (US) is 2000 pounds. */
+const gramsPerShortTon = BigDecimal.make(90718474n, 2);
+
+export const shortTons = (n: BigDecimal.BigDecimal) =>
+  make(BigDecimal.multiply(n, gramsPerShortTon));
+
+export const inShortTons = (m: Mass) =>
+  BigDecimal.unsafeDivide(m.value, gramsPerShortTon);
