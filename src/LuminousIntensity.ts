@@ -1,0 +1,26 @@
+import * as BigDecimal from "effect/BigDecimal";
+
+import * as LuminousFlux from "./LuminousFlux";
+import * as Quantity from "./Quantity";
+import * as SolidAngle from "./SolidAngle";
+import * as Unit from "./Unit";
+
+export type Candelas = Unit.Rate<LuminousFlux.Lumens, SolidAngle.Steradians>;
+export const Candelas: Candelas = Unit.rate(
+  LuminousFlux.Lumens,
+  SolidAngle.Steradians,
+);
+
+export type LuminousIntensity = Quantity.Quantity<Candelas>;
+
+export const LuminousIntensity = Quantity.Quantity(Candelas);
+export const LuminousIntensityFromSelf = Quantity.QuantityFromSelf(Candelas);
+
+const make = (value: BigDecimal.BigDecimal): LuminousIntensity =>
+  Quantity.make(Candelas, value);
+
+export const zero = make(BigDecimal.fromBigInt(0n));
+
+export const candelas = (n: BigDecimal.BigDecimal) => make(n);
+
+export const inCandelas = (i: LuminousIntensity) => i.value;
