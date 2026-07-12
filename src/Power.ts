@@ -2,6 +2,7 @@ import * as BigDecimal from "effect/BigDecimal";
 
 import * as Duration from "./Duration";
 import * as Energy from "./Energy";
+import * as Prefix from "./Prefix";
 import * as Quantity from "./Quantity";
 import * as Unit from "./Unit";
 
@@ -18,55 +19,43 @@ const make = (value: BigDecimal.BigDecimal): Power =>
 
 export const zero = make(BigDecimal.fromBigInt(0n));
 
-// Because the library's mass base unit is grams (not kilograms), one watt is
-// 1000 base units (g·m²/s³).
-const baseUnitsPerWatt = BigDecimal.fromBigInt(1000n);
+export const watts = (n: BigDecimal.BigDecimal) => make(n);
 
-export const watts = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, baseUnitsPerWatt));
-
-export const inWatts = (p: Power) =>
-  BigDecimal.unsafeDivide(p.value, baseUnitsPerWatt);
-
-const baseUnitsPerKilowatt = BigDecimal.fromBigInt(1_000_000n);
+export const inWatts = (p: Power) => p.value;
 
 export const kilowatts = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, baseUnitsPerKilowatt));
+  make(Prefix.toBase("Kilo", n));
 
-export const inKilowatts = (p: Power) =>
-  BigDecimal.unsafeDivide(p.value, baseUnitsPerKilowatt);
-
-const baseUnitsPerMegawatt = BigDecimal.fromBigInt(1_000_000_000n);
+export const inKilowatts = (p: Power) => Prefix.toPrefixed("Kilo", p.value);
 
 export const megawatts = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, baseUnitsPerMegawatt));
+  make(Prefix.toBase("Mega", n));
 
-export const inMegawatts = (p: Power) =>
-  BigDecimal.unsafeDivide(p.value, baseUnitsPerMegawatt);
+export const inMegawatts = (p: Power) => Prefix.toPrefixed("Mega", p.value);
 
 /** One metric horsepower is 735.49875 watts, exactly. */
-const baseUnitsPerMetricHorsepower = BigDecimal.make(73549875n, 2);
+const wattsPerMetricHorsepower = BigDecimal.make(73549875n, 5);
 
 export const metricHorsepower = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, baseUnitsPerMetricHorsepower));
+  make(BigDecimal.multiply(n, wattsPerMetricHorsepower));
 
 export const inMetricHorsepower = (p: Power) =>
-  BigDecimal.unsafeDivide(p.value, baseUnitsPerMetricHorsepower);
+  BigDecimal.unsafeDivide(p.value, wattsPerMetricHorsepower);
 
 /** One mechanical horsepower is 550 foot pounds per second, exactly. */
-const baseUnitsPerMechanicalHorsepower = BigDecimal.make(74569987158227022n, 11);
+const wattsPerMechanicalHorsepower = BigDecimal.make(74569987158227022n, 14);
 
 export const mechanicalHorsepower = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, baseUnitsPerMechanicalHorsepower));
+  make(BigDecimal.multiply(n, wattsPerMechanicalHorsepower));
 
 export const inMechanicalHorsepower = (p: Power) =>
-  BigDecimal.unsafeDivide(p.value, baseUnitsPerMechanicalHorsepower);
+  BigDecimal.unsafeDivide(p.value, wattsPerMechanicalHorsepower);
 
 /** One electrical horsepower is 746 watts, exactly. */
-const baseUnitsPerElectricalHorsepower = BigDecimal.fromBigInt(746_000n);
+const wattsPerElectricalHorsepower = BigDecimal.fromBigInt(746n);
 
 export const electricalHorsepower = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, baseUnitsPerElectricalHorsepower));
+  make(BigDecimal.multiply(n, wattsPerElectricalHorsepower));
 
 export const inElectricalHorsepower = (p: Power) =>
-  BigDecimal.unsafeDivide(p.value, baseUnitsPerElectricalHorsepower);
+  BigDecimal.unsafeDivide(p.value, wattsPerElectricalHorsepower);

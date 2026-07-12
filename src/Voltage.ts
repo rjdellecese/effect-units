@@ -18,12 +18,6 @@ const make = (value: BigDecimal.BigDecimal): Voltage =>
 
 export const zero = make(BigDecimal.fromBigInt(0n));
 
-// Because the library's mass base unit is grams (not kilograms), one volt is
-// 1000 base units (g·m²/(s³·A)).
-const baseUnitsPerVolt = BigDecimal.fromBigInt(1000n);
+export const volts = (n: BigDecimal.BigDecimal) => make(n);
 
-export const volts = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, baseUnitsPerVolt));
-
-export const inVolts = (v: Voltage) =>
-  BigDecimal.unsafeDivide(v.value, baseUnitsPerVolt);
+export const inVolts = (v: Voltage) => v.value;

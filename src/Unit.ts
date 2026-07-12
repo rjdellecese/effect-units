@@ -4,7 +4,7 @@ import * as Schema from "effect/Schema";
 export const BaseUnit = Schema.Literal(
   "Meters",
   "Seconds",
-  "Grams",
+  "Kilograms",
   "Radians",
   "Pixels",
   "Coulombs",
@@ -72,7 +72,8 @@ export const equals = (a: Unit, b: Unit): boolean =>
 
 /**
  * Canonical rendering of a unit tree, e.g. `"Meters"`, `"(Meters/Seconds)"`,
- * or `"(Grams*((Meters/Seconds)/Seconds))"`. Used as the `unit` field of the
+ * or `"(Kilograms*((Meters/Seconds)/Seconds))"`. Used as the `unit` field of
+ * the
  * serialized form of a `Quantity`.
  */
 export const print = (u: Unit): string =>

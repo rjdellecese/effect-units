@@ -25,21 +25,15 @@ const make = (value: BigDecimal.BigDecimal): Torque =>
 
 export const zero = make(BigDecimal.fromBigInt(0n));
 
-// Because the library's mass base unit is grams (not kilograms), one newton
-// meter is 1000 base units (g·m²/s²).
-const baseUnitsPerNewtonMeter = BigDecimal.fromBigInt(1000n);
+export const newtonMeters = (n: BigDecimal.BigDecimal) => make(n);
 
-export const newtonMeters = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, baseUnitsPerNewtonMeter));
-
-export const inNewtonMeters = (t: Torque) =>
-  BigDecimal.unsafeDivide(t.value, baseUnitsPerNewtonMeter);
+export const inNewtonMeters = (t: Torque) => t.value;
 
 /** One pound foot is one pound of force times one foot, exactly. */
-const baseUnitsPerPoundFoot = BigDecimal.make(13558179483314004n, 13);
+const newtonMetersPerPoundFoot = BigDecimal.make(13558179483314004n, 16);
 
 export const poundFeet = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, baseUnitsPerPoundFoot));
+  make(BigDecimal.multiply(n, newtonMetersPerPoundFoot));
 
 export const inPoundFeet = (t: Torque) =>
-  BigDecimal.unsafeDivide(t.value, baseUnitsPerPoundFoot);
+  BigDecimal.unsafeDivide(t.value, newtonMetersPerPoundFoot);

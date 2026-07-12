@@ -32,7 +32,7 @@ pnpm add github:rjdellecese/effect-units#main
 | --- | --- |
 | `effect-units/Length` | `Meters` |
 | `effect-units/Duration` | `Seconds` (with `effect/Duration` and `effect/DateTime` interop) |
-| `effect-units/Mass` | `Grams` |
+| `effect-units/Mass` | `Kilograms` |
 | `effect-units/Angle` | `Radians` (with DMS conversion and trigonometry) |
 | `effect-units/Area` | `Squared<Meters>` |
 | `effect-units/Volume` | `Cubed<Meters>` |
@@ -40,12 +40,12 @@ pnpm add github:rjdellecese/effect-units#main
 | `effect-units/Acceleration` | `Rate<MetersPerSecond, Seconds>` |
 | `effect-units/AngularSpeed` | `Rate<Radians, Seconds>` |
 | `effect-units/AngularAcceleration` | `Rate<RadiansPerSecond, Seconds>` |
-| `effect-units/Force` | `Product<Grams, MetersPerSecondSquared>` |
+| `effect-units/Force` | `Product<Kilograms, MetersPerSecondSquared>` |
 | `effect-units/Energy` | `Product<Newtons, Meters>` |
 | `effect-units/Torque` | `Product<Newtons, Meters>` (same as energy, as in `elm-units`) |
 | `effect-units/Power` | `Rate<Joules, Seconds>` |
 | `effect-units/Pressure` | `Rate<Newtons, SquareMeters>` |
-| `effect-units/Density` | `Rate<Grams, CubicMeters>` |
+| `effect-units/Density` | `Rate<Kilograms, CubicMeters>` |
 | `effect-units/Charge` | `Coulombs` |
 | `effect-units/Current` | `Rate<Coulombs, Seconds>` |
 | `effect-units/Voltage` | `Rate<Watts, Amperes>` |
@@ -100,10 +100,6 @@ Two boundaries are lossy by design:
   vs. 1 turn) agree to roughly 100 significant digits rather than exactly.
 - Trigonometry (`Angle.sin`, `SolidAngle.conical`, ...) and `DateTime`
   interop go through 64-bit floats.
-
-Because the mass base unit is grams rather than SI's kilograms, every
-mass-containing derived unit stores 1000× its SI value internally (one newton
-is 1000 g·m/s²); constructors and extractors handle this invisibly.
 
 ## Scripts
 

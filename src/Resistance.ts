@@ -18,12 +18,6 @@ const make = (value: BigDecimal.BigDecimal): Resistance =>
 
 export const zero = make(BigDecimal.fromBigInt(0n));
 
-// Because the library's mass base unit is grams (not kilograms), one ohm is
-// 1000 base units (g·m²/(s³·A²)).
-const baseUnitsPerOhm = BigDecimal.fromBigInt(1000n);
+export const ohms = (n: BigDecimal.BigDecimal) => make(n);
 
-export const ohms = (n: BigDecimal.BigDecimal) =>
-  make(BigDecimal.multiply(n, baseUnitsPerOhm));
-
-export const inOhms = (r: Resistance) =>
-  BigDecimal.unsafeDivide(r.value, baseUnitsPerOhm);
+export const inOhms = (r: Resistance) => r.value;

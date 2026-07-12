@@ -24,7 +24,7 @@ const nonZeroBigDecimal = bigDecimal.filter(
 describe("multiply", () => {
   const baseQuantities = [
     { label: "Length", constructor: Length.meters },
-    { label: "Mass", constructor: Mass.grams },
+    { label: "Mass", constructor: Mass.kilograms },
   ];
 
   baseQuantities.forEach((baseQuantity) => {
@@ -62,11 +62,14 @@ describe("times", () => {
   it("multiplies values and forms a Product unit", () => {
     FastCheck.assert(
       FastCheck.property(bigDecimal, bigDecimal, (a, b) => {
-        const product = Quantity.times(Length.meters(a), Mass.grams(b));
+        const product = Quantity.times(Length.meters(a), Mass.kilograms(b));
 
         assertEquals(product.value, BigDecimal.multiply(a, b));
         assertTrue(
-          Unit.equals(product.unit, Unit.product(Length.Meters, Mass.Grams)),
+          Unit.equals(
+            product.unit,
+            Unit.product(Length.Meters, Mass.Kilograms),
+          ),
         );
       }),
     );
@@ -75,8 +78,8 @@ describe("times", () => {
   it("over recovers the left factor exactly", () => {
     FastCheck.assert(
       FastCheck.property(bigDecimal, nonZeroBigDecimal, (a, b) => {
-        const product = Quantity.times(Length.meters(a), Mass.grams(b));
-        const recovered = Quantity.over(product, Mass.grams(b));
+        const product = Quantity.times(Length.meters(a), Mass.kilograms(b));
+        const recovered = Quantity.over(product, Mass.kilograms(b));
 
         assertTrue(Option.isSome(recovered));
         assertTrue(Equal.equals(Option.getOrThrow(recovered), Length.meters(a)));
@@ -87,11 +90,11 @@ describe("times", () => {
   it("over_ recovers the right factor exactly", () => {
     FastCheck.assert(
       FastCheck.property(nonZeroBigDecimal, bigDecimal, (a, b) => {
-        const product = Quantity.times(Length.meters(a), Mass.grams(b));
+        const product = Quantity.times(Length.meters(a), Mass.kilograms(b));
         const recovered = Quantity.over_(product, Length.meters(a));
 
         assertTrue(Option.isSome(recovered));
-        assertTrue(Equal.equals(Option.getOrThrow(recovered), Mass.grams(b)));
+        assertTrue(Equal.equals(Option.getOrThrow(recovered), Mass.kilograms(b)));
       }),
     );
   });
