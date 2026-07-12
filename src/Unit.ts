@@ -71,14 +71,17 @@ export const equals = (a: Unit, b: Unit): boolean =>
         equals(a.independent, b.independent);
 
 /**
- * Canonical rendering of a unit tree, e.g. `"Meters"`, `"(Meters/Seconds)"`,
- * or `"(Kilograms*((Meters/Seconds)/Seconds))"`. Used as the `unit` field of
- * the
- * serialized form of a `Quantity`.
+ * The canonical string encoding of a unit tree, e.g. `"Meters"`,
+ * `"(Meters/Seconds)"`, or `"(Kilograms*((Meters/Seconds)/Seconds))"`.
+ *
+ * This is a stable serialization format — it appears as the `unit` field of
+ * a `Quantity`'s encoded form and feeds unit hashing — not a display format.
+ * For human-facing output, `Quantity` implements `Inspectable`
+ * (`toString`/`toJSON`).
  */
-export const print = (u: Unit): string =>
+export const encode = (u: Unit): string =>
   typeof u === "string"
     ? u
     : u._tag === "Product"
-      ? `(${print(u.left)}*${print(u.right)})`
-      : `(${print(u.dependent)}/${print(u.independent)})`;
+      ? `(${encode(u.left)}*${encode(u.right)})`
+      : `(${encode(u.dependent)}/${encode(u.independent)})`;

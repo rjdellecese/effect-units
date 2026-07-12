@@ -1,51 +1,37 @@
 import { describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import * as FastCheck from "effect/FastCheck";
-import { pipe } from "effect/Function";
 
-import { closeTo, double } from "./internal/testUtils";
+import { isCloseTo, testRoundtrip } from "./internal/testUtils";
 import * as Length from "./Length";
 
 describe("Length", () => {
-  const roundtrip = [
-    // Metric
-    { there: Length.angstroms, back: Length.inAngstroms },
-    { there: Length.nanometers, back: Length.inNanometers },
-    { there: Length.microns, back: Length.inMicrons },
-    { there: Length.meters, back: Length.inMeters },
-    { there: Length.kilometers, back: Length.inKilometers },
-    { there: Length.centimeters, back: Length.inCentimeters },
-    { there: Length.millimeters, back: Length.inMillimeters },
+  // Metric
+  testRoundtrip(Length.angstroms, Length.inAngstroms);
+  testRoundtrip(Length.nanometers, Length.inNanometers);
+  testRoundtrip(Length.microns, Length.inMicrons);
+  testRoundtrip(Length.meters, Length.inMeters);
+  testRoundtrip(Length.kilometers, Length.inKilometers);
+  testRoundtrip(Length.centimeters, Length.inCentimeters);
+  testRoundtrip(Length.millimeters, Length.inMillimeters);
 
-    // Imperial
-    { there: Length.thou, back: Length.inThou },
-    { there: Length.inches, back: Length.inInches },
-    { there: Length.feet, back: Length.inFeet },
-    { there: Length.yards, back: Length.inYards },
-    { there: Length.miles, back: Length.inMiles },
+  // Imperial
+  testRoundtrip(Length.thou, Length.inThou);
+  testRoundtrip(Length.inches, Length.inInches);
+  testRoundtrip(Length.feet, Length.inFeet);
+  testRoundtrip(Length.yards, Length.inYards);
+  testRoundtrip(Length.miles, Length.inMiles);
 
-    // Typography
-    { there: Length.cssPixels, back: Length.inCssPixels },
-    { there: Length.points, back: Length.inPoints },
-    { there: Length.picas, back: Length.inPicas },
+  // Typography
+  testRoundtrip(Length.cssPixels, Length.inCssPixels);
+  testRoundtrip(Length.points, Length.inPoints);
+  testRoundtrip(Length.picas, Length.inPicas);
 
-    // Astronomical
-    { there: Length.astronomicalUnits, back: Length.inAstronomicalUnits },
-    { there: Length.parsecs, back: Length.inParsecs },
-    { there: Length.lightYears, back: Length.inLightYears },
-  ];
-
-  roundtrip.forEach(({ there, back }) => {
-    it(`roundtrips between '${there.name}' and '${back.name}'`, () => {
-      FastCheck.assert(
-        FastCheck.property(double, (n) => {
-          assertTrue(closeTo(pipe(n, there, back), n));
-        }),
-      );
-    });
-  });
+  // Astronomical
+  testRoundtrip(Length.astronomicalUnits, Length.inAstronomicalUnits);
+  testRoundtrip(Length.parsecs, Length.inParsecs);
+  testRoundtrip(Length.lightYears, Length.inLightYears);
 
   it("relates feet to inches", () => {
-    assertTrue(closeTo(Length.inInches(Length.feet(1)), 12));
+    assertTrue(isCloseTo(Length.inInches(Length.feet(1)), 12));
   });
 });

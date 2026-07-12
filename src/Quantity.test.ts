@@ -8,7 +8,7 @@ import * as Equal from "effect/Equal";
 import * as FastCheck from "effect/FastCheck";
 import * as Schema from "effect/Schema";
 
-import { closeTo, double } from "./internal/testUtils";
+import { isCloseTo, double } from "./internal/testUtils";
 import * as Length from "./Length";
 import * as Mass from "./Mass";
 import * as Quantity from "./Quantity";
@@ -31,7 +31,7 @@ describe("multiply", () => {
             b,
           );
 
-          assertTrue(closeTo(quantityProduct.value, a * b));
+          assertTrue(isCloseTo(quantityProduct.value, a * b));
         }),
       );
     });
@@ -44,7 +44,7 @@ describe("multiply", () => {
             baseQuantity.constructor(b),
           );
 
-          assertTrue(closeTo(quantityProduct.value, a * b));
+          assertTrue(isCloseTo(quantityProduct.value, a * b));
         }),
       );
     });
@@ -75,7 +75,7 @@ describe("times", () => {
         const recovered = Quantity.over(product, Mass.kilograms(b));
 
         assertTrue(Unit.equals(recovered.unit, Length.Meters));
-        assertTrue(closeTo(recovered.value, a));
+        assertTrue(isCloseTo(recovered.value, a));
       }),
     );
   });
@@ -87,7 +87,7 @@ describe("times", () => {
         const recovered = Quantity.over_(product, Length.meters(a));
 
         assertTrue(Unit.equals(recovered.unit, Mass.Kilograms));
-        assertTrue(closeTo(recovered.value, b));
+        assertTrue(isCloseTo(recovered.value, b));
       }),
     );
   });
@@ -183,7 +183,7 @@ describe("rates", () => {
         const recovered = Quantity.at_(dependent, rate);
 
         assertTrue(Unit.equals(recovered.unit, "Seconds"));
-        assertTrue(closeTo(recovered.value, i));
+        assertTrue(isCloseTo(recovered.value, i));
       }),
     );
   });
@@ -242,17 +242,17 @@ describe("equals", () => {
   });
 });
 
-describe("equalWithin", () => {
+describe("equalsWithin", () => {
   it("compares within a tolerance quantity", () => {
     assertTrue(
-      Quantity.equalWithin(
+      Quantity.equalsWithin(
         Length.meters(1),
         Length.meters(1.0005),
         Length.millimeters(1),
       ),
     );
     assertTrue(
-      !Quantity.equalWithin(
+      !Quantity.equalsWithin(
         Length.meters(1),
         Length.meters(1.002),
         Length.millimeters(1),
@@ -262,7 +262,7 @@ describe("equalWithin", () => {
 
   it("is false for NaN", () => {
     assertTrue(
-      !Quantity.equalWithin(
+      !Quantity.equalsWithin(
         Quantity.make("Meters", NaN),
         Length.meters(1),
         Length.meters(1),
@@ -290,5 +290,18 @@ describe("comparison", () => {
     assertTrue(!Quantity.lessThan(nan, Length.meters(1)));
     assertTrue(!Quantity.greaterThan(nan, Length.meters(1)));
     assertTrue(!Quantity.lessThanOrEqualTo(nan, nan));
+  });
+});
+
+describe("inspection", () => {
+  it("formats via Inspectable", () => {
+    const speed = Quantity.make(Unit.rate(Length.Meters, "Seconds"), 5);
+
+    deepStrictEqual(speed.toJSON(), {
+      _id: "Quantity",
+      unit: "(Meters/Seconds)",
+      value: 5,
+    });
+    assertTrue(speed.toString().includes('"unit": "(Meters/Seconds)"'));
   });
 });

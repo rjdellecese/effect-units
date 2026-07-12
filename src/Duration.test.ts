@@ -3,32 +3,19 @@ import { assertEquals, assertTrue } from "@effect/vitest/utils";
 import * as DateTime from "effect/DateTime";
 import * as EffectDuration from "effect/Duration";
 import * as FastCheck from "effect/FastCheck";
-import { pipe } from "effect/Function";
 import * as Option from "effect/Option";
 
 import * as Duration from "./Duration";
-import { closeTo, double } from "./internal/testUtils";
+import { isCloseTo, testRoundtrip } from "./internal/testUtils";
 
 describe("Duration", () => {
-  const roundtrip = [
-    { there: Duration.seconds, back: Duration.inSeconds },
-    { there: Duration.milliseconds, back: Duration.inMilliseconds },
-    { there: Duration.minutes, back: Duration.inMinutes },
-    { there: Duration.hours, back: Duration.inHours },
-    { there: Duration.days, back: Duration.inDays },
-    { there: Duration.weeks, back: Duration.inWeeks },
-    { there: Duration.julianYears, back: Duration.inJulianYears },
-  ];
-
-  roundtrip.forEach(({ there, back }) => {
-    it(`roundtrips between '${there.name}' and '${back.name}'`, () => {
-      FastCheck.assert(
-        FastCheck.property(double, (n) => {
-          assertTrue(closeTo(pipe(n, there, back), n));
-        }),
-      );
-    });
-  });
+  testRoundtrip(Duration.seconds, Duration.inSeconds);
+  testRoundtrip(Duration.milliseconds, Duration.inMilliseconds);
+  testRoundtrip(Duration.minutes, Duration.inMinutes);
+  testRoundtrip(Duration.hours, Duration.inHours);
+  testRoundtrip(Duration.days, Duration.inDays);
+  testRoundtrip(Duration.weeks, Duration.inWeeks);
+  testRoundtrip(Duration.julianYears, Duration.inJulianYears);
 
   describe("interop", () => {
     it("roundtrips through effect/Duration", () => {
@@ -43,7 +30,11 @@ describe("Duration", () => {
               Option.getOrThrow,
             );
 
-            assertTrue(closeTo(EffectDuration.toMillis(back), millis, 1e-12));
+            assertTrue(
+              isCloseTo(EffectDuration.toMillis(back), millis, {
+                relativeTolerance: 1e-12,
+              }),
+            );
           },
         ),
       );

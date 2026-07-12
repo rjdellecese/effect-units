@@ -1,3 +1,4 @@
+import * as Prefix from "./Prefix";
 import * as Quantity from "./Quantity";
 
 export type Kilograms = "Kilograms";
@@ -18,25 +19,25 @@ export const kilograms = (n: number) => make(n);
 
 export const inKilograms = (m: Mass) => m.value;
 
-const kilogramsPerGram = 0.001;
+const kilogramsPerGram = Prefix.toPrefixed("Kilo", 1);
 
 export const grams = (n: number) => make(n * kilogramsPerGram);
 
 export const inGrams = (m: Mass) => m.value / kilogramsPerGram;
 
-const kilogramsPerMilligram = 1e-6;
+const kilogramsPerMilligram = Prefix.toBase("Milli", kilogramsPerGram);
 
 export const milligrams = (n: number) => make(n * kilogramsPerMilligram);
 
 export const inMilligrams = (m: Mass) => m.value / kilogramsPerMilligram;
 
-const kilogramsPerMicrogram = 1e-9;
+const kilogramsPerMicrogram = Prefix.toBase("Micro", kilogramsPerGram);
 
 export const micrograms = (n: number) => make(n * kilogramsPerMicrogram);
 
 export const inMicrograms = (m: Mass) => m.value / kilogramsPerMicrogram;
 
-const kilogramsPerNanogram = 1e-12;
+const kilogramsPerNanogram = Prefix.toBase("Nano", kilogramsPerGram);
 
 export const nanograms = (n: number) => make(n * kilogramsPerNanogram);
 

@@ -1,26 +1,11 @@
-import { describe, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
-import * as FastCheck from "effect/FastCheck";
-import { pipe } from "effect/Function";
+import { describe } from "@effect/vitest";
 
 import * as Capacitance from "./Capacitance";
-import { closeTo, double } from "./internal/testUtils";
+import { testRoundtrip } from "./internal/testUtils";
 
 describe("Capacitance", () => {
-  const roundtrip = [
-    { there: Capacitance.farads, back: Capacitance.inFarads },
-    { there: Capacitance.picofarads, back: Capacitance.inPicofarads },
-    { there: Capacitance.nanofarads, back: Capacitance.inNanofarads },
-    { there: Capacitance.microfarads, back: Capacitance.inMicrofarads },
-  ];
-
-  roundtrip.forEach(({ there, back }) => {
-    it(`roundtrips between '${there.name}' and '${back.name}'`, () => {
-      FastCheck.assert(
-        FastCheck.property(double, (n) => {
-          assertTrue(closeTo(pipe(n, there, back), n));
-        }),
-      );
-    });
-  });
+  testRoundtrip(Capacitance.farads, Capacitance.inFarads);
+  testRoundtrip(Capacitance.picofarads, Capacitance.inPicofarads);
+  testRoundtrip(Capacitance.nanofarads, Capacitance.inNanofarads);
+  testRoundtrip(Capacitance.microfarads, Capacitance.inMicrofarads);
 });

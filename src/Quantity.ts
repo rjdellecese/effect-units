@@ -1,6 +1,7 @@
 import * as Equal from "effect/Equal";
 import * as Function from "effect/Function";
 import * as Hash from "effect/Hash";
+import * as Inspectable from "effect/Inspectable";
 import * as Match from "effect/Match";
 import * as Pipeable from "effect/Pipeable";
 import * as Predicate from "effect/Predicate";
@@ -17,14 +18,14 @@ export const QuantityFromSelf = <const U extends Unit.Unit>(unit: U) =>
 export const Quantity = <const U extends Unit.Unit>(unit: U) =>
   Schema.transform(
     Schema.Struct({
-      unit: Schema.Literal(Unit.print(unit)),
+      unit: Schema.Literal(Unit.encode(unit)),
       value: Schema.Number,
     }),
     QuantityFromSelf(unit),
     {
       strict: true,
       decode: ({ value }) => make(unit, value),
-      encode: ({ value }) => ({ unit: Unit.print(unit), value }),
+      encode: ({ value }) => ({ unit: Unit.encode(unit), value }),
     },
   );
 
@@ -34,7 +35,7 @@ export const Quantity = <const U extends Unit.Unit>(unit: U) =>
  * operations yield NaN — check with {@link isNaN} and {@link isInfinite}.
  */
 export interface Quantity<U extends Unit.Unit>
-  extends Equal.Equal, Pipeable.Pipeable {
+  extends Equal.Equal, Inspectable.Inspectable, Pipeable.Pipeable {
   readonly [TypeId]: TypeId;
   readonly unit: U;
   readonly value: number;
@@ -59,9 +60,22 @@ const Proto = {
     return isQuantity()(that) && equals(this, that);
   },
   [Hash.symbol](this: Quantity<Unit.Unit>): number {
-    return Hash.combine(Hash.string(Unit.print(this.unit)))(
+    return Hash.combine(Hash.string(Unit.encode(this.unit)))(
       Hash.number(this.value),
     );
+  },
+  toJSON(this: Quantity<Unit.Unit>) {
+    return {
+      _id: "Quantity",
+      unit: Unit.encode(this.unit),
+      value: this.value,
+    };
+  },
+  toString(this: Quantity<Unit.Unit>): string {
+    return Inspectable.format(this.toJSON());
+  },
+  [Inspectable.NodeInspectSymbol](this: Quantity<Unit.Unit>) {
+    return this.toJSON();
   },
   pipe() {
     return Pipeable.pipeArguments(this, arguments);
@@ -83,7 +97,7 @@ export const make = <U extends Unit.Unit>(
  * Exact equality: identical values (with NaN equal to itself, so equality is
  * reflexive) and structurally equal units. For float quantities this is
  * identity, not "approximately the same measurement" — domain logic and
- * tests usually want {@link equalWithin} instead.
+ * tests usually want {@link equalsWithin} instead.
  */
 export const equals = <U extends Unit.Unit>(
   a: Quantity<U>,
@@ -95,7 +109,7 @@ export const equals = <U extends Unit.Unit>(
  * `tolerance` (a quantity in the same units). Returns false if any value
  * involved is NaN.
  */
-export const equalWithin: {
+export const equalsWithin: {
   <U extends Unit.Unit>(
     b: Quantity<U>,
     tolerance: Quantity<U>,

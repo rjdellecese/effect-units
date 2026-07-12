@@ -1,4 +1,5 @@
 import * as Length from "./Length";
+import * as Prefix from "./Prefix";
 import * as Quantity from "./Quantity";
 import * as Unit from "./Unit";
 
@@ -26,7 +27,7 @@ export const liters = (n: number) => make(n * cubicMetersPerLiter);
 
 export const inLiters = (v: Volume) => v.value / cubicMetersPerLiter;
 
-const cubicMetersPerMilliliter = 1e-6;
+const cubicMetersPerMilliliter = Prefix.toBase("Milli", cubicMetersPerLiter);
 
 export const milliliters = (n: number) => make(n * cubicMetersPerMilliliter);
 

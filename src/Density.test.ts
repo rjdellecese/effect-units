@@ -1,41 +1,31 @@
 import { describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import * as FastCheck from "effect/FastCheck";
-import { pipe } from "effect/Function";
 
 import * as Density from "./Density";
-import { closeTo, double, quantityCloseTo } from "./internal/testUtils";
+import {
+  isCloseTo,
+  isQuantityCloseTo,
+  testRoundtrip,
+} from "./internal/testUtils";
 import * as Mass from "./Mass";
 import * as Quantity from "./Quantity";
 import * as Volume from "./Volume";
 
 describe("Density", () => {
-  const roundtrip = [
-    {
-      there: Density.kilogramsPerCubicMeter,
-      back: Density.inKilogramsPerCubicMeter,
-    },
-    {
-      there: Density.gramsPerCubicCentimeter,
-      back: Density.inGramsPerCubicCentimeter,
-    },
-    { there: Density.poundsPerCubicInch, back: Density.inPoundsPerCubicInch },
-    { there: Density.poundsPerCubicFoot, back: Density.inPoundsPerCubicFoot },
-  ];
-
-  roundtrip.forEach(({ there, back }) => {
-    it(`roundtrips between '${there.name}' and '${back.name}'`, () => {
-      FastCheck.assert(
-        FastCheck.property(double, (n) => {
-          assertTrue(closeTo(pipe(n, there, back), n));
-        }),
-      );
-    });
-  });
+  testRoundtrip(
+    Density.kilogramsPerCubicMeter,
+    Density.inKilogramsPerCubicMeter,
+  );
+  testRoundtrip(
+    Density.gramsPerCubicCentimeter,
+    Density.inGramsPerCubicCentimeter,
+  );
+  testRoundtrip(Density.poundsPerCubicInch, Density.inPoundsPerCubicInch);
+  testRoundtrip(Density.poundsPerCubicFoot, Density.inPoundsPerCubicFoot);
 
   it("is a mass per a volume", () => {
     assertTrue(
-      quantityCloseTo(
+      isQuantityCloseTo(
         Quantity.per(Mass.kilograms(10), Volume.cubicMeters(2)),
         Density.kilogramsPerCubicMeter(5),
       ),
@@ -44,7 +34,7 @@ describe("Density", () => {
 
   it("relates grams per cubic centimeter to kilograms per cubic meter", () => {
     assertTrue(
-      closeTo(
+      isCloseTo(
         Density.inKilogramsPerCubicMeter(Density.gramsPerCubicCentimeter(1)),
         1000,
       ),

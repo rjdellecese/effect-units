@@ -1,3 +1,4 @@
+import * as Prefix from "./Prefix";
 import * as Quantity from "./Quantity";
 
 export type Coulombs = "Coulombs";
@@ -22,7 +23,10 @@ export const ampereHours = (n: number) => make(n * coulombsPerAmpereHour);
 
 export const inAmpereHours = (c: Charge) => c.value / coulombsPerAmpereHour;
 
-const coulombsPerMilliampereHour = 3.6;
+const coulombsPerMilliampereHour = Prefix.toBase(
+  "Milli",
+  coulombsPerAmpereHour,
+);
 
 export const milliampereHours = (n: number) =>
   make(n * coulombsPerMilliampereHour);

@@ -2,61 +2,57 @@ import { describe, it } from "@effect/vitest";
 import { assertEquals, assertTrue } from "@effect/vitest/utils";
 import * as Equal from "effect/Equal";
 import * as FastCheck from "effect/FastCheck";
-import { pipe } from "effect/Function";
 import * as Schema from "effect/Schema";
 
-import { closeTo, double } from "./internal/testUtils";
+import { double, isCloseTo, testRoundtrip } from "./internal/testUtils";
 import * as Temperature from "./Temperature";
 
 describe("Temperature", () => {
-  const testRoundtrip = <Q>(
-    there: (n: number) => Q,
-    back: (q: Q) => number,
-  ) => {
-    it(`roundtrips between '${there.name}' and '${back.name}'`, () => {
-      FastCheck.assert(
-        FastCheck.property(double, (n) => {
-          // Temperature conversions are additive (offset by 273.15), so
-          // their error is absolute, not relative to the input.
-          assertTrue(closeTo(pipe(n, there, back), n, 1e-9, 1e-9));
-        }),
-      );
-    });
-  };
+  // Temperature conversions are additive (offset by 273.15), so their error
+  // is absolute, not relative to the input.
+  const tolerance = { absoluteTolerance: 1e-9 };
 
-  testRoundtrip(Temperature.kelvins, Temperature.inKelvins);
-  testRoundtrip(Temperature.degreesCelsius, Temperature.inDegreesCelsius);
+  testRoundtrip(Temperature.kelvins, Temperature.inKelvins, tolerance);
+  testRoundtrip(
+    Temperature.degreesCelsius,
+    Temperature.inDegreesCelsius,
+    tolerance,
+  );
   testRoundtrip(
     Temperature.degreesFahrenheit,
     Temperature.inDegreesFahrenheit,
+    tolerance,
   );
-  testRoundtrip(Temperature.celsiusDegrees, Temperature.inCelsiusDegrees);
+  testRoundtrip(
+    Temperature.celsiusDegrees,
+    Temperature.inCelsiusDegrees,
+    tolerance,
+  );
   testRoundtrip(
     Temperature.fahrenheitDegrees,
     Temperature.inFahrenheitDegrees,
+    tolerance,
   );
 
   it("relates the Celsius, Fahrenheit, and Kelvin scales", () => {
     assertTrue(
-      closeTo(
+      isCloseTo(
         Temperature.inDegreesCelsius(Temperature.degreesFahrenheit(32)),
         0,
-        1e-9,
-        1e-9,
+        { absoluteTolerance: 1e-9 },
       ),
     );
     assertTrue(
-      closeTo(
+      isCloseTo(
         Temperature.inDegreesCelsius(Temperature.degreesFahrenheit(212)),
         100,
       ),
     );
     assertTrue(
-      closeTo(
+      isCloseTo(
         Temperature.inKelvins(Temperature.degreesCelsius(-273.15)),
         0,
-        1e-9,
-        1e-9,
+        { absoluteTolerance: 1e-9 },
       ),
     );
   });
@@ -69,14 +65,11 @@ describe("Temperature", () => {
         const raised = Temperature.plus(temperature, delta);
 
         assertTrue(
-          closeTo(
-            Temperature.minus(raised, temperature).value,
-            delta.value,
-            1e-9,
-            // Absolute fallback: adding then subtracting a large temperature
-            // absorbs deltas far below its own magnitude.
-            1e-9 * Math.max(Math.abs(a), 1),
-          ),
+          isCloseTo(Temperature.minus(raised, temperature).value, delta.value, {
+            // Adding then subtracting a large temperature absorbs deltas far
+            // below its own magnitude.
+            absoluteTolerance: 1e-9 * Math.max(Math.abs(a), 1),
+          }),
         );
       }),
     );
@@ -84,7 +77,7 @@ describe("Temperature", () => {
 
   it("a Fahrenheit degree is five ninths of a Celsius degree", () => {
     assertTrue(
-      closeTo(
+      isCloseTo(
         Temperature.inCelsiusDegrees(Temperature.fahrenheitDegrees(9)),
         5,
       ),

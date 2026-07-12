@@ -1,32 +1,19 @@
 import { describe, it } from "@effect/vitest";
 import { assertEquals, assertTrue } from "@effect/vitest/utils";
 import * as FastCheck from "effect/FastCheck";
-import { pipe } from "effect/Function";
 
 import * as Angle from "./Angle";
-import { closeTo, double } from "./internal/testUtils";
+import { isCloseTo, testRoundtrip } from "./internal/testUtils";
 
 describe("Angle", () => {
-  const roundtrip = [
-    { there: Angle.radians, back: Angle.inRadians },
-    { there: Angle.degrees, back: Angle.inDegrees },
-    { there: Angle.turns, back: Angle.inTurns },
-    { there: Angle.minutes, back: Angle.inMinutes },
-    { there: Angle.seconds, back: Angle.inSeconds },
-  ];
-
-  roundtrip.forEach(({ there, back }) => {
-    it(`roundtrips between '${there.name}' and '${back.name}'`, () => {
-      FastCheck.assert(
-        FastCheck.property(double, (n) => {
-          assertTrue(closeTo(pipe(n, there, back), n));
-        }),
-      );
-    });
-  });
+  testRoundtrip(Angle.radians, Angle.inRadians);
+  testRoundtrip(Angle.degrees, Angle.inDegrees);
+  testRoundtrip(Angle.turns, Angle.inTurns);
+  testRoundtrip(Angle.minutes, Angle.inMinutes);
+  testRoundtrip(Angle.seconds, Angle.inSeconds);
 
   it("relates degrees to turns", () => {
-    assertTrue(closeTo(Angle.inTurns(Angle.degrees(360)), 1));
+    assertTrue(isCloseTo(Angle.inTurns(Angle.degrees(360)), 1));
   });
 
   describe("dms", () => {
@@ -38,7 +25,9 @@ describe("Angle", () => {
             const angle = Angle.radians(n);
             const reconstructed = Angle.fromDms(Angle.toDms(angle));
 
-            assertTrue(closeTo(reconstructed.value, n, 1e-6));
+            assertTrue(
+              isCloseTo(reconstructed.value, n, { relativeTolerance: 1e-6 }),
+            );
           },
         ),
       );
@@ -67,31 +56,33 @@ describe("Angle", () => {
         seconds: 0,
       });
 
-      assertTrue(closeTo(Angle.inDegrees(angle), 30.5));
+      assertTrue(isCloseTo(Angle.inDegrees(angle), 30.5));
 
       const dms = Angle.toDms(Angle.degrees(-10.25));
       assertEquals(dms.sign, "Negative");
       assertEquals(dms.degrees, 10);
       assertEquals(dms.minutes, 15);
-      assertTrue(closeTo(dms.seconds, 0, 1e-6) || dms.seconds < 1e-6);
+      assertTrue(
+        isCloseTo(dms.seconds, 0, { absoluteTolerance: 1e-6 }),
+      );
     });
   });
 
   describe("trigonometry", () => {
     it("sin of 90 degrees is 1", () => {
-      assertTrue(closeTo(Angle.sin(Angle.degrees(90)), 1));
+      assertTrue(isCloseTo(Angle.sin(Angle.degrees(90)), 1));
     });
 
     it("cos of one turn is 1", () => {
-      assertTrue(closeTo(Angle.cos(Angle.turns(1)), 1));
+      assertTrue(isCloseTo(Angle.cos(Angle.turns(1)), 1));
     });
 
     it("tan of 45 degrees is 1", () => {
-      assertTrue(closeTo(Angle.tan(Angle.degrees(45)), 1));
+      assertTrue(isCloseTo(Angle.tan(Angle.degrees(45)), 1));
     });
 
     it("atan2(1, 1) is 45 degrees", () => {
-      assertTrue(closeTo(Angle.inDegrees(Angle.atan2(1, 1)), 45));
+      assertTrue(isCloseTo(Angle.inDegrees(Angle.atan2(1, 1)), 45));
     });
 
     it("asin is NaN outside [-1, 1]", () => {
@@ -100,7 +91,7 @@ describe("Angle", () => {
     });
 
     it("asin(1) is 90 degrees", () => {
-      assertTrue(closeTo(Angle.inDegrees(Angle.asin(1)), 90));
+      assertTrue(isCloseTo(Angle.inDegrees(Angle.asin(1)), 90));
     });
   });
 
@@ -126,7 +117,7 @@ describe("Angle", () => {
 
     it("normalizes 1.5 turns to half a turn", () => {
       assertTrue(
-        closeTo(Math.abs(Angle.normalize(Angle.turns(1.5)).value), Math.PI),
+        isCloseTo(Math.abs(Angle.normalize(Angle.turns(1.5)).value), Math.PI),
       );
     });
   });

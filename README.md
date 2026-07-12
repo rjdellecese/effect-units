@@ -97,9 +97,9 @@ Equality is two-tier:
   equals itself; -0 is normalized to 0) and structurally equal units. This
   is identity, suitable for `HashMap` keys, not for comparing computed
   measurements.
-- `Quantity.equalWithin(a, b, tolerance)` is the domain-level comparison —
+- `Quantity.equalsWithin(a, b, tolerance)` is the domain-level comparison —
   the tolerance is itself a quantity in the same units, e.g.
-  `Quantity.equalWithin(a, b, Length.millimeters(1))`.
+  `Quantity.equalsWithin(a, b, Length.millimeters(1))`.
 
 Comparisons (`lessThan`, `min`, `max`, ...) follow IEEE NaN semantics: any
 comparison involving NaN is false.

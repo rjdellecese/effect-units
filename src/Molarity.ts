@@ -1,3 +1,4 @@
+import * as Prefix from "./Prefix";
 import * as Quantity from "./Quantity";
 import * as SubstanceAmount from "./SubstanceAmount";
 import * as Unit from "./Unit";
@@ -34,7 +35,10 @@ export const molesPerLiter = (n: number) =>
 export const inMolesPerLiter = (m: Molarity) =>
   m.value / molesPerCubicMeterPerMolePerLiter;
 
-const molesPerCubicMeterPerDecimolePerLiter = 100;
+const molesPerCubicMeterPerDecimolePerLiter = Prefix.toBase(
+  "Deci",
+  molesPerCubicMeterPerMolePerLiter,
+);
 
 export const decimolesPerLiter = (n: number) =>
   make(n * molesPerCubicMeterPerDecimolePerLiter);
@@ -42,7 +46,10 @@ export const decimolesPerLiter = (n: number) =>
 export const inDecimolesPerLiter = (m: Molarity) =>
   m.value / molesPerCubicMeterPerDecimolePerLiter;
 
-const molesPerCubicMeterPerCentimolePerLiter = 10;
+const molesPerCubicMeterPerCentimolePerLiter = Prefix.toBase(
+  "Centi",
+  molesPerCubicMeterPerMolePerLiter,
+);
 
 export const centimolesPerLiter = (n: number) =>
   make(n * molesPerCubicMeterPerCentimolePerLiter);
@@ -50,11 +57,21 @@ export const centimolesPerLiter = (n: number) =>
 export const inCentimolesPerLiter = (m: Molarity) =>
   m.value / molesPerCubicMeterPerCentimolePerLiter;
 
-export const millimolesPerLiter = (n: number) => make(n);
+const molesPerCubicMeterPerMillimolePerLiter = Prefix.toBase(
+  "Milli",
+  molesPerCubicMeterPerMolePerLiter,
+);
 
-export const inMillimolesPerLiter = (m: Molarity) => m.value;
+export const millimolesPerLiter = (n: number) =>
+  make(n * molesPerCubicMeterPerMillimolePerLiter);
 
-const molesPerCubicMeterPerMicromolePerLiter = 0.001;
+export const inMillimolesPerLiter = (m: Molarity) =>
+  m.value / molesPerCubicMeterPerMillimolePerLiter;
+
+const molesPerCubicMeterPerMicromolePerLiter = Prefix.toBase(
+  "Micro",
+  molesPerCubicMeterPerMolePerLiter,
+);
 
 export const micromolesPerLiter = (n: number) =>
   make(n * molesPerCubicMeterPerMicromolePerLiter);

@@ -1,6 +1,7 @@
 import * as Equal from "effect/Equal";
 import * as Function from "effect/Function";
 import * as Hash from "effect/Hash";
+import * as Inspectable from "effect/Inspectable";
 import * as Number_ from "effect/Number";
 import * as order from "effect/Order";
 import * as Pipeable from "effect/Pipeable";
@@ -18,7 +19,8 @@ export type TypeId = typeof TypeId;
  * is not a `Quantity` — it makes no sense to add two absolute temperatures,
  * for example.
  */
-export interface Temperature extends Equal.Equal, Pipeable.Pipeable {
+export interface Temperature
+  extends Equal.Equal, Inspectable.Inspectable, Pipeable.Pipeable {
   readonly [TypeId]: TypeId;
   readonly value: number;
 }
@@ -36,6 +38,15 @@ const Proto = {
   },
   [Hash.symbol](this: Temperature): number {
     return Hash.number(this.value);
+  },
+  toJSON(this: Temperature) {
+    return { _id: "Temperature", value: this.value };
+  },
+  toString(this: Temperature): string {
+    return Inspectable.format(this.toJSON());
+  },
+  [Inspectable.NodeInspectSymbol](this: Temperature) {
+    return this.toJSON();
   },
   pipe() {
     return Pipeable.pipeArguments(this, arguments);
@@ -91,6 +102,12 @@ export const inDegreesFahrenheit = (t: Temperature) =>
  * A difference between two temperatures. Unlike an absolute `Temperature`,
  * a `Delta` is an ordinary `Quantity` and participates in the usual quantity
  * arithmetic.
+ *
+ * Note the deliberate word order, following `elm-units` and standard
+ * metrology usage: "degrees Celsius" (`degreesCelsius`) is a point on the
+ * scale, while "Celsius degrees" (`celsiusDegrees`) is a number of
+ * scale-sized intervals — a rise of 5 Celsius degrees, from 20 degrees
+ * Celsius to 25.
  */
 export type Delta = Quantity.Quantity<"CelsiusDegrees">;
 
