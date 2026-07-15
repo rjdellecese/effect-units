@@ -211,28 +211,28 @@ export const cubed = <U extends Unit.Unit>(
   make(Unit.cubed(a.unit), a.value * a.value * a.value);
 
 /**
- * Divides one quantity by another, producing a rate: `per(dep, indep)` is
- * the rate of change of `dep` per unit of `indep` (e.g. `per(length,
+ * Divides one quantity by another, producing a rate: `per(dependent, independent)` is
+ * the rate of change of `dependent` per unit of `independent` (e.g. `per(length,
  * duration)` is a speed). Division by zero yields ±Infinity (or NaN for
  * 0/0).
  */
 export const per: {
-  <Indep extends Unit.Unit>(
-    indep: Quantity<Indep>,
-  ): <Dep extends Unit.Unit>(
-    dep: Quantity<Dep>,
-  ) => Quantity<Unit.Rate<Dep, Indep>>;
-  <Dep extends Unit.Unit, Indep extends Unit.Unit>(
-    dep: Quantity<Dep>,
-    indep: Quantity<Indep>,
-  ): Quantity<Unit.Rate<Dep, Indep>>;
+  <Independent extends Unit.Unit>(
+    independent: Quantity<Independent>,
+  ): <Dependent extends Unit.Unit>(
+    dependent: Quantity<Dependent>,
+  ) => Quantity<Unit.Rate<Dependent, Independent>>;
+  <Dependent extends Unit.Unit, Independent extends Unit.Unit>(
+    dependent: Quantity<Dependent>,
+    independent: Quantity<Independent>,
+  ): Quantity<Unit.Rate<Dependent, Independent>>;
 } = Function.dual(
   2,
   (
-    dep: Quantity<Unit.Unit>,
-    indep: Quantity<Unit.Unit>,
+    dependent: Quantity<Unit.Unit>,
+    independent: Quantity<Unit.Unit>,
   ): Quantity<Unit.Rate<Unit.Unit, Unit.Unit>> =>
-    make(Unit.rate(dep.unit, indep.unit), dep.value / indep.value),
+    make(Unit.rate(dependent.unit, independent.unit), dependent.value / independent.value),
 );
 
 /**
@@ -240,22 +240,22 @@ export const per: {
  * quantity in its dependent units: `at(speed, duration)` is a length.
  */
 export const at: {
-  <Indep extends Unit.Unit>(
-    indep: Quantity<Indep>,
-  ): <Dep extends Unit.Unit>(
-    rate: Quantity<Unit.Rate<Dep, Indep>>,
-  ) => Quantity<Dep>;
-  <Dep extends Unit.Unit, Indep extends Unit.Unit>(
-    rate: Quantity<Unit.Rate<Dep, Indep>>,
-    indep: Quantity<Indep>,
-  ): Quantity<Dep>;
+  <Independent extends Unit.Unit>(
+    independent: Quantity<Independent>,
+  ): <Dependent extends Unit.Unit>(
+    rate: Quantity<Unit.Rate<Dependent, Independent>>,
+  ) => Quantity<Dependent>;
+  <Dependent extends Unit.Unit, Independent extends Unit.Unit>(
+    rate: Quantity<Unit.Rate<Dependent, Independent>>,
+    independent: Quantity<Independent>,
+  ): Quantity<Dependent>;
 } = Function.dual(
   2,
   (
     rate: Quantity<Unit.Rate<Unit.Unit, Unit.Unit>>,
-    indep: Quantity<Unit.Unit>,
+    independent: Quantity<Unit.Unit>,
   ): Quantity<Unit.Unit> =>
-    make(rate.unit.dependent, rate.value * indep.value),
+    make(rate.unit.dependent, rate.value * independent.value),
 );
 
 /**
@@ -264,20 +264,20 @@ export const at: {
  * Division by zero yields ±Infinity (or NaN for 0/0).
  */
 export const at_: {
-  <Dep extends Unit.Unit, Indep extends Unit.Unit>(
-    rate: Quantity<Unit.Rate<Dep, Indep>>,
-  ): (dep: Quantity<Dep>) => Quantity<Indep>;
-  <Dep extends Unit.Unit, Indep extends Unit.Unit>(
-    dep: Quantity<Dep>,
-    rate: Quantity<Unit.Rate<Dep, Indep>>,
-  ): Quantity<Indep>;
+  <Dependent extends Unit.Unit, Independent extends Unit.Unit>(
+    rate: Quantity<Unit.Rate<Dependent, Independent>>,
+  ): (dependent: Quantity<Dependent>) => Quantity<Independent>;
+  <Dependent extends Unit.Unit, Independent extends Unit.Unit>(
+    dependent: Quantity<Dependent>,
+    rate: Quantity<Unit.Rate<Dependent, Independent>>,
+  ): Quantity<Independent>;
 } = Function.dual(
   2,
   (
-    dep: Quantity<Unit.Unit>,
+    dependent: Quantity<Unit.Unit>,
     rate: Quantity<Unit.Rate<Unit.Unit, Unit.Unit>>,
   ): Quantity<Unit.Unit> =>
-    make(rate.unit.independent, dep.value / rate.value),
+    make(rate.unit.independent, dependent.value / rate.value),
 );
 
 /**
@@ -286,20 +286,20 @@ export const at_: {
  * reserved word.)
  */
 export const for_: {
-  <Dep extends Unit.Unit, Indep extends Unit.Unit>(
-    rate: Quantity<Unit.Rate<Dep, Indep>>,
-  ): (indep: Quantity<Indep>) => Quantity<Dep>;
-  <Dep extends Unit.Unit, Indep extends Unit.Unit>(
-    indep: Quantity<Indep>,
-    rate: Quantity<Unit.Rate<Dep, Indep>>,
-  ): Quantity<Dep>;
+  <Dependent extends Unit.Unit, Independent extends Unit.Unit>(
+    rate: Quantity<Unit.Rate<Dependent, Independent>>,
+  ): (independent: Quantity<Independent>) => Quantity<Dependent>;
+  <Dependent extends Unit.Unit, Independent extends Unit.Unit>(
+    independent: Quantity<Independent>,
+    rate: Quantity<Unit.Rate<Dependent, Independent>>,
+  ): Quantity<Dependent>;
 } = Function.dual(
   2,
   (
-    indep: Quantity<Unit.Unit>,
+    independent: Quantity<Unit.Unit>,
     rate: Quantity<Unit.Rate<Unit.Unit, Unit.Unit>>,
   ): Quantity<Unit.Unit> =>
-    make(rate.unit.dependent, rate.value * indep.value),
+    make(rate.unit.dependent, rate.value * independent.value),
 );
 
 /**

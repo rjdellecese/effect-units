@@ -3,10 +3,6 @@ import * as Length from "./Length";
 import * as Quantity from "./Quantity";
 import * as Unit from "./Unit";
 
-/**
- * Note that, as in `elm-units`, torque has the same units type as energy
- * (`Product<Newtons, Meters>`) — the two are dimensionally indistinguishable.
- */
 export type NewtonMeters = Unit.Product<Force.Newtons, Length.Meters>;
 export const NewtonMeters: NewtonMeters = Unit.product(
   Force.Newtons,
