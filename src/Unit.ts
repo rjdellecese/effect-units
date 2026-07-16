@@ -157,7 +157,10 @@ export const decode = (input: string): Option.Option<Unit> => {
     : Option.none();
 };
 
-export const UnitFromSelf = Schema.declare(isUnit);
+export const UnitFromSelf = Schema.declare(isUnit).annotations({
+  identifier: "UnitFromSelf",
+  description: "a unit tree",
+});
 
 export const Unit = Schema.transformOrFail(Schema.String, UnitFromSelf, {
   strict: true,
@@ -170,4 +173,4 @@ export const Unit = Schema.transformOrFail(Schema.String, UnitFromSelf, {
       onSome: (unit) => ParseResult.succeed(unit),
     }),
   encode: (unit) => ParseResult.succeed(encode(unit)),
-});
+}).annotations({ identifier: "Unit" });

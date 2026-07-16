@@ -1,7 +1,11 @@
-// Conversion factors shared by multiple unit modules, in SI units. All are
-// exact defined values (the 1959 international yard and pound agreement,
-// standard gravity), written as literals so each is the correctly rounded
-// float of its defined decimal value.
+/**
+ * Conversion factors shared by multiple unit modules, in SI units. All are
+ * exact defined values (the 1959 international yard and pound agreement,
+ * standard gravity), written as literals so each is the correctly rounded
+ * float of its defined decimal value.
+ *
+ * @module
+ */
 
 /** Meters per international inch. */
 export const metersPerInch = 0.0254;
