@@ -1,5 +1,5 @@
 import { describe, it } from "@effect/vitest";
-import { assertEquals, assertTrue } from "@effect/vitest/utils";
+import { assertEquals, assertFalse, assertTrue } from "@effect/vitest/utils";
 import * as Either from "effect/Either";
 import * as Equal from "effect/Equal";
 import * as Option from "effect/Option";
@@ -20,8 +20,8 @@ describe("Unit", () => {
         Unit.rate("Meters", "Seconds"),
       ),
     );
-    assertTrue(
-      !Equal.equals(
+    assertFalse(
+      Equal.equals(
         Unit.rate("Meters", "Seconds"),
         Unit.rate("Seconds", "Meters"),
       ),

@@ -1,6 +1,7 @@
 import { describe, it } from "@effect/vitest";
 import {
   assertEquals,
+  assertFalse,
   assertTrue,
   deepStrictEqual,
 } from "@effect/vitest/utils";
@@ -227,7 +228,7 @@ describe("equals", () => {
     const a = Quantity.make("Meters", 1);
     const b = Quantity.make("Seconds", 1);
 
-    assertTrue(!Equal.equals(a, b));
+    assertFalse(Equal.equals(a, b));
   });
 
   it("treats NaN quantities as equal to themselves", () => {
@@ -251,8 +252,8 @@ describe("equalsWithin", () => {
         Length.millimeters(1),
       ),
     );
-    assertTrue(
-      !Quantity.equalsWithin(
+    assertFalse(
+      Quantity.equalsWithin(
         Length.meters(1),
         Length.meters(1.002),
         Length.millimeters(1),
@@ -261,8 +262,8 @@ describe("equalsWithin", () => {
   });
 
   it("is false for NaN", () => {
-    assertTrue(
-      !Quantity.equalsWithin(
+    assertFalse(
+      Quantity.equalsWithin(
         Quantity.make("Meters", NaN),
         Length.meters(1),
         Length.meters(1),
@@ -287,9 +288,9 @@ describe("comparison", () => {
   it("comparisons involving NaN are false", () => {
     const nan = Quantity.make("Meters", NaN);
 
-    assertTrue(!Quantity.lessThan(nan, Length.meters(1)));
-    assertTrue(!Quantity.greaterThan(nan, Length.meters(1)));
-    assertTrue(!Quantity.lessThanOrEqualTo(nan, nan));
+    assertFalse(Quantity.lessThan(nan, Length.meters(1)));
+    assertFalse(Quantity.greaterThan(nan, Length.meters(1)));
+    assertFalse(Quantity.lessThanOrEqualTo(nan, nan));
   });
 });
 
