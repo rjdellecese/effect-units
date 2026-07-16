@@ -2,6 +2,7 @@ import * as DateTime from "effect/DateTime";
 import * as EffectDuration from "effect/Duration";
 import * as Option from "effect/Option";
 
+import * as Constants from "./internal/constants";
 import * as Prefix from "./Prefix";
 import * as Quantity from "./Quantity";
 
@@ -26,32 +27,29 @@ export const milliseconds = (n: number) => make(Prefix.toBase("Milli", n));
 export const inMilliseconds = (d: Duration) =>
   Prefix.toPrefixed("Milli", d.value);
 
-const secondsPerMinute = 60;
+export const minutes = (n: number) => make(n * Constants.secondsPerMinute);
 
-export const minutes = (n: number) => make(n * secondsPerMinute);
+export const inMinutes = (d: Duration) =>
+  d.value / Constants.secondsPerMinute;
 
-export const inMinutes = (d: Duration) => d.value / secondsPerMinute;
+export const hours = (n: number) => make(n * Constants.secondsPerHour);
 
-const secondsPerHour = 3600;
+export const inHours = (d: Duration) => d.value / Constants.secondsPerHour;
 
-export const hours = (n: number) => make(n * secondsPerHour);
-
-export const inHours = (d: Duration) => d.value / secondsPerHour;
-
-const secondsPerDay = 86400;
+const secondsPerDay = 24 * Constants.secondsPerHour;
 
 export const days = (n: number) => make(n * secondsPerDay);
 
 export const inDays = (d: Duration) => d.value / secondsPerDay;
 
-const secondsPerWeek = 604800;
+const secondsPerWeek = 7 * secondsPerDay;
 
 export const weeks = (n: number) => make(n * secondsPerWeek);
 
 export const inWeeks = (d: Duration) => d.value / secondsPerWeek;
 
 /** One Julian year is exactly 365.25 days. */
-const secondsPerJulianYear = 31557600;
+const secondsPerJulianYear = 365.25 * secondsPerDay;
 
 export const julianYears = (n: number) => make(n * secondsPerJulianYear);
 

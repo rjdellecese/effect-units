@@ -1,4 +1,5 @@
 import * as Area from "./Area";
+import * as Constants from "./internal/constants";
 import * as LuminousIntensity from "./LuminousIntensity";
 import * as Quantity from "./Quantity";
 import * as Unit from "./Unit";
@@ -23,7 +24,8 @@ export const nits = (n: number) => make(n);
 export const inNits = (l: Luminance) => l.value;
 
 /** One foot lambert is 1/π candelas per square foot. */
-const nitsPerFootLambert = 1 / (Math.PI * 0.3048 * 0.3048);
+const nitsPerFootLambert =
+  1 / (Math.PI * Constants.metersPerFoot * Constants.metersPerFoot);
 
 export const footLamberts = (n: number) => make(n * nitsPerFootLambert);
 

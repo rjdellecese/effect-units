@@ -1,3 +1,4 @@
+import * as Constants from "./internal/constants";
 import * as Mass from "./Mass";
 import * as Quantity from "./Quantity";
 import * as Unit from "./Unit";
@@ -37,7 +38,8 @@ export const inGramsPerCubicCentimeter = (d: Density) =>
   d.value / kilogramsPerCubicMeterPerGramPerCubicCentimeter;
 
 const kilogramsPerCubicMeterPerPoundPerCubicInch =
-  0.45359237 / (0.0254 * 0.0254 * 0.0254);
+  Constants.kilogramsPerPound /
+  (Constants.metersPerInch * Constants.metersPerInch * Constants.metersPerInch);
 
 export const poundsPerCubicInch = (n: number) =>
   make(n * kilogramsPerCubicMeterPerPoundPerCubicInch);
@@ -46,7 +48,8 @@ export const inPoundsPerCubicInch = (d: Density) =>
   d.value / kilogramsPerCubicMeterPerPoundPerCubicInch;
 
 const kilogramsPerCubicMeterPerPoundPerCubicFoot =
-  0.45359237 / (0.3048 * 0.3048 * 0.3048);
+  Constants.kilogramsPerPound /
+  (Constants.metersPerFoot * Constants.metersPerFoot * Constants.metersPerFoot);
 
 export const poundsPerCubicFoot = (n: number) =>
   make(n * kilogramsPerCubicMeterPerPoundPerCubicFoot);

@@ -1,4 +1,5 @@
 import * as Area from "./Area";
+import * as Constants from "./internal/constants";
 import * as LuminousFlux from "./LuminousFlux";
 import * as Quantity from "./Quantity";
 import * as Unit from "./Unit";
@@ -20,7 +21,8 @@ export const lux = (n: number) => make(n);
 export const inLux = (i: Illuminance) => i.value;
 
 /** One foot candle is one lumen per square foot. */
-const luxPerFootCandle = 1 / (0.3048 * 0.3048);
+const luxPerFootCandle =
+  1 / (Constants.metersPerFoot * Constants.metersPerFoot);
 
 export const footCandles = (n: number) => make(n * luxPerFootCandle);
 

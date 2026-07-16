@@ -1,4 +1,5 @@
 import * as Force from "./Force";
+import * as Constants from "./internal/constants";
 import * as Length from "./Length";
 import * as Prefix from "./Prefix";
 import * as Quantity from "./Quantity";
@@ -28,8 +29,9 @@ export const megajoules = (n: number) => make(Prefix.toBase("Mega", n));
 
 export const inMegajoules = (e: Energy) => Prefix.toPrefixed("Mega", e.value);
 
-/** One kilowatt hour is 3.6 million joules. */
-const joulesPerKilowattHour = 3_600_000;
+/** One kilowatt hour is one kilowatt (1000 joules per second) for one hour. */
+const wattsPerKilowatt = 1000;
+const joulesPerKilowattHour = wattsPerKilowatt * Constants.secondsPerHour;
 
 export const kilowattHours = (n: number) => make(n * joulesPerKilowattHour);
 

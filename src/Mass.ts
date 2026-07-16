@@ -1,3 +1,4 @@
+import * as Constants from "./internal/constants";
 import * as Prefix from "./Prefix";
 import * as Quantity from "./Quantity";
 
@@ -51,7 +52,7 @@ export const inMetricTons = (m: Mass) => m.value / kilogramsPerMetricTon;
 
 // Imperial
 
-const kilogramsPerPound = 0.45359237;
+const kilogramsPerPound = Constants.kilogramsPerPound;
 
 /** One ounce is 1/16 of a pound. */
 const kilogramsPerOunce = kilogramsPerPound / 16;

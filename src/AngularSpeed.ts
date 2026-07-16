@@ -1,5 +1,6 @@
 import * as Angle from "./Angle";
 import * as Duration from "./Duration";
+import * as Constants from "./internal/constants";
 import * as Quantity from "./Quantity";
 import * as Unit from "./Unit";
 
@@ -38,7 +39,8 @@ export const turnsPerSecond = (n: number) => make(n * radiansPerTurn);
 export const inTurnsPerSecond = (s: AngularSpeed) =>
   s.value / radiansPerTurn;
 
-const radiansPerSecondPerTurnPerMinute = radiansPerTurn / 60;
+const radiansPerSecondPerTurnPerMinute =
+  radiansPerTurn / Constants.secondsPerMinute;
 
 export const turnsPerMinute = (n: number) =>
   make(n * radiansPerSecondPerTurnPerMinute);

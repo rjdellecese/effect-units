@@ -1,3 +1,4 @@
+import * as Constants from "./internal/constants";
 import * as Prefix from "./Prefix";
 import * as Quantity from "./Quantity";
 
@@ -17,7 +18,8 @@ export const coulombs = (n: number) => make(n);
 
 export const inCoulombs = (c: Charge) => c.value;
 
-const coulombsPerAmpereHour = 3600;
+/** One ampere hour is one ampere (a coulomb per second) for one hour. */
+const coulombsPerAmpereHour = Constants.secondsPerHour;
 
 export const ampereHours = (n: number) => make(n * coulombsPerAmpereHour);
 

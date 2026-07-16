@@ -1,5 +1,6 @@
 import * as Area from "./Area";
 import * as Force from "./Force";
+import * as Constants from "./internal/constants";
 import * as Prefix from "./Prefix";
 import * as Quantity from "./Quantity";
 import * as Unit from "./Unit";
@@ -32,7 +33,8 @@ export const inMegapascals = (p: Pressure) =>
 
 /** One pound per square inch is one pound of force per square inch. */
 const pascalsPerPoundPerSquareInch =
-  (0.45359237 * 9.80665) / (0.0254 * 0.0254);
+  Constants.newtonsPerPoundForce /
+  (Constants.metersPerInch * Constants.metersPerInch);
 
 export const poundsPerSquareInch = (n: number) =>
   make(n * pascalsPerPoundPerSquareInch);

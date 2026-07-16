@@ -1,5 +1,6 @@
 import * as Duration from "./Duration";
 import * as Energy from "./Energy";
+import * as Constants from "./internal/constants";
 import * as Prefix from "./Prefix";
 import * as Quantity from "./Quantity";
 import * as Unit from "./Unit";
@@ -37,8 +38,12 @@ export const metricHorsepower = (n: number) =>
 export const inMetricHorsepower = (p: Power) =>
   p.value / wattsPerMetricHorsepower;
 
-/** One mechanical horsepower is 550 foot pounds per second. */
-const wattsPerMechanicalHorsepower = 550 * 0.45359237 * 9.80665 * 0.3048;
+/** One mechanical horsepower is 550 foot pounds of force per second. */
+const footPoundsPerSecondPerMechanicalHorsepower = 550;
+const wattsPerMechanicalHorsepower =
+  footPoundsPerSecondPerMechanicalHorsepower *
+  Constants.newtonsPerPoundForce *
+  Constants.metersPerFoot;
 
 export const mechanicalHorsepower = (n: number) =>
   make(n * wattsPerMechanicalHorsepower);

@@ -1,4 +1,5 @@
 import * as Duration from "./Duration";
+import * as Constants from "./internal/constants";
 import * as Quantity from "./Quantity";
 import * as Speed from "./Speed";
 import * as Unit from "./Unit";
@@ -28,17 +29,13 @@ export const metersPerSecondSquared = (n: number) => make(n);
 
 export const inMetersPerSecondSquared = (a: Acceleration) => a.value;
 
-const metersPerFoot = 0.3048;
-
-export const feetPerSecondSquared = (n: number) => make(n * metersPerFoot);
+export const feetPerSecondSquared = (n: number) =>
+  make(n * Constants.metersPerFoot);
 
 export const inFeetPerSecondSquared = (a: Acceleration) =>
-  a.value / metersPerFoot;
+  a.value / Constants.metersPerFoot;
 
-/** One gee is 9.80665 m/s², the standard acceleration due to gravity. */
-const metersPerSecondSquaredPerGee = 9.80665;
+/** One gee is the standard acceleration due to gravity. */
+export const gees = (n: number) => make(n * Constants.gee);
 
-export const gees = (n: number) => make(n * metersPerSecondSquaredPerGee);
-
-export const inGees = (a: Acceleration) =>
-  a.value / metersPerSecondSquaredPerGee;
+export const inGees = (a: Acceleration) => a.value / Constants.gee;

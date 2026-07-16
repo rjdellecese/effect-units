@@ -1,3 +1,4 @@
+import * as Constants from "./internal/constants";
 import * as Length from "./Length";
 import * as Quantity from "./Quantity";
 import * as Unit from "./Unit";
@@ -52,33 +53,38 @@ export const inSquareKilometers = (a: Area) =>
 
 // Imperial
 
-const squareMetersPerSquareInch = 0.0254 * 0.0254;
+const squareMetersPerSquareInch =
+  Constants.metersPerInch * Constants.metersPerInch;
 
 export const squareInches = (n: number) =>
   make(n * squareMetersPerSquareInch);
 
 export const inSquareInches = (a: Area) => a.value / squareMetersPerSquareInch;
 
-const squareMetersPerSquareFoot = 0.3048 * 0.3048;
+const squareMetersPerSquareFoot =
+  Constants.metersPerFoot * Constants.metersPerFoot;
 
 export const squareFeet = (n: number) => make(n * squareMetersPerSquareFoot);
 
 export const inSquareFeet = (a: Area) => a.value / squareMetersPerSquareFoot;
 
-const squareMetersPerSquareYard = 0.9144 * 0.9144;
+const squareMetersPerSquareYard =
+  Constants.metersPerYard * Constants.metersPerYard;
 
 export const squareYards = (n: number) => make(n * squareMetersPerSquareYard);
 
 export const inSquareYards = (a: Area) => a.value / squareMetersPerSquareYard;
 
 /** One acre is 4840 square yards. */
-const squareMetersPerAcre = 4840 * 0.9144 * 0.9144;
+const squareYardsPerAcre = 4840;
+const squareMetersPerAcre = squareYardsPerAcre * squareMetersPerSquareYard;
 
 export const acres = (n: number) => make(n * squareMetersPerAcre);
 
 export const inAcres = (a: Area) => a.value / squareMetersPerAcre;
 
-const squareMetersPerSquareMile = 1609.344 * 1609.344;
+const squareMetersPerSquareMile =
+  Constants.metersPerMile * Constants.metersPerMile;
 
 export const squareMiles = (n: number) => make(n * squareMetersPerSquareMile);
 

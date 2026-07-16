@@ -1,4 +1,5 @@
 import * as Acceleration from "./Acceleration";
+import * as Constants from "./internal/constants";
 import * as Mass from "./Mass";
 import * as Prefix from "./Prefix";
 import * as Quantity from "./Quantity";
@@ -34,8 +35,7 @@ export const meganewtons = (n: number) => make(Prefix.toBase("Mega", n));
 
 export const inMeganewtons = (f: Force) => Prefix.toPrefixed("Mega", f.value);
 
-/** One pound of force is 0.45359237 kg times 9.80665 m/s². */
-const newtonsPerPound = 0.45359237 * 9.80665;
+const newtonsPerPound = Constants.newtonsPerPoundForce;
 
 export const pounds = (n: number) => make(n * newtonsPerPound);
 

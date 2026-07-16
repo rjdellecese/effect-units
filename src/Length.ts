@@ -1,3 +1,4 @@
+import * as Constants from "./internal/constants";
 import * as Prefix from "./Prefix";
 import * as Quantity from "./Quantity";
 
@@ -49,55 +50,47 @@ export const inMillimeters = (l: Length) =>
 
 // Imperial
 
-const metersPerInch = 0.0254;
-
 /** One thou is one thousandth of an inch. */
-const metersPerThou = metersPerInch / 1000;
+const metersPerThou = Constants.metersPerInch / 1000;
 
 export const thou = (n: number) => make(n * metersPerThou);
 
 export const inThou = (l: Length) => l.value / metersPerThou;
 
-export const inches = (n: number) => make(n * metersPerInch);
+export const inches = (n: number) => make(n * Constants.metersPerInch);
 
-export const inInches = (l: Length) => l.value / metersPerInch;
+export const inInches = (l: Length) => l.value / Constants.metersPerInch;
 
-const metersPerFoot = 0.3048;
+export const feet = (n: number) => make(n * Constants.metersPerFoot);
 
-export const feet = (n: number) => make(n * metersPerFoot);
+export const inFeet = (l: Length) => l.value / Constants.metersPerFoot;
 
-export const inFeet = (l: Length) => l.value / metersPerFoot;
+export const yards = (n: number) => make(n * Constants.metersPerYard);
 
-const metersPerYard = 0.9144;
+export const inYards = (l: Length) => l.value / Constants.metersPerYard;
 
-export const yards = (n: number) => make(n * metersPerYard);
+export const miles = (n: number) => make(n * Constants.metersPerMile);
 
-export const inYards = (l: Length) => l.value / metersPerYard;
-
-const metersPerMile = 1609.344;
-
-export const miles = (n: number) => make(n * metersPerMile);
-
-export const inMiles = (l: Length) => l.value / metersPerMile;
+export const inMiles = (l: Length) => l.value / Constants.metersPerMile;
 
 // Typography
 
 /** One CSS pixel is 1/96 of an inch. */
-const metersPerCssPixel = metersPerInch / 96;
+const metersPerCssPixel = Constants.metersPerInch / 96;
 
 export const cssPixels = (n: number) => make(n * metersPerCssPixel);
 
 export const inCssPixels = (l: Length) => l.value / metersPerCssPixel;
 
 /** One point is 1/72 of an inch. */
-const metersPerPoint = metersPerInch / 72;
+const metersPerPoint = Constants.metersPerInch / 72;
 
 export const points = (n: number) => make(n * metersPerPoint);
 
 export const inPoints = (l: Length) => l.value / metersPerPoint;
 
 /** One pica is 1/6 of an inch. */
-const metersPerPica = metersPerInch / 6;
+const metersPerPica = Constants.metersPerInch / 6;
 
 export const picas = (n: number) => make(n * metersPerPica);
 

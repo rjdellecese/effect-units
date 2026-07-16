@@ -1,3 +1,4 @@
+import * as Constants from "./internal/constants";
 import * as Length from "./Length";
 import * as Prefix from "./Prefix";
 import * as Quantity from "./Quantity";
@@ -42,19 +43,22 @@ export const inCubicCentimeters = (v: Volume) =>
 
 // Imperial
 
-const cubicMetersPerCubicInch = 0.0254 * 0.0254 * 0.0254;
+const cubicMetersPerCubicInch =
+  Constants.metersPerInch * Constants.metersPerInch * Constants.metersPerInch;
 
 export const cubicInches = (n: number) => make(n * cubicMetersPerCubicInch);
 
 export const inCubicInches = (v: Volume) => v.value / cubicMetersPerCubicInch;
 
-const cubicMetersPerCubicFoot = 0.3048 * 0.3048 * 0.3048;
+const cubicMetersPerCubicFoot =
+  Constants.metersPerFoot * Constants.metersPerFoot * Constants.metersPerFoot;
 
 export const cubicFeet = (n: number) => make(n * cubicMetersPerCubicFoot);
 
 export const inCubicFeet = (v: Volume) => v.value / cubicMetersPerCubicFoot;
 
-const cubicMetersPerCubicYard = 0.9144 * 0.9144 * 0.9144;
+const cubicMetersPerCubicYard =
+  Constants.metersPerYard * Constants.metersPerYard * Constants.metersPerYard;
 
 export const cubicYards = (n: number) => make(n * cubicMetersPerCubicYard);
 
