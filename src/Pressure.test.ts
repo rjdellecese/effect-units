@@ -6,17 +6,19 @@ import * as Force from "./Force";
 import {
   isCloseTo,
   isQuantityCloseTo,
-  testRoundtrip,
+  testRoundtrips,
 } from "./internal/testUtils";
 import * as Pressure from "./Pressure";
 import * as Quantity from "./Quantity";
 
 describe("Pressure", () => {
-  testRoundtrip(Pressure.pascals, Pressure.inPascals);
-  testRoundtrip(Pressure.kilopascals, Pressure.inKilopascals);
-  testRoundtrip(Pressure.megapascals, Pressure.inMegapascals);
-  testRoundtrip(Pressure.poundsPerSquareInch, Pressure.inPoundsPerSquareInch);
-  testRoundtrip(Pressure.atmospheres, Pressure.inAtmospheres);
+  testRoundtrips([
+    [Pressure.pascals, Pressure.inPascals],
+    [Pressure.kilopascals, Pressure.inKilopascals],
+    [Pressure.megapascals, Pressure.inMegapascals],
+    [Pressure.poundsPerSquareInch, Pressure.inPoundsPerSquareInch],
+    [Pressure.atmospheres, Pressure.inAtmospheres],
+  ]);
 
   it("is a force per an area", () => {
     assertTrue(

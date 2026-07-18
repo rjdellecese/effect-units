@@ -4,22 +4,24 @@ import { assertTrue } from "@effect/vitest/utils";
 import * as AngularAcceleration from "./AngularAcceleration";
 import * as AngularSpeed from "./AngularSpeed";
 import * as Duration from "./Duration";
-import { isQuantityCloseTo, testRoundtrip } from "./internal/testUtils";
+import { isQuantityCloseTo, testRoundtrips } from "./internal/testUtils";
 import * as Quantity from "./Quantity";
 
 describe("AngularAcceleration", () => {
-  testRoundtrip(
-    AngularAcceleration.radiansPerSecondSquared,
-    AngularAcceleration.inRadiansPerSecondSquared,
-  );
-  testRoundtrip(
-    AngularAcceleration.degreesPerSecondSquared,
-    AngularAcceleration.inDegreesPerSecondSquared,
-  );
-  testRoundtrip(
-    AngularAcceleration.turnsPerSecondSquared,
-    AngularAcceleration.inTurnsPerSecondSquared,
-  );
+  testRoundtrips([
+    [
+      AngularAcceleration.radiansPerSecondSquared,
+      AngularAcceleration.inRadiansPerSecondSquared,
+    ],
+    [
+      AngularAcceleration.degreesPerSecondSquared,
+      AngularAcceleration.inDegreesPerSecondSquared,
+    ],
+    [
+      AngularAcceleration.turnsPerSecondSquared,
+      AngularAcceleration.inTurnsPerSecondSquared,
+    ],
+  ]);
 
   it("is an angular speed per a duration", () => {
     assertTrue(

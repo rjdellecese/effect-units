@@ -2,7 +2,7 @@
 
 Typed quantities and unit conversions for [Effect](https://effect.website).
 
-A port of Elm's [`ianmackenzie/elm-units`](https://package.elm-lang.org/packages/ianmackenzie/elm-units/latest/) built on `effect/BigDecimal`. Originally extracted from [globecommerce](https://github.com/GlobeCommerce/globecommerce)'s `@globecommerce/units` package.
+A port of Elm's [`ianmackenzie/elm-units`](https://package.elm-lang.org/packages/ianmackenzie/elm-units/latest/) for [Effect](https://effect.website).
 
 ## Install
 

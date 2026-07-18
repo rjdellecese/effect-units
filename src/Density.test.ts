@@ -5,23 +5,19 @@ import * as Density from "./Density";
 import {
   isCloseTo,
   isQuantityCloseTo,
-  testRoundtrip,
+  testRoundtrips,
 } from "./internal/testUtils";
 import * as Mass from "./Mass";
 import * as Quantity from "./Quantity";
 import * as Volume from "./Volume";
 
 describe("Density", () => {
-  testRoundtrip(
-    Density.kilogramsPerCubicMeter,
-    Density.inKilogramsPerCubicMeter,
-  );
-  testRoundtrip(
-    Density.gramsPerCubicCentimeter,
-    Density.inGramsPerCubicCentimeter,
-  );
-  testRoundtrip(Density.poundsPerCubicInch, Density.inPoundsPerCubicInch);
-  testRoundtrip(Density.poundsPerCubicFoot, Density.inPoundsPerCubicFoot);
+  testRoundtrips([
+    [Density.kilogramsPerCubicMeter, Density.inKilogramsPerCubicMeter],
+    [Density.gramsPerCubicCentimeter, Density.inGramsPerCubicCentimeter],
+    [Density.poundsPerCubicInch, Density.inPoundsPerCubicInch],
+    [Density.poundsPerCubicFoot, Density.inPoundsPerCubicFoot],
+  ]);
 
   it("is a mass per a volume", () => {
     assertTrue(

@@ -3,14 +3,16 @@ import { assertEquals, assertTrue } from "@effect/vitest/utils";
 import * as FastCheck from "effect/FastCheck";
 
 import * as Angle from "./Angle";
-import { isCloseTo, testRoundtrip } from "./internal/testUtils";
+import { isCloseTo, testRoundtrips } from "./internal/testUtils";
 
 describe("Angle", () => {
-  testRoundtrip(Angle.radians, Angle.inRadians);
-  testRoundtrip(Angle.degrees, Angle.inDegrees);
-  testRoundtrip(Angle.turns, Angle.inTurns);
-  testRoundtrip(Angle.minutes, Angle.inMinutes);
-  testRoundtrip(Angle.seconds, Angle.inSeconds);
+  testRoundtrips([
+    [Angle.radians, Angle.inRadians],
+    [Angle.degrees, Angle.inDegrees],
+    [Angle.turns, Angle.inTurns],
+    [Angle.minutes, Angle.inMinutes],
+    [Angle.seconds, Angle.inSeconds],
+  ]);
 
   it("relates degrees to turns", () => {
     assertTrue(isCloseTo(Angle.inTurns(Angle.degrees(360)), 1));

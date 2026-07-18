@@ -1,12 +1,14 @@
 import { describe } from "@effect/vitest";
 
 import * as Inductance from "./Inductance";
-import { testRoundtrip } from "./internal/testUtils";
+import { testRoundtrips } from "./internal/testUtils";
 
 describe("Inductance", () => {
-  testRoundtrip(Inductance.henries, Inductance.inHenries);
-  testRoundtrip(Inductance.nanohenries, Inductance.inNanohenries);
-  testRoundtrip(Inductance.microhenries, Inductance.inMicrohenries);
-  testRoundtrip(Inductance.millihenries, Inductance.inMillihenries);
-  testRoundtrip(Inductance.kilohenries, Inductance.inKilohenries);
+  testRoundtrips([
+    [Inductance.henries, Inductance.inHenries],
+    [Inductance.nanohenries, Inductance.inNanohenries],
+    [Inductance.microhenries, Inductance.inMicrohenries],
+    [Inductance.millihenries, Inductance.inMillihenries],
+    [Inductance.kilohenries, Inductance.inKilohenries],
+  ]);
 });

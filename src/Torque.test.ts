@@ -2,14 +2,16 @@ import { describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 
 import * as Force from "./Force";
-import { isQuantityCloseTo, testRoundtrip } from "./internal/testUtils";
+import { isQuantityCloseTo, testRoundtrips } from "./internal/testUtils";
 import * as Length from "./Length";
 import * as Quantity from "./Quantity";
 import * as Torque from "./Torque";
 
 describe("Torque", () => {
-  testRoundtrip(Torque.newtonMeters, Torque.inNewtonMeters);
-  testRoundtrip(Torque.poundFeet, Torque.inPoundFeet);
+  testRoundtrips([
+    [Torque.newtonMeters, Torque.inNewtonMeters],
+    [Torque.poundFeet, Torque.inPoundFeet],
+  ]);
 
   it("is a force times a length", () => {
     assertTrue(

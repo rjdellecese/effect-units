@@ -5,25 +5,27 @@ import * as Area from "./Area";
 import {
   isCloseTo,
   isQuantityCloseTo,
-  testRoundtrip,
+  testRoundtrips,
 } from "./internal/testUtils";
 import * as Length from "./Length";
 import * as Quantity from "./Quantity";
 
 describe("Area", () => {
-  // Metric
-  testRoundtrip(Area.squareMeters, Area.inSquareMeters);
-  testRoundtrip(Area.squareMillimeters, Area.inSquareMillimeters);
-  testRoundtrip(Area.squareCentimeters, Area.inSquareCentimeters);
-  testRoundtrip(Area.hectares, Area.inHectares);
-  testRoundtrip(Area.squareKilometers, Area.inSquareKilometers);
+  testRoundtrips([
+    // Metric
+    [Area.squareMeters, Area.inSquareMeters],
+    [Area.squareMillimeters, Area.inSquareMillimeters],
+    [Area.squareCentimeters, Area.inSquareCentimeters],
+    [Area.hectares, Area.inHectares],
+    [Area.squareKilometers, Area.inSquareKilometers],
 
-  // Imperial
-  testRoundtrip(Area.squareInches, Area.inSquareInches);
-  testRoundtrip(Area.squareFeet, Area.inSquareFeet);
-  testRoundtrip(Area.squareYards, Area.inSquareYards);
-  testRoundtrip(Area.acres, Area.inAcres);
-  testRoundtrip(Area.squareMiles, Area.inSquareMiles);
+    // Imperial
+    [Area.squareInches, Area.inSquareInches],
+    [Area.squareFeet, Area.inSquareFeet],
+    [Area.squareYards, Area.inSquareYards],
+    [Area.acres, Area.inAcres],
+    [Area.squareMiles, Area.inSquareMiles],
+  ]);
 
   it("is the product of two lengths", () => {
     assertTrue(

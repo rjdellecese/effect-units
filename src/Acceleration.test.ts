@@ -3,20 +3,16 @@ import { assertTrue } from "@effect/vitest/utils";
 
 import * as Acceleration from "./Acceleration";
 import * as Duration from "./Duration";
-import { isQuantityCloseTo, testRoundtrip } from "./internal/testUtils";
+import { isQuantityCloseTo, testRoundtrips } from "./internal/testUtils";
 import * as Quantity from "./Quantity";
 import * as Speed from "./Speed";
 
 describe("Acceleration", () => {
-  testRoundtrip(
-    Acceleration.metersPerSecondSquared,
-    Acceleration.inMetersPerSecondSquared,
-  );
-  testRoundtrip(
-    Acceleration.feetPerSecondSquared,
-    Acceleration.inFeetPerSecondSquared,
-  );
-  testRoundtrip(Acceleration.gees, Acceleration.inGees);
+  testRoundtrips([
+    [Acceleration.metersPerSecondSquared, Acceleration.inMetersPerSecondSquared],
+    [Acceleration.feetPerSecondSquared, Acceleration.inFeetPerSecondSquared],
+    [Acceleration.gees, Acceleration.inGees],
+  ]);
 
   it("is a speed per a duration", () => {
     assertTrue(

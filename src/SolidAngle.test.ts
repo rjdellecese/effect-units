@@ -2,13 +2,15 @@ import { describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 
 import * as Angle from "./Angle";
-import { isCloseTo, testRoundtrip } from "./internal/testUtils";
+import { isCloseTo, testRoundtrips } from "./internal/testUtils";
 import * as SolidAngle from "./SolidAngle";
 
 describe("SolidAngle", () => {
-  testRoundtrip(SolidAngle.steradians, SolidAngle.inSteradians);
-  testRoundtrip(SolidAngle.spats, SolidAngle.inSpats);
-  testRoundtrip(SolidAngle.squareDegrees, SolidAngle.inSquareDegrees);
+  testRoundtrips([
+    [SolidAngle.steradians, SolidAngle.inSteradians],
+    [SolidAngle.spats, SolidAngle.inSpats],
+    [SolidAngle.squareDegrees, SolidAngle.inSquareDegrees],
+  ]);
 
   it("one spat is 4π steradians", () => {
     assertTrue(

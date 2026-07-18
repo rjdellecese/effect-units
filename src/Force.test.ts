@@ -3,16 +3,18 @@ import { assertTrue } from "@effect/vitest/utils";
 
 import * as Acceleration from "./Acceleration";
 import * as Force from "./Force";
-import { isQuantityCloseTo, testRoundtrip } from "./internal/testUtils";
+import { isQuantityCloseTo, testRoundtrips } from "./internal/testUtils";
 import * as Mass from "./Mass";
 import * as Quantity from "./Quantity";
 
 describe("Force", () => {
-  testRoundtrip(Force.newtons, Force.inNewtons);
-  testRoundtrip(Force.kilonewtons, Force.inKilonewtons);
-  testRoundtrip(Force.meganewtons, Force.inMeganewtons);
-  testRoundtrip(Force.pounds, Force.inPounds);
-  testRoundtrip(Force.kips, Force.inKips);
+  testRoundtrips([
+    [Force.newtons, Force.inNewtons],
+    [Force.kilonewtons, Force.inKilonewtons],
+    [Force.meganewtons, Force.inMeganewtons],
+    [Force.pounds, Force.inPounds],
+    [Force.kips, Force.inKips],
+  ]);
 
   it("is a mass times an acceleration", () => {
     assertTrue(

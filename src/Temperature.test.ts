@@ -4,7 +4,7 @@ import * as Equal from "effect/Equal";
 import * as FastCheck from "effect/FastCheck";
 import * as Schema from "effect/Schema";
 
-import { double, isCloseTo, testRoundtrip } from "./internal/testUtils";
+import { double, isCloseTo, testRoundtrips } from "./internal/testUtils";
 import * as Temperature from "./Temperature";
 
 describe("Temperature", () => {
@@ -12,25 +12,19 @@ describe("Temperature", () => {
   // is absolute, not relative to the input.
   const tolerance = { absoluteTolerance: 1e-9 };
 
-  testRoundtrip(Temperature.kelvins, Temperature.inKelvins, tolerance);
-  testRoundtrip(
-    Temperature.degreesCelsius,
-    Temperature.inDegreesCelsius,
+  testRoundtrips(
+    [
+      [Temperature.kelvins, Temperature.inKelvins],
+      [Temperature.degreesCelsius, Temperature.inDegreesCelsius],
+      [Temperature.degreesFahrenheit, Temperature.inDegreesFahrenheit],
+    ],
     tolerance,
   );
-  testRoundtrip(
-    Temperature.degreesFahrenheit,
-    Temperature.inDegreesFahrenheit,
-    tolerance,
-  );
-  testRoundtrip(
-    Temperature.celsiusDegrees,
-    Temperature.inCelsiusDegrees,
-    tolerance,
-  );
-  testRoundtrip(
-    Temperature.fahrenheitDegrees,
-    Temperature.inFahrenheitDegrees,
+  testRoundtrips(
+    [
+      [Temperature.celsiusDegrees, Temperature.inCelsiusDegrees],
+      [Temperature.fahrenheitDegrees, Temperature.inFahrenheitDegrees],
+    ],
     tolerance,
   );
 

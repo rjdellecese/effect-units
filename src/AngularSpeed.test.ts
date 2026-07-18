@@ -9,23 +9,19 @@ import * as Duration from "./Duration";
 import {
   double,
   isQuantityCloseTo,
-  testRoundtrip,
+  testRoundtrips,
 } from "./internal/testUtils";
 import * as Quantity from "./Quantity";
 
 describe("AngularSpeed", () => {
-  testRoundtrip(AngularSpeed.radiansPerSecond, AngularSpeed.inRadiansPerSecond);
-  testRoundtrip(AngularSpeed.degreesPerSecond, AngularSpeed.inDegreesPerSecond);
-  testRoundtrip(AngularSpeed.turnsPerSecond, AngularSpeed.inTurnsPerSecond);
-  testRoundtrip(AngularSpeed.turnsPerMinute, AngularSpeed.inTurnsPerMinute);
-  testRoundtrip(
-    AngularSpeed.revolutionsPerSecond,
-    AngularSpeed.inRevolutionsPerSecond,
-  );
-  testRoundtrip(
-    AngularSpeed.revolutionsPerMinute,
-    AngularSpeed.inRevolutionsPerMinute,
-  );
+  testRoundtrips([
+    [AngularSpeed.radiansPerSecond, AngularSpeed.inRadiansPerSecond],
+    [AngularSpeed.degreesPerSecond, AngularSpeed.inDegreesPerSecond],
+    [AngularSpeed.turnsPerSecond, AngularSpeed.inTurnsPerSecond],
+    [AngularSpeed.turnsPerMinute, AngularSpeed.inTurnsPerMinute],
+    [AngularSpeed.revolutionsPerSecond, AngularSpeed.inRevolutionsPerSecond],
+    [AngularSpeed.revolutionsPerMinute, AngularSpeed.inRevolutionsPerMinute],
+  ]);
 
   it("is an angle per a duration", () => {
     assertTrue(

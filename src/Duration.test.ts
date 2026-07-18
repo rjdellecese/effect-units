@@ -6,16 +6,18 @@ import * as FastCheck from "effect/FastCheck";
 import * as Option from "effect/Option";
 
 import * as Duration from "./Duration";
-import { isCloseTo, testRoundtrip } from "./internal/testUtils";
+import { isCloseTo, testRoundtrips } from "./internal/testUtils";
 
 describe("Duration", () => {
-  testRoundtrip(Duration.seconds, Duration.inSeconds);
-  testRoundtrip(Duration.milliseconds, Duration.inMilliseconds);
-  testRoundtrip(Duration.minutes, Duration.inMinutes);
-  testRoundtrip(Duration.hours, Duration.inHours);
-  testRoundtrip(Duration.days, Duration.inDays);
-  testRoundtrip(Duration.weeks, Duration.inWeeks);
-  testRoundtrip(Duration.julianYears, Duration.inJulianYears);
+  testRoundtrips([
+    [Duration.seconds, Duration.inSeconds],
+    [Duration.milliseconds, Duration.inMilliseconds],
+    [Duration.minutes, Duration.inMinutes],
+    [Duration.hours, Duration.inHours],
+    [Duration.days, Duration.inDays],
+    [Duration.weeks, Duration.inWeeks],
+    [Duration.julianYears, Duration.inJulianYears],
+  ]);
 
   describe("interop", () => {
     it("roundtrips through effect/Duration", () => {

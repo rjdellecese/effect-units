@@ -3,17 +3,19 @@ import { assertTrue } from "@effect/vitest/utils";
 
 import * as Duration from "./Duration";
 import * as Energy from "./Energy";
-import { isQuantityCloseTo, testRoundtrip } from "./internal/testUtils";
+import { isQuantityCloseTo, testRoundtrips } from "./internal/testUtils";
 import * as Power from "./Power";
 import * as Quantity from "./Quantity";
 
 describe("Power", () => {
-  testRoundtrip(Power.watts, Power.inWatts);
-  testRoundtrip(Power.kilowatts, Power.inKilowatts);
-  testRoundtrip(Power.megawatts, Power.inMegawatts);
-  testRoundtrip(Power.metricHorsepower, Power.inMetricHorsepower);
-  testRoundtrip(Power.mechanicalHorsepower, Power.inMechanicalHorsepower);
-  testRoundtrip(Power.electricalHorsepower, Power.inElectricalHorsepower);
+  testRoundtrips([
+    [Power.watts, Power.inWatts],
+    [Power.kilowatts, Power.inKilowatts],
+    [Power.megawatts, Power.inMegawatts],
+    [Power.metricHorsepower, Power.inMetricHorsepower],
+    [Power.mechanicalHorsepower, Power.inMechanicalHorsepower],
+    [Power.electricalHorsepower, Power.inElectricalHorsepower],
+  ]);
 
   it("is an energy per a duration", () => {
     assertTrue(

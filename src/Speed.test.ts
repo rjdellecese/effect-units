@@ -5,17 +5,19 @@ import * as Duration from "./Duration";
 import {
   isCloseTo,
   isQuantityCloseTo,
-  testRoundtrip,
+  testRoundtrips,
 } from "./internal/testUtils";
 import * as Length from "./Length";
 import * as Quantity from "./Quantity";
 import * as Speed from "./Speed";
 
 describe("Speed", () => {
-  testRoundtrip(Speed.metersPerSecond, Speed.inMetersPerSecond);
-  testRoundtrip(Speed.kilometersPerHour, Speed.inKilometersPerHour);
-  testRoundtrip(Speed.feetPerSecond, Speed.inFeetPerSecond);
-  testRoundtrip(Speed.milesPerHour, Speed.inMilesPerHour);
+  testRoundtrips([
+    [Speed.metersPerSecond, Speed.inMetersPerSecond],
+    [Speed.kilometersPerHour, Speed.inKilometersPerHour],
+    [Speed.feetPerSecond, Speed.inFeetPerSecond],
+    [Speed.milesPerHour, Speed.inMilesPerHour],
+  ]);
 
   it("is a length per a duration", () => {
     assertTrue(

@@ -1,5 +1,6 @@
 import { it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
+import * as Array from "effect/Array";
 import * as FastCheck from "effect/FastCheck";
 import { pipe } from "effect/Function";
 
@@ -49,10 +50,6 @@ export const isQuantityCloseTo = <U extends Unit.Unit>(
 /**
  * Registers a property test asserting that a constructor/extractor pair
  * roundtrips within tolerance. Call inside a `describe` block.
- *
- * `Q` is deliberately unconstrained (not `Quantity`): the intermediate only
- * needs to be whatever the pair agrees on, which lets `Temperature`'s
- * absolute type — a non-`Quantity` — use the same helper.
  */
 export const testRoundtrip = <Q>(
   there: (n: number) => Q,
@@ -66,4 +63,17 @@ export const testRoundtrip = <Q>(
       }),
     );
   });
+};
+
+/**
+ * Registers a {@link testRoundtrip} property test for each
+ * constructor/extractor pair. Call inside a `describe` block.
+ */
+export const testRoundtrips = <Q>(
+  pairs: ReadonlyArray<readonly [(n: number) => Q, (q: Q) => number]>,
+  tolerance: Tolerance = {},
+): void => {
+  Array.forEach(pairs, ([there, back]) =>
+    testRoundtrip(there, back, tolerance),
+  );
 };

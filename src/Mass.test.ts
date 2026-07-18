@@ -1,23 +1,25 @@
 import { describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 
-import { isCloseTo, testRoundtrip } from "./internal/testUtils";
+import { isCloseTo, testRoundtrips } from "./internal/testUtils";
 import * as Mass from "./Mass";
 
 describe("Mass", () => {
-  // Metric
-  testRoundtrip(Mass.kilograms, Mass.inKilograms);
-  testRoundtrip(Mass.grams, Mass.inGrams);
-  testRoundtrip(Mass.milligrams, Mass.inMilligrams);
-  testRoundtrip(Mass.micrograms, Mass.inMicrograms);
-  testRoundtrip(Mass.nanograms, Mass.inNanograms);
-  testRoundtrip(Mass.metricTons, Mass.inMetricTons);
+  testRoundtrips([
+    // Metric
+    [Mass.kilograms, Mass.inKilograms],
+    [Mass.grams, Mass.inGrams],
+    [Mass.milligrams, Mass.inMilligrams],
+    [Mass.micrograms, Mass.inMicrograms],
+    [Mass.nanograms, Mass.inNanograms],
+    [Mass.metricTons, Mass.inMetricTons],
 
-  // Imperial
-  testRoundtrip(Mass.ounces, Mass.inOunces);
-  testRoundtrip(Mass.pounds, Mass.inPounds);
-  testRoundtrip(Mass.longTons, Mass.inLongTons);
-  testRoundtrip(Mass.shortTons, Mass.inShortTons);
+    // Imperial
+    [Mass.ounces, Mass.inOunces],
+    [Mass.pounds, Mass.inPounds],
+    [Mass.longTons, Mass.inLongTons],
+    [Mass.shortTons, Mass.inShortTons],
+  ]);
 
   it("relates pounds to ounces", () => {
     assertTrue(isCloseTo(Mass.inOunces(Mass.pounds(1)), 16));

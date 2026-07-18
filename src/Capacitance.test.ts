@@ -1,11 +1,13 @@
 import { describe } from "@effect/vitest";
 
 import * as Capacitance from "./Capacitance";
-import { testRoundtrip } from "./internal/testUtils";
+import { testRoundtrips } from "./internal/testUtils";
 
 describe("Capacitance", () => {
-  testRoundtrip(Capacitance.farads, Capacitance.inFarads);
-  testRoundtrip(Capacitance.picofarads, Capacitance.inPicofarads);
-  testRoundtrip(Capacitance.nanofarads, Capacitance.inNanofarads);
-  testRoundtrip(Capacitance.microfarads, Capacitance.inMicrofarads);
+  testRoundtrips([
+    [Capacitance.farads, Capacitance.inFarads],
+    [Capacitance.picofarads, Capacitance.inPicofarads],
+    [Capacitance.nanofarads, Capacitance.inNanofarads],
+    [Capacitance.microfarads, Capacitance.inMicrofarads],
+  ]);
 });

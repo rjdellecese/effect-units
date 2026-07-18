@@ -11,19 +11,6 @@ import * as String from "effect/String";
 /**
  * The leaf tags of the unit algebra — every other unit is a `Product` or
  * `Rate` composition of these.
- *
- * The set is ported from `elm-units` and is deliberately *not* the SI base
- * set: it is the set of leaves that makes the library's compositions
- * expressible while keeping unit trees shallow, not a physically minimal
- * basis. Notable divergences from SI: charge (`Coulombs`) is the base tag
- * and current is derived as `Rate<Coulombs, Seconds>` (SI does the
- * reverse); the candela — an SI base unit — is derived here as
- * `Rate<Lumens, Steradians>`; `Farads` and `Henries` are kept opaque, as in
- * `elm-units`, even though decompositions via volts exist; `Radians` and
- * `Steradians` (dimensionless in SI), `Pixels` (screen space), and
- * `CelsiusDegrees` (temperature deltas) are pragmatic additions; and
- * kelvins are absent because absolute temperature is not a `Quantity` (see
- * `Temperature`).
  */
 export const BaseUnit = Schema.Literal(
   "Meters",

@@ -4,12 +4,14 @@ import { assertTrue } from "@effect/vitest/utils";
 import * as Charge from "./Charge";
 import * as Current from "./Current";
 import * as Duration from "./Duration";
-import { isQuantityCloseTo, testRoundtrip } from "./internal/testUtils";
+import { isQuantityCloseTo, testRoundtrips } from "./internal/testUtils";
 import * as Quantity from "./Quantity";
 
 describe("Current", () => {
-  testRoundtrip(Current.amperes, Current.inAmperes);
-  testRoundtrip(Current.milliamperes, Current.inMilliamperes);
+  testRoundtrips([
+    [Current.amperes, Current.inAmperes],
+    [Current.milliamperes, Current.inMilliamperes],
+  ]);
 
   it("is a charge per a duration", () => {
     assertTrue(
