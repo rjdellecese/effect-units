@@ -5,9 +5,11 @@ import {
   assertTrue,
   deepStrictEqual,
 } from "@effect/vitest/utils";
+import * as Array from "effect/Array";
 import * as Equal from "effect/Equal";
 import * as FastCheck from "effect/FastCheck";
 import * as Schema from "effect/Schema";
+import * as String from "effect/String";
 
 import { isCloseTo, double } from "./internal/testUtils";
 import * as Length from "./Length";
@@ -23,7 +25,7 @@ describe("multiply", () => {
     { label: "Mass", constructor: Mass.kilograms },
   ];
 
-  baseQuantities.forEach((baseQuantity) => {
+  Array.forEach(baseQuantities, (baseQuantity) => {
     it(`number * Quantity (${baseQuantity.label})`, () => {
       FastCheck.assert(
         FastCheck.property(double, double, (a, b) => {
@@ -303,6 +305,8 @@ describe("inspection", () => {
       unit: "(Meters/Seconds)",
       value: 5,
     });
-    assertTrue(speed.toString().includes('"unit": "(Meters/Seconds)"'));
+    assertTrue(
+      String.includes('"unit": "(Meters/Seconds)"')(speed.toString()),
+    );
   });
 });

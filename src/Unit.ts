@@ -1,10 +1,12 @@
 import * as Equal from "effect/Equal";
+import { pipe } from "effect/Function";
 import * as Hash from "effect/Hash";
 import * as Inspectable from "effect/Inspectable";
 import * as Option from "effect/Option";
 import * as ParseResult from "effect/ParseResult";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
+import * as String from "effect/String";
 
 /**
  * The leaf tags of the unit algebra — every other unit is a `Product` or
@@ -140,38 +142,45 @@ export const encode = (u: Unit): string =>
 // the remaining input.
 type Parsed = readonly [unit: Unit, rest: string];
 
-const parseBaseUnit = (input: string): Option.Option<Parsed> => {
-  const name = input.match(/^[A-Za-z]+/)?.[0] ?? "";
-
-  return Schema.is(BaseUnit)(name)
-    ? Option.some([name, input.slice(name.length)])
-    : Option.none();
-};
+const parseBaseUnit = (input: string): Option.Option<Parsed> =>
+  pipe(
+    String.match(/^[A-Za-z]+/)(input),
+    Option.flatMap((matches) => Option.fromNullable(matches[0])),
+    Option.filter(Schema.is(BaseUnit)),
+    Option.map((name) => [name, String.slice(name.length)(input)] as const),
+  );
 
 const parseComposite = (input: string): Option.Option<Parsed> =>
-  parseTree(input.slice(1)).pipe(
-    Option.flatMap(([first, afterFirst]) => {
-      const operator = afterFirst.charAt(0);
-
-      return operator !== "*" && operator !== "/"
-        ? Option.none()
-        : parseTree(afterFirst.slice(1)).pipe(
+  pipe(
+    parseTree(String.slice(1)(input)),
+    Option.flatMap(([first, afterFirst]) =>
+      pipe(
+        String.charAt(0)(afterFirst),
+        Option.filter(
+          (operator): operator is "*" | "/" =>
+            operator === "*" || operator === "/",
+        ),
+        Option.flatMap((operator) =>
+          pipe(
+            parseTree(String.slice(1)(afterFirst)),
             Option.flatMap(([second, afterSecond]) =>
-              afterSecond.startsWith(")")
+              String.startsWith(")")(afterSecond)
                 ? Option.some([
                     operator === "*"
                       ? product(first, second)
                       : rate(first, second),
-                    afterSecond.slice(1),
+                    String.slice(1)(afterSecond),
                   ] as const)
                 : Option.none(),
             ),
-          );
-    }),
+          ),
+        ),
+      ),
+    ),
   );
 
 const parseTree = (input: string): Option.Option<Parsed> =>
-  input.startsWith("(") ? parseComposite(input) : parseBaseUnit(input);
+  String.startsWith("(")(input) ? parseComposite(input) : parseBaseUnit(input);
 
 /**
  * Parses the canonical encoding produced by {@link encode}. Returns
