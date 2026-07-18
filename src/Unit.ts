@@ -1,4 +1,6 @@
-import * as Data from "effect/Data";
+import * as Equal from "effect/Equal";
+import * as Hash from "effect/Hash";
+import * as Inspectable from "effect/Inspectable";
 import * as Option from "effect/Option";
 import * as ParseResult from "effect/ParseResult";
 import * as Predicate from "effect/Predicate";
@@ -38,7 +40,8 @@ export const BaseUnit = Schema.Literal(
 
 export type BaseUnit = typeof BaseUnit.Type;
 
-export interface Product<in out U1 extends Unit, in out U2 extends Unit> {
+export interface Product<in out U1 extends Unit, in out U2 extends Unit>
+  extends Equal.Equal, Inspectable.Inspectable {
   readonly _tag: "Product";
   readonly left: U1;
   readonly right: U2;
@@ -47,7 +50,7 @@ export interface Product<in out U1 extends Unit, in out U2 extends Unit> {
 export interface Rate<
   in out Dependent extends Unit,
   in out Independent extends Unit,
-> {
+> extends Equal.Equal, Inspectable.Inspectable {
   readonly _tag: "Rate";
   readonly dependent: Dependent;
   readonly independent: Independent;
@@ -59,19 +62,39 @@ export type Squared<U extends Unit> = Product<U, U>;
 
 export type Cubed<U extends Unit> = Product<Product<U, U>, U>;
 
-// Composite units are built with Data.struct, so units support Equal.equals
-// and Hash out of the box (base units are plain strings, which already do).
+// Composite units implement Equal, Hash, and Inspectable (base units are
+// bare strings, which support all three natively). Inspection shows the
+// canonical encoding.
+
+const Proto = {
+  [Equal.symbol](this: Unit, that: unknown): boolean {
+    return isUnit(that) && equals(this, that);
+  },
+  [Hash.symbol](this: Unit): number {
+    return Hash.string(encode(this));
+  },
+  toJSON(this: Unit): string {
+    return encode(this);
+  },
+  toString(this: Unit): string {
+    return encode(this);
+  },
+  [Inspectable.NodeInspectSymbol](this: Unit): string {
+    return encode(this);
+  },
+} as const;
 
 export const product = <U1 extends Unit, U2 extends Unit>(
   left: U1,
   right: U2,
-): Product<U1, U2> => Data.struct({ _tag: "Product" as const, left, right });
+): Product<U1, U2> =>
+  Object.assign(Object.create(Proto), { _tag: "Product", left, right });
 
 export const rate = <Dependent extends Unit, Independent extends Unit>(
   dependent: Dependent,
   independent: Independent,
 ): Rate<Dependent, Independent> =>
-  Data.struct({ _tag: "Rate" as const, dependent, independent });
+  Object.assign(Object.create(Proto), { _tag: "Rate", dependent, independent });
 
 export const squared = <U extends Unit>(unit: U): Squared<U> =>
   product(unit, unit);
@@ -102,9 +125,9 @@ export const equals = (a: Unit, b: Unit): boolean =>
  * `"(Meters/Seconds)"`, or `"(Kilograms*((Meters/Seconds)/Seconds))"`.
  *
  * This is a stable serialization format — it appears as the `unit` field of
- * a `Quantity`'s encoded form and feeds unit hashing — not a display format.
- * For human-facing output, `Quantity` implements `Inspectable`
- * (`toString`/`toJSON`).
+ * a `Quantity`'s encoded form and feeds unit hashing. It doubles as the
+ * inspection output for composite units, whose `Inspectable` implementation
+ * delegates to it.
  */
 export const encode = (u: Unit): string =>
   typeof u === "string"
@@ -113,49 +136,53 @@ export const encode = (u: Unit): string =>
       ? `(${encode(u.left)}*${encode(u.right)})`
       : `(${encode(u.dependent)}/${encode(u.independent)})`;
 
+// A parse step consumes a prefix of the input, yielding the parsed unit and
+// the remaining input.
+type Parsed = readonly [unit: Unit, rest: string];
+
+const parseBaseUnit = (input: string): Option.Option<Parsed> => {
+  const name = input.match(/^[A-Za-z]+/)?.[0] ?? "";
+
+  return Schema.is(BaseUnit)(name)
+    ? Option.some([name, input.slice(name.length)])
+    : Option.none();
+};
+
+const parseComposite = (input: string): Option.Option<Parsed> =>
+  parseTree(input.slice(1)).pipe(
+    Option.flatMap(([first, afterFirst]) => {
+      const operator = afterFirst.charAt(0);
+
+      return operator !== "*" && operator !== "/"
+        ? Option.none()
+        : parseTree(afterFirst.slice(1)).pipe(
+            Option.flatMap(([second, afterSecond]) =>
+              afterSecond.startsWith(")")
+                ? Option.some([
+                    operator === "*"
+                      ? product(first, second)
+                      : rate(first, second),
+                    afterSecond.slice(1),
+                  ] as const)
+                : Option.none(),
+            ),
+          );
+    }),
+  );
+
+const parseTree = (input: string): Option.Option<Parsed> =>
+  input.startsWith("(") ? parseComposite(input) : parseBaseUnit(input);
+
 /**
  * Parses the canonical encoding produced by {@link encode}. Returns
  * `Option.none()` for anything else.
  */
-export const decode = (input: string): Option.Option<Unit> => {
-  let index = 0;
-
-  const parseTree = (): Unit | undefined => {
-    if (input[index] === "(") {
-      index++;
-      const first = parseTree();
-      if (first === undefined) {
-        return undefined;
-      }
-      const operator = input[index];
-      if (operator !== "*" && operator !== "/") {
-        return undefined;
-      }
-      index++;
-      const second = parseTree();
-      if (second === undefined || input[index] !== ")") {
-        return undefined;
-      }
-      index++;
-
-      return operator === "*" ? product(first, second) : rate(first, second);
-    }
-
-    const start = index;
-    while (index < input.length && /[A-Za-z]/.test(input.charAt(index))) {
-      index++;
-    }
-    const name = input.slice(start, index);
-
-    return Schema.is(BaseUnit)(name) ? name : undefined;
-  };
-
-  const result = parseTree();
-
-  return result !== undefined && index === input.length
-    ? Option.some(result)
-    : Option.none();
-};
+export const decode = (input: string): Option.Option<Unit> =>
+  parseTree(input).pipe(
+    Option.flatMap(([unit, rest]) =>
+      rest === "" ? Option.some(unit) : Option.none(),
+    ),
+  );
 
 export const UnitFromSelf = Schema.declare(isUnit).annotations({
   identifier: "UnitFromSelf",

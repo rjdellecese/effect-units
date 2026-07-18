@@ -83,4 +83,15 @@ describe("Unit", () => {
       Either.isLeft(Schema.decodeEither(Unit.Unit)("(Meters/Seconds")),
     );
   });
+
+  it("composite units inspect as their canonical encoding", () => {
+    const metersPerSecond = Unit.rate("Meters", "Seconds");
+
+    assertEquals(metersPerSecond.toString(), "(Meters/Seconds)");
+    assertEquals(JSON.stringify(metersPerSecond), '"(Meters/Seconds)"');
+    assertEquals(
+      JSON.stringify(newtons),
+      '"(Kilograms*((Meters/Seconds)/Seconds))"',
+    );
+  });
 });
