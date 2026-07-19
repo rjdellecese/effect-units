@@ -1,35 +1,39 @@
 import { describe, it } from "@effect/vitest";
-import { assertEquals } from "@effect/vitest/utils";
-import * as Arbitrary from "effect/Arbitrary";
-import * as FastCheck from "effect/FastCheck";
-import { pipe } from "effect/Function";
-import * as Schema from "effect/Schema";
+import { assertTrue } from "@effect/vitest/utils";
 
+import { isCloseTo, testAnchors, testRoundtrips } from "./internal/testUtils";
 import * as Mass from "./Mass";
 
 describe("Mass", () => {
-  const roundtrip = [
+  testRoundtrips([
     // Metric
-    { there: Mass.kilograms, back: Mass.inKilograms },
-    { there: Mass.grams, back: Mass.inGrams },
-    { there: Mass.milligrams, back: Mass.inMilligrams },
-    { there: Mass.micrograms, back: Mass.inMicrograms },
-    { there: Mass.nanograms, back: Mass.inNanograms },
+    [Mass.kilograms, Mass.inKilograms],
+    [Mass.grams, Mass.inGrams],
+    [Mass.milligrams, Mass.inMilligrams],
+    [Mass.micrograms, Mass.inMicrograms],
+    [Mass.nanograms, Mass.inNanograms],
+    [Mass.metricTons, Mass.inMetricTons],
 
     // Imperial
-    { there: Mass.ounces, back: Mass.inOunces },
-    { there: Mass.pounds, back: Mass.inPounds },
-  ];
+    [Mass.ounces, Mass.inOunces],
+    [Mass.pounds, Mass.inPounds],
+    [Mass.longTons, Mass.inLongTons],
+    [Mass.shortTons, Mass.inShortTons],
+  ]);
 
-  roundtrip.forEach(({ there, back }) => {
-    it(`roundtrips between '${there.name}' and '${back.name}'`, () => {
-      FastCheck.assert(
-        FastCheck.property(Arbitrary.make(Schema.BigDecimal), (n) => {
-          const roundTripped = pipe(n, there, back);
+  testAnchors(Mass.inKilograms, [
+    [Mass.grams, 1e-3],
+    [Mass.milligrams, 1e-6],
+    [Mass.micrograms, 1e-9],
+    [Mass.nanograms, 1e-12],
+    [Mass.metricTons, 1e3],
+    [Mass.ounces, 0.45359237 / 16],
+    [Mass.pounds, 0.45359237],
+    [Mass.longTons, 1016.0469088],
+    [Mass.shortTons, 907.18474],
+  ]);
 
-          return assertEquals(roundTripped, n);
-        }),
-      );
-    });
+  it("relates pounds to ounces", () => {
+    assertTrue(isCloseTo(Mass.inOunces(Mass.pounds(1)), 16));
   });
 });

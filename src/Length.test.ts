@@ -1,34 +1,59 @@
 import { describe, it } from "@effect/vitest";
-import { assertEquals } from "@effect/vitest/utils";
-import * as Arbitrary from "effect/Arbitrary";
-import * as FastCheck from "effect/FastCheck";
-import { pipe } from "effect/Function";
-import * as Schema from "effect/Schema";
+import { assertTrue } from "@effect/vitest/utils";
 
+import { isCloseTo, testAnchors, testRoundtrips } from "./internal/testUtils";
 import * as Length from "./Length";
 
 describe("Length", () => {
-  const roundtrip = [
+  testRoundtrips([
     // Metric
-    { there: Length.meters, back: Length.inMeters },
-    { there: Length.kilometers, back: Length.inKilometers },
-    { there: Length.centimeters, back: Length.inCentimeters },
-    { there: Length.millimeters, back: Length.inMillimeters },
+    [Length.angstroms, Length.inAngstroms],
+    [Length.nanometers, Length.inNanometers],
+    [Length.microns, Length.inMicrons],
+    [Length.meters, Length.inMeters],
+    [Length.kilometers, Length.inKilometers],
+    [Length.centimeters, Length.inCentimeters],
+    [Length.millimeters, Length.inMillimeters],
 
     // Imperial
-    { there: Length.inches, back: Length.inInches },
-    { there: Length.feet, back: Length.inFeet },
-  ];
+    [Length.thou, Length.inThou],
+    [Length.inches, Length.inInches],
+    [Length.feet, Length.inFeet],
+    [Length.yards, Length.inYards],
+    [Length.miles, Length.inMiles],
 
-  roundtrip.forEach(({ there, back }) => {
-    it(`roundtrips between '${there.name}' and '${back.name}'`, () => {
-      FastCheck.assert(
-        FastCheck.property(Arbitrary.make(Schema.BigDecimal), (n) => {
-          const roundTripped = pipe(n, there, back);
+    // Typography
+    [Length.cssPixels, Length.inCssPixels],
+    [Length.points, Length.inPoints],
+    [Length.picas, Length.inPicas],
 
-          return assertEquals(roundTripped, n);
-        }),
-      );
-    });
+    // Astronomical
+    [Length.astronomicalUnits, Length.inAstronomicalUnits],
+    [Length.parsecs, Length.inParsecs],
+    [Length.lightYears, Length.inLightYears],
+  ]);
+
+  testAnchors(Length.inMeters, [
+    [Length.angstroms, 1e-10],
+    [Length.nanometers, 1e-9],
+    [Length.microns, 1e-6],
+    [Length.millimeters, 1e-3],
+    [Length.centimeters, 1e-2],
+    [Length.kilometers, 1e3],
+    [Length.thou, 2.54e-5],
+    [Length.inches, 0.0254],
+    [Length.feet, 0.3048],
+    [Length.yards, 0.9144],
+    [Length.miles, 1609.344],
+    [Length.cssPixels, 0.0254 / 96],
+    [Length.points, 0.0254 / 72],
+    [Length.picas, 0.0254 / 6],
+    [Length.astronomicalUnits, 149597870700],
+    [Length.parsecs, (648000 / Math.PI) * 149597870700],
+    [Length.lightYears, 9460730472580800],
+  ]);
+
+  it("relates feet to inches", () => {
+    assertTrue(isCloseTo(Length.inInches(Length.feet(1)), 12));
   });
 });

@@ -1,6 +1,4 @@
-import * as BigDecimal from "effect/BigDecimal";
 import * as Function from "effect/Function";
-import * as Match from "effect/Match";
 import * as Schema from "effect/Schema";
 
 export const Prefix = Schema.Literal(
@@ -32,61 +30,50 @@ export const Prefix = Schema.Literal(
 
 export type Prefix = typeof Prefix.Type;
 
-const base10Exponent = (prefix: Prefix) =>
-  Match.value(prefix).pipe(
-    (matcher) =>
-      matcher.pipe(
-        Match.when("Quetta", () => 30n),
-        Match.when("Ronna", () => 27n),
-        Match.when("Yotta", () => 24n),
-        Match.when("Zetta", () => 21n),
-        Match.when("Exa", () => 18n),
-        Match.when("Peta", () => 15n),
-        Match.when("Tera", () => 12n),
-        Match.when("Giga", () => 9n),
-        Match.when("Mega", () => 6n),
-        Match.when("Kilo", () => 3n),
-        Match.when("Hecto", () => 2n),
-        Match.when("Deca", () => 1n),
-      ),
-    (matcher) =>
-      matcher.pipe(
-        Match.when("Deci", () => -1n),
-        Match.when("Centi", () => -2n),
-        Match.when("Milli", () => -3n),
-        Match.when("Micro", () => -6n),
-        Match.when("Nano", () => -9n),
-        Match.when("Pico", () => -12n),
-        Match.when("Femto", () => -15n),
-        Match.when("Atto", () => -18n),
-        Match.when("Zepto", () => -21n),
-        Match.when("Yocto", () => -24n),
-        Match.when("Ronto", () => -27n),
-        Match.when("Quecto", () => -30n),
-      ),
-    Match.exhaustive,
-  );
-
-/** `10^exponent` as a `BigDecimal`, for SI prefix conversion. */
-const base10Power = (exponent: bigint): BigDecimal.BigDecimal =>
-  exponent >= 0n
-    ? BigDecimal.fromBigInt(10n ** exponent)
-    : BigDecimal.make(1n, Number(-exponent));
+const base10Exponents: Record<Prefix, number> = {
+  Quetta: 30,
+  Ronna: 27,
+  Yotta: 24,
+  Zetta: 21,
+  Exa: 18,
+  Peta: 15,
+  Tera: 12,
+  Giga: 9,
+  Mega: 6,
+  Kilo: 3,
+  Hecto: 2,
+  Deca: 1,
+  Deci: -1,
+  Centi: -2,
+  Milli: -3,
+  Micro: -6,
+  Nano: -9,
+  Pico: -12,
+  Femto: -15,
+  Atto: -18,
+  Zepto: -21,
+  Yocto: -24,
+  Ronto: -27,
+  Quecto: -30,
+};
 
 export const toBase: {
-  (value: BigDecimal.BigDecimal): (prefix: Prefix) => BigDecimal.BigDecimal;
-  (prefix: Prefix, value: BigDecimal.BigDecimal): BigDecimal.BigDecimal;
+  (value: number): (prefix: Prefix) => number;
+  (prefix: Prefix, value: number): number;
 } = Function.dual(
   2,
-  (prefix: Prefix, value: BigDecimal.BigDecimal): BigDecimal.BigDecimal =>
-    BigDecimal.multiply(value, base10Power(base10Exponent(prefix))),
+  (prefix: Prefix, value: number): number =>
+    value * 10 ** base10Exponents[prefix],
 );
 
 export const toPrefixed: {
-  (value: BigDecimal.BigDecimal): (prefix: Prefix) => BigDecimal.BigDecimal;
-  (prefix: Prefix, value: BigDecimal.BigDecimal): BigDecimal.BigDecimal;
+  (value: number): (prefix: Prefix) => number;
+  (prefix: Prefix, value: number): number;
 } = Function.dual(
   2,
-  (prefix: Prefix, value: BigDecimal.BigDecimal): BigDecimal.BigDecimal =>
-    BigDecimal.multiply(value, base10Power(-base10Exponent(prefix))),
+  (prefix: Prefix, value: number): number =>
+    // Dividing by the same factor toBase multiplies by, rather than
+    // multiplying by its inverse, keeps roundtrips as close to exact as
+    // floats allow.
+    value / 10 ** base10Exponents[prefix],
 );
