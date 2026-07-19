@@ -1,4 +1,6 @@
 node_modules/
 dist/
+coverage/
 *.tsbuildinfo
+tsconfig.vitest-temp.json
 .DS_Store

@@ -1,0 +1,10 @@
+{
+  "$schema": "./node_modules/syncpack/schema.json",
+  "semverGroups": [
+    {
+      "label": "devDependencies must be exact pins (no semver range prefix)",
+      "dependencyTypes": ["dev"],
+      "range": ""
+    }
+  ]
+}
