@@ -58,8 +58,7 @@ export const inSquareKilometers = (a: Area) =>
 const squareMetersPerSquareInch =
   Constants.metersPerInch * Constants.metersPerInch;
 
-export const squareInches = (n: number) =>
-  make(n * squareMetersPerSquareInch);
+export const squareInches = (n: number) => make(n * squareMetersPerSquareInch);
 
 export const inSquareInches = (a: Area) => a.value / squareMetersPerSquareInch;
 

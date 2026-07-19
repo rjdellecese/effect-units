@@ -29,8 +29,7 @@ export const inMilliseconds = (d: Duration) =>
 
 export const minutes = (n: number) => make(n * Constants.secondsPerMinute);
 
-export const inMinutes = (d: Duration) =>
-  d.value / Constants.secondsPerMinute;
+export const inMinutes = (d: Duration) => d.value / Constants.secondsPerMinute;
 
 export const hours = (n: number) => make(n * Constants.secondsPerHour);
 

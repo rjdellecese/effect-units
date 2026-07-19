@@ -2,7 +2,11 @@ import { describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 
 import * as Area from "./Area";
-import { isQuantityCloseTo, testAnchors, testRoundtrips } from "./internal/testUtils";
+import {
+  isQuantityCloseTo,
+  testAnchors,
+  testRoundtrips,
+} from "./internal/testUtils";
 import * as Luminance from "./Luminance";
 import * as LuminousIntensity from "./LuminousIntensity";
 import * as Quantity from "./Quantity";

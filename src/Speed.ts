@@ -35,11 +35,9 @@ export const kilometersPerHour = (n: number) =>
 export const inKilometersPerHour = (s: Speed) =>
   s.value / metersPerSecondPerKilometerPerHour;
 
-export const feetPerSecond = (n: number) =>
-  make(n * Constants.metersPerFoot);
+export const feetPerSecond = (n: number) => make(n * Constants.metersPerFoot);
 
-export const inFeetPerSecond = (s: Speed) =>
-  s.value / Constants.metersPerFoot;
+export const inFeetPerSecond = (s: Speed) => s.value / Constants.metersPerFoot;
 
 /** One mile per hour is 0.44704 meters per second. */
 const metersPerSecondPerMilePerHour =

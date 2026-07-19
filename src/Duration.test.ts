@@ -37,9 +37,7 @@ describe("Duration", () => {
             const duration = Duration.fromDuration(
               EffectDuration.millis(millis),
             );
-            const back = Duration.toDuration(duration).pipe(
-              Option.getOrThrow,
-            );
+            const back = Duration.toDuration(duration).pipe(Option.getOrThrow);
 
             assertTrue(
               isCloseTo(EffectDuration.toMillis(back), millis, {
@@ -64,9 +62,7 @@ describe("Duration", () => {
         Option.isNone(Duration.toDuration(Duration.seconds(Infinity))),
       );
       // Finite, but the nanosecond count overflows the float range.
-      assertTrue(
-        Option.isNone(Duration.toDuration(Duration.seconds(1e300))),
-      );
+      assertTrue(Option.isNone(Duration.toDuration(Duration.seconds(1e300))));
     });
 
     it("between measures the signed difference between DateTimes", () => {
@@ -101,9 +97,7 @@ describe("Duration", () => {
         Option.isNone(Duration.addTo(start, Duration.seconds(Infinity))),
       );
       // Finite, but lands outside the representable DateTime range.
-      assertTrue(
-        Option.isNone(Duration.addTo(start, Duration.days(1e12))),
-      );
+      assertTrue(Option.isNone(Duration.addTo(start, Duration.days(1e12))));
     });
   });
 });

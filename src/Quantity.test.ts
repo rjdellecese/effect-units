@@ -130,9 +130,7 @@ describe("rates", () => {
         const rate = Quantity.per(Length.meters(a), seconds(b));
 
         assertEquals(rate.value, a / b);
-        assertTrue(
-          Unit.equals(rate.unit, Unit.rate(Length.Meters, "Seconds")),
-        );
+        assertTrue(Unit.equals(rate.unit, Unit.rate(Length.Meters, "Seconds")));
       }),
     );
   });
@@ -223,7 +221,10 @@ describe("schema", () => {
     // silently turn them into null — so encoding must fail loudly instead.
     const MetersPerSecond = Unit.rate(Length.Meters, "Seconds");
     const Speed = Quantity.Quantity(MetersPerSecond);
-    const infinite = Quantity.per(Length.meters(1), Quantity.make("Seconds", 0));
+    const infinite = Quantity.per(
+      Length.meters(1),
+      Quantity.make("Seconds", 0),
+    );
 
     assertTrue(Either.isLeft(Schema.encodeEither(Speed)(infinite)));
     assertTrue(
@@ -295,9 +296,7 @@ describe("equalsWithin", () => {
   it("is reflexive for infinite quantities", () => {
     const infinite = Length.meters(Infinity);
 
-    assertTrue(
-      Quantity.equalsWithin(infinite, infinite, Length.meters(1)),
-    );
+    assertTrue(Quantity.equalsWithin(infinite, infinite, Length.meters(1)));
     assertFalse(
       Quantity.equalsWithin(
         infinite,
@@ -349,8 +348,6 @@ describe("inspection", () => {
       unit: "(Meters/Seconds)",
       value: 5,
     });
-    assertTrue(
-      String.includes('"unit": "(Meters/Seconds)"')(speed.toString()),
-    );
+    assertTrue(String.includes('"unit": "(Meters/Seconds)"')(speed.toString()));
   });
 });

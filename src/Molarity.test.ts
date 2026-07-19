@@ -1,7 +1,11 @@
 import { describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 
-import { isQuantityCloseTo, testAnchors, testRoundtrips } from "./internal/testUtils";
+import {
+  isQuantityCloseTo,
+  testAnchors,
+  testRoundtrips,
+} from "./internal/testUtils";
 import * as Molarity from "./Molarity";
 import * as Quantity from "./Quantity";
 import * as SubstanceAmount from "./SubstanceAmount";

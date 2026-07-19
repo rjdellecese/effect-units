@@ -47,11 +47,9 @@ describe("Temperature", () => {
       ),
     );
     assertTrue(
-      isCloseTo(
-        Temperature.inKelvins(Temperature.degreesCelsius(-273.15)),
-        0,
-        { absoluteTolerance: 1e-9 },
-      ),
+      isCloseTo(Temperature.inKelvins(Temperature.degreesCelsius(-273.15)), 0, {
+        absoluteTolerance: 1e-9,
+      }),
     );
   });
 

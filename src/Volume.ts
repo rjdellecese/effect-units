@@ -32,8 +32,7 @@ const cubicMetersPerMilliliter = Prefix.toBase("Milli", cubicMetersPerLiter);
 
 export const milliliters = (n: number) => make(n * cubicMetersPerMilliliter);
 
-export const inMilliliters = (v: Volume) =>
-  v.value / cubicMetersPerMilliliter;
+export const inMilliliters = (v: Volume) => v.value / cubicMetersPerMilliliter;
 
 export const cubicCentimeters = (n: number) =>
   make(n * cubicMetersPerMilliliter);
@@ -103,8 +102,7 @@ export const inUsFluidOunces = (v: Volume) =>
 
 const cubicMetersPerUsDryGallon = 0.00440488377086;
 
-export const usDryGallons = (n: number) =>
-  make(n * cubicMetersPerUsDryGallon);
+export const usDryGallons = (n: number) => make(n * cubicMetersPerUsDryGallon);
 
 export const inUsDryGallons = (v: Volume) =>
   v.value / cubicMetersPerUsDryGallon;
@@ -113,8 +111,7 @@ const cubicMetersPerUsDryQuart = cubicMetersPerUsDryGallon / 4;
 
 export const usDryQuarts = (n: number) => make(n * cubicMetersPerUsDryQuart);
 
-export const inUsDryQuarts = (v: Volume) =>
-  v.value / cubicMetersPerUsDryQuart;
+export const inUsDryQuarts = (v: Volume) => v.value / cubicMetersPerUsDryQuart;
 
 const cubicMetersPerUsDryPint = cubicMetersPerUsDryGallon / 8;
 

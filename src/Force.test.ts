@@ -3,7 +3,11 @@ import { assertTrue } from "@effect/vitest/utils";
 
 import * as Acceleration from "./Acceleration";
 import * as Force from "./Force";
-import { isQuantityCloseTo, testAnchors, testRoundtrips } from "./internal/testUtils";
+import {
+  isQuantityCloseTo,
+  testAnchors,
+  testRoundtrips,
+} from "./internal/testUtils";
 import * as Mass from "./Mass";
 import * as Quantity from "./Quantity";
 

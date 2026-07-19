@@ -71,9 +71,7 @@ describe("Angle", () => {
       assertEquals(dms.sign, "Negative");
       assertEquals(dms.degrees, 10);
       assertEquals(dms.minutes, 15);
-      assertTrue(
-        isCloseTo(dms.seconds, 0, { absoluteTolerance: 1e-6 }),
-      );
+      assertTrue(isCloseTo(dms.seconds, 0, { absoluteTolerance: 1e-6 }));
     });
   });
 

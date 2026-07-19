@@ -4,7 +4,11 @@ import { assertTrue } from "@effect/vitest/utils";
 import * as AngularAcceleration from "./AngularAcceleration";
 import * as AngularSpeed from "./AngularSpeed";
 import * as Duration from "./Duration";
-import { isQuantityCloseTo, testAnchors, testRoundtrips } from "./internal/testUtils";
+import {
+  isQuantityCloseTo,
+  testAnchors,
+  testRoundtrips,
+} from "./internal/testUtils";
 import * as Quantity from "./Quantity";
 
 describe("AngularAcceleration", () => {

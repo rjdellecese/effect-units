@@ -4,7 +4,7 @@ import * as Array from "effect/Array";
 import * as FastCheck from "effect/FastCheck";
 import { pipe } from "effect/Function";
 
-import * as Quantity from "../Quantity";
+import type * as Quantity from "../Quantity";
 import * as Unit from "../Unit";
 
 export interface Tolerance {

@@ -9,10 +9,7 @@ import * as Quantity from "./Quantity";
 describe("Pixels", () => {
   testRoundtrip(Pixels.pixels, Pixels.inPixels);
   testRoundtrip(Pixels.pixelsPerSecond, Pixels.inPixelsPerSecond);
-  testRoundtrip(
-    Pixels.pixelsPerSecondSquared,
-    Pixels.inPixelsPerSecondSquared,
-  );
+  testRoundtrip(Pixels.pixelsPerSecondSquared, Pixels.inPixelsPerSecondSquared);
   testRoundtrip(Pixels.squarePixels, Pixels.inSquarePixels);
 
   it("pixels per second is pixels per a duration", () => {

@@ -1,10 +1,10 @@
 import * as Equal from "effect/Equal";
 import * as Function from "effect/Function";
 import * as Hash from "effect/Hash";
-import * as Inspectable from "effect/Inspectable";
+import type * as Inspectable from "effect/Inspectable";
 import * as Number_ from "effect/Number";
 import * as order from "effect/Order";
-import * as Pipeable from "effect/Pipeable";
+import type * as Pipeable from "effect/Pipeable";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 
@@ -135,16 +135,18 @@ export const inFahrenheitDegrees = (d: Delta) => d.value / fiveNinths;
 export const plus: {
   (delta: Delta): (t: Temperature) => Temperature;
   (t: Temperature, delta: Delta): Temperature;
-} = Function.dual(2, (t: Temperature, delta: Delta): Temperature =>
-  make(t.value + delta.value),
+} = Function.dual(
+  2,
+  (t: Temperature, delta: Delta): Temperature => make(t.value + delta.value),
 );
 
 /** The delta from `b` up to `a` (i.e. `a` minus `b`). */
 export const minus: {
   (b: Temperature): (a: Temperature) => Delta;
   (a: Temperature, b: Temperature): Delta;
-} = Function.dual(2, (a: Temperature, b: Temperature): Delta =>
-  celsiusDegrees(a.value - b.value),
+} = Function.dual(
+  2,
+  (a: Temperature, b: Temperature): Delta => celsiusDegrees(a.value - b.value),
 );
 
 // Comparison

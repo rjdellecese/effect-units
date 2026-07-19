@@ -3,7 +3,11 @@ import { assertTrue } from "@effect/vitest/utils";
 
 import * as Area from "./Area";
 import * as Illuminance from "./Illuminance";
-import { isQuantityCloseTo, testAnchors, testRoundtrips } from "./internal/testUtils";
+import {
+  isQuantityCloseTo,
+  testAnchors,
+  testRoundtrips,
+} from "./internal/testUtils";
 import * as LuminousFlux from "./LuminousFlux";
 import * as Quantity from "./Quantity";
 
@@ -13,9 +17,7 @@ describe("Illuminance", () => {
     [Illuminance.footCandles, Illuminance.inFootCandles],
   ]);
 
-  testAnchors(Illuminance.inLux, [
-    [Illuminance.footCandles, 1 / 0.09290304],
-  ]);
+  testAnchors(Illuminance.inLux, [[Illuminance.footCandles, 1 / 0.09290304]]);
 
   it("is a flux per an area", () => {
     assertTrue(

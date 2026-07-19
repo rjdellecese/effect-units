@@ -1,8 +1,8 @@
 import * as Equal from "effect/Equal";
 import * as Function from "effect/Function";
 import * as Hash from "effect/Hash";
-import * as Inspectable from "effect/Inspectable";
-import * as Pipeable from "effect/Pipeable";
+import type * as Inspectable from "effect/Inspectable";
+import type * as Pipeable from "effect/Pipeable";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 
@@ -142,7 +142,10 @@ export const multiply: {
     b: Quantity<Unit.Unit> | number,
   ): Quantity<Unit.Unit> =>
     Predicate.isNumber(a)
-      ? make((b as Quantity<Unit.Unit>).unit, a * (b as Quantity<Unit.Unit>).value)
+      ? make(
+          (b as Quantity<Unit.Unit>).unit,
+          a * (b as Quantity<Unit.Unit>).value,
+        )
       : make(a.unit, a.value * (b as number)),
 );
 
@@ -177,9 +180,7 @@ export const subtract: {
 export const times: {
   <U2 extends Unit.Unit>(
     b: Quantity<U2>,
-  ): <U1 extends Unit.Unit>(
-    a: Quantity<U1>,
-  ) => Quantity<Unit.Product<U1, U2>>;
+  ): <U1 extends Unit.Unit>(a: Quantity<U1>) => Quantity<Unit.Product<U1, U2>>;
   <U1 extends Unit.Unit, U2 extends Unit.Unit>(
     a: Quantity<U1>,
     b: Quantity<U2>,
@@ -195,8 +196,7 @@ export const times: {
 
 export const squared = <U extends Unit.Unit>(
   a: Quantity<U>,
-): Quantity<Unit.Squared<U>> =>
-  make(Unit.squared(a.unit), a.value * a.value);
+): Quantity<Unit.Squared<U>> => make(Unit.squared(a.unit), a.value * a.value);
 
 export const cubed = <U extends Unit.Unit>(
   a: Quantity<U>,
@@ -390,7 +390,13 @@ export const min: {
 } = Function.dual(
   2,
   (a: Quantity<Unit.Unit>, b: Quantity<Unit.Unit>): Quantity<Unit.Unit> =>
-    Number.isNaN(a.value) ? a : Number.isNaN(b.value) ? b : b.value < a.value ? b : a,
+    Number.isNaN(a.value)
+      ? a
+      : Number.isNaN(b.value)
+        ? b
+        : b.value < a.value
+          ? b
+          : a,
 );
 
 /** Propagates NaN: if either argument is NaN, the NaN quantity is returned. */
@@ -400,7 +406,13 @@ export const max: {
 } = Function.dual(
   2,
   (a: Quantity<Unit.Unit>, b: Quantity<Unit.Unit>): Quantity<Unit.Unit> =>
-    Number.isNaN(a.value) ? a : Number.isNaN(b.value) ? b : b.value > a.value ? b : a,
+    Number.isNaN(a.value)
+      ? a
+      : Number.isNaN(b.value)
+        ? b
+        : b.value > a.value
+          ? b
+          : a,
 );
 
 // Guards

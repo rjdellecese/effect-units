@@ -38,8 +38,7 @@ export const inDegreesPerSecondSquared = (a: AngularAcceleration) =>
 
 const radiansPerTurn = 2 * Math.PI;
 
-export const turnsPerSecondSquared = (n: number) =>
-  make(n * radiansPerTurn);
+export const turnsPerSecondSquared = (n: number) => make(n * radiansPerTurn);
 
 export const inTurnsPerSecondSquared = (a: AngularAcceleration) =>
   a.value / radiansPerTurn;
