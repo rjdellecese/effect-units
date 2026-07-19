@@ -77,3 +77,23 @@ export const testRoundtrips = <Q>(
     testRoundtrip(there, back, tolerance),
   );
 };
+
+/**
+ * Registers a test anchoring each constructor's conversion factor to an
+ * independently stated reference value: `toBase(there(1))` must be close to
+ * `expected`. Roundtrip tests cancel the factor by construction, so without
+ * anchors a mistyped constant would pass the suite; state `expected` as a
+ * literal (or a ratio of literals), not by importing the source constant.
+ */
+export const testAnchors = <Q>(
+  toBase: (q: Q) => number,
+  anchors: ReadonlyArray<readonly [(n: number) => Q, number]>,
+): void => {
+  Array.forEach(anchors, ([there, expected]) => {
+    it(`anchors '${there.name}' at ${expected}`, () => {
+      assertTrue(
+        isCloseTo(toBase(there(1)), expected, { relativeTolerance: 1e-12 }),
+      );
+    });
+  });
+};

@@ -6,7 +6,7 @@ import * as FastCheck from "effect/FastCheck";
 import * as Option from "effect/Option";
 
 import * as Duration from "./Duration";
-import { isCloseTo, testRoundtrips } from "./internal/testUtils";
+import { isCloseTo, testAnchors, testRoundtrips } from "./internal/testUtils";
 
 describe("Duration", () => {
   testRoundtrips([
@@ -17,6 +17,15 @@ describe("Duration", () => {
     [Duration.days, Duration.inDays],
     [Duration.weeks, Duration.inWeeks],
     [Duration.julianYears, Duration.inJulianYears],
+  ]);
+
+  testAnchors(Duration.inSeconds, [
+    [Duration.milliseconds, 1e-3],
+    [Duration.minutes, 60],
+    [Duration.hours, 3600],
+    [Duration.days, 86400],
+    [Duration.weeks, 604800],
+    [Duration.julianYears, 31557600],
   ]);
 
   describe("interop", () => {
@@ -49,10 +58,14 @@ describe("Duration", () => {
       );
     });
 
-    it("toDuration is none for negative or non-finite durations", () => {
+    it("toDuration is none for negative, non-finite, or oversized durations", () => {
       assertTrue(Option.isNone(Duration.toDuration(Duration.seconds(-1))));
       assertTrue(
         Option.isNone(Duration.toDuration(Duration.seconds(Infinity))),
+      );
+      // Finite, but the nanosecond count overflows the float range.
+      assertTrue(
+        Option.isNone(Duration.toDuration(Duration.seconds(1e300))),
       );
     });
 
@@ -68,12 +81,28 @@ describe("Duration", () => {
       const start = DateTime.unsafeMake(0);
 
       assertEquals(
-        DateTime.toEpochMillis(Duration.addTo(start, Duration.seconds(1.5))),
+        DateTime.toEpochMillis(
+          Option.getOrThrow(Duration.addTo(start, Duration.seconds(1.5))),
+        ),
         1500,
       );
       assertEquals(
-        DateTime.toEpochMillis(Duration.addTo(start, Duration.seconds(-1.5))),
+        DateTime.toEpochMillis(
+          Option.getOrThrow(Duration.addTo(start, Duration.seconds(-1.5))),
+        ),
         -1500,
+      );
+    });
+
+    it("addTo is none for non-finite or out-of-range results", () => {
+      const start = DateTime.unsafeMake(0);
+
+      assertTrue(
+        Option.isNone(Duration.addTo(start, Duration.seconds(Infinity))),
+      );
+      // Finite, but lands outside the representable DateTime range.
+      assertTrue(
+        Option.isNone(Duration.addTo(start, Duration.days(1e12))),
       );
     });
   });

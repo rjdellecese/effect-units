@@ -9,6 +9,7 @@ import * as Duration from "./Duration";
 import {
   double,
   isQuantityCloseTo,
+  testAnchors,
   testRoundtrips,
 } from "./internal/testUtils";
 import * as Quantity from "./Quantity";
@@ -21,6 +22,14 @@ describe("AngularSpeed", () => {
     [AngularSpeed.turnsPerMinute, AngularSpeed.inTurnsPerMinute],
     [AngularSpeed.revolutionsPerSecond, AngularSpeed.inRevolutionsPerSecond],
     [AngularSpeed.revolutionsPerMinute, AngularSpeed.inRevolutionsPerMinute],
+  ]);
+
+  testAnchors(AngularSpeed.inRadiansPerSecond, [
+    [AngularSpeed.degreesPerSecond, Math.PI / 180],
+    [AngularSpeed.turnsPerSecond, 2 * Math.PI],
+    [AngularSpeed.turnsPerMinute, (2 * Math.PI) / 60],
+    [AngularSpeed.revolutionsPerSecond, 2 * Math.PI],
+    [AngularSpeed.revolutionsPerMinute, (2 * Math.PI) / 60],
   ]);
 
   it("is an angle per a duration", () => {

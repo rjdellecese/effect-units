@@ -1,7 +1,7 @@
 import { describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 
-import { isQuantityCloseTo, testRoundtrips } from "./internal/testUtils";
+import { isQuantityCloseTo, testAnchors, testRoundtrips } from "./internal/testUtils";
 import * as Molarity from "./Molarity";
 import * as Quantity from "./Quantity";
 import * as SubstanceAmount from "./SubstanceAmount";
@@ -15,6 +15,14 @@ describe("Molarity", () => {
     [Molarity.centimolesPerLiter, Molarity.inCentimolesPerLiter],
     [Molarity.millimolesPerLiter, Molarity.inMillimolesPerLiter],
     [Molarity.micromolesPerLiter, Molarity.inMicromolesPerLiter],
+  ]);
+
+  testAnchors(Molarity.inMolesPerCubicMeter, [
+    [Molarity.molesPerLiter, 1000],
+    [Molarity.decimolesPerLiter, 100],
+    [Molarity.centimolesPerLiter, 10],
+    [Molarity.millimolesPerLiter, 1],
+    [Molarity.micromolesPerLiter, 1e-3],
   ]);
 
   it("is a substance amount per a volume", () => {

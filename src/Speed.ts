@@ -1,6 +1,7 @@
 import * as Duration from "./Duration";
 import * as Constants from "./internal/constants";
 import * as Length from "./Length";
+import * as Prefix from "./Prefix";
 import * as Quantity from "./Quantity";
 import * as Unit from "./Unit";
 
@@ -23,7 +24,7 @@ export const metersPerSecond = (n: number) => make(n);
 
 export const inMetersPerSecond = (s: Speed) => s.value;
 
-const metersPerKilometer = 1000;
+const metersPerKilometer = Prefix.toBase("Kilo", 1);
 
 const metersPerSecondPerKilometerPerHour =
   metersPerKilometer / Constants.secondsPerHour;

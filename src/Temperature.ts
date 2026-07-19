@@ -8,6 +8,11 @@ import * as Pipeable from "effect/Pipeable";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 
+import {
+  normalizeZero,
+  ValueObjectProto,
+  valueEquals,
+} from "./internal/valueObject";
 import * as Quantity from "./Quantity";
 
 export const TypeId = Symbol.for("effect-units/Temperature");
@@ -28,10 +33,8 @@ export interface Temperature
 export const isTemperature = (u: unknown): u is Temperature =>
   Predicate.hasProperty(u, TypeId);
 
-const valueEquals = (a: number, b: number): boolean =>
-  a === b || (Number.isNaN(a) && Number.isNaN(b));
-
 const Proto = {
+  ...ValueObjectProto,
   [TypeId]: TypeId,
   [Equal.symbol](this: Temperature, that: unknown): boolean {
     return isTemperature(that) && equals(this, that);
@@ -42,32 +45,35 @@ const Proto = {
   toJSON(this: Temperature) {
     return { _id: "Temperature", value: this.value };
   },
-  toString(this: Temperature): string {
-    return Inspectable.format(this.toJSON());
-  },
-  [Inspectable.NodeInspectSymbol](this: Temperature) {
-    return this.toJSON();
-  },
-  pipe() {
-    return Pipeable.pipeArguments(this, arguments);
-  },
 } as const;
 
 const make = (value: number): Temperature =>
-  Object.assign(Object.create(Proto), { value: value === 0 ? 0 : value });
+  Object.assign(Object.create(Proto), { value: normalizeZero(value) });
 
 export const equals = (a: Temperature, b: Temperature): boolean =>
   valueEquals(a.value, b.value);
 
-export const TemperatureFromSelf = Schema.declare(isTemperature);
+export const TemperatureFromSelf = Schema.declare(isTemperature).annotations({
+  identifier: "TemperatureFromSelf",
+  description: "an absolute temperature",
+});
 
+/**
+ * The wire format carries a `unit: "Kelvins"` discriminator so persisted
+ * temperatures are self-describing, matching the `{ unit, value }`
+ * convention of `Quantity` schemas. As with quantities, only finite values
+ * are admitted.
+ */
 export const Temperature = Schema.transform(
-  Schema.Struct({ value: Schema.Number }),
+  Schema.Struct({
+    unit: Schema.Literal("Kelvins"),
+    value: Schema.Number.pipe(Schema.finite()),
+  }),
   TemperatureFromSelf,
   {
     strict: true,
     decode: ({ value }) => make(value),
-    encode: ({ value }) => ({ value }),
+    encode: ({ value }) => ({ unit: "Kelvins" as const, value }),
   },
 );
 

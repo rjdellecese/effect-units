@@ -3,7 +3,7 @@ import { assertTrue } from "@effect/vitest/utils";
 
 import * as Acceleration from "./Acceleration";
 import * as Force from "./Force";
-import { isQuantityCloseTo, testRoundtrips } from "./internal/testUtils";
+import { isQuantityCloseTo, testAnchors, testRoundtrips } from "./internal/testUtils";
 import * as Mass from "./Mass";
 import * as Quantity from "./Quantity";
 
@@ -14,6 +14,13 @@ describe("Force", () => {
     [Force.meganewtons, Force.inMeganewtons],
     [Force.pounds, Force.inPounds],
     [Force.kips, Force.inKips],
+  ]);
+
+  testAnchors(Force.inNewtons, [
+    [Force.kilonewtons, 1e3],
+    [Force.meganewtons, 1e6],
+    [Force.pounds, 4.4482216152605],
+    [Force.kips, 4448.2216152605],
   ]);
 
   it("is a mass times an acceleration", () => {

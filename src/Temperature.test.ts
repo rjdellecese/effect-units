@@ -1,5 +1,9 @@
 import { describe, it } from "@effect/vitest";
-import { assertEquals, assertTrue } from "@effect/vitest/utils";
+import {
+  assertEquals,
+  assertTrue,
+  deepStrictEqual,
+} from "@effect/vitest/utils";
 import * as Equal from "effect/Equal";
 import * as FastCheck from "effect/FastCheck";
 import * as Schema from "effect/Schema";
@@ -105,6 +109,13 @@ describe("Temperature", () => {
 
         assertTrue(Equal.equals(decoded, temperature));
       }),
+    );
+  });
+
+  it("carries a unit discriminator in the wire format", () => {
+    deepStrictEqual(
+      Schema.encodeSync(Temperature.Temperature)(Temperature.kelvins(293.15)),
+      { unit: "Kelvins", value: 293.15 },
     );
   });
 

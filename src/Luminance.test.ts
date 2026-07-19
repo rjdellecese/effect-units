@@ -2,7 +2,7 @@ import { describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 
 import * as Area from "./Area";
-import { isQuantityCloseTo, testRoundtrips } from "./internal/testUtils";
+import { isQuantityCloseTo, testAnchors, testRoundtrips } from "./internal/testUtils";
 import * as Luminance from "./Luminance";
 import * as LuminousIntensity from "./LuminousIntensity";
 import * as Quantity from "./Quantity";
@@ -11,6 +11,10 @@ describe("Luminance", () => {
   testRoundtrips([
     [Luminance.nits, Luminance.inNits],
     [Luminance.footLamberts, Luminance.inFootLamberts],
+  ]);
+
+  testAnchors(Luminance.inNits, [
+    [Luminance.footLamberts, 1 / (Math.PI * 0.09290304)],
   ]);
 
   it("is an intensity per an area", () => {

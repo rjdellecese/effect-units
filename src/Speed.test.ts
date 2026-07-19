@@ -5,6 +5,7 @@ import * as Duration from "./Duration";
 import {
   isCloseTo,
   isQuantityCloseTo,
+  testAnchors,
   testRoundtrips,
 } from "./internal/testUtils";
 import * as Length from "./Length";
@@ -17,6 +18,12 @@ describe("Speed", () => {
     [Speed.kilometersPerHour, Speed.inKilometersPerHour],
     [Speed.feetPerSecond, Speed.inFeetPerSecond],
     [Speed.milesPerHour, Speed.inMilesPerHour],
+  ]);
+
+  testAnchors(Speed.inMetersPerSecond, [
+    [Speed.kilometersPerHour, 1000 / 3600],
+    [Speed.feetPerSecond, 0.3048],
+    [Speed.milesPerHour, 0.44704],
   ]);
 
   it("is a length per a duration", () => {

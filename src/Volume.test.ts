@@ -5,6 +5,7 @@ import * as Area from "./Area";
 import {
   isCloseTo,
   isQuantityCloseTo,
+  testAnchors,
   testRoundtrips,
 } from "./internal/testUtils";
 import * as Length from "./Length";
@@ -40,6 +41,26 @@ describe("Volume", () => {
     [Volume.imperialQuarts, Volume.inImperialQuarts],
     [Volume.imperialPints, Volume.inImperialPints],
     [Volume.imperialFluidOunces, Volume.inImperialFluidOunces],
+  ]);
+
+  testAnchors(Volume.inCubicMeters, [
+    [Volume.liters, 1e-3],
+    [Volume.milliliters, 1e-6],
+    [Volume.cubicCentimeters, 1e-6],
+    [Volume.cubicInches, 1.6387064e-5],
+    [Volume.cubicFeet, 0.028316846592],
+    [Volume.cubicYards, 0.764554857984],
+    [Volume.usLiquidGallons, 3.785411784e-3],
+    [Volume.usLiquidQuarts, 3.785411784e-3 / 4],
+    [Volume.usLiquidPints, 3.785411784e-3 / 8],
+    [Volume.usFluidOunces, 3.785411784e-3 / 128],
+    [Volume.usDryGallons, 4.40488377086e-3],
+    [Volume.usDryQuarts, 4.40488377086e-3 / 4],
+    [Volume.usDryPints, 4.40488377086e-3 / 8],
+    [Volume.imperialGallons, 4.54609e-3],
+    [Volume.imperialQuarts, 4.54609e-3 / 4],
+    [Volume.imperialPints, 4.54609e-3 / 8],
+    [Volume.imperialFluidOunces, 4.54609e-3 / 160],
   ]);
 
   it("is the product of an area and a length", () => {

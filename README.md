@@ -99,10 +99,17 @@ Equality is two-tier:
   measurements.
 - `Quantity.equalsWithin(a, b, tolerance)` is the domain-level comparison —
   the tolerance is itself a quantity in the same units, e.g.
-  `Quantity.equalsWithin(a, b, Length.millimeters(1))`.
+  `Quantity.equalsWithin(a, b, Length.millimeters(1))`. Identical values —
+  including two equal infinities — are equal within any tolerance; NaN is
+  never equal to anything.
 
-Comparisons (`lessThan`, `min`, `max`, ...) follow IEEE NaN semantics: any
-comparison involving NaN is false.
+The ordering predicates (`lessThan`, `greaterThan`, ...) follow IEEE NaN
+semantics: any comparison involving NaN is false. `min` and `max` propagate
+NaN deterministically, like `Math.min`/`Math.max`.
+
+While in-memory arithmetic produces NaN and ±Infinity freely, the wire
+format does not admit them: schemas reject non-finite values at encode
+(where JSON would silently turn them into `null`) and at decode.
 
 ## Scripts
 

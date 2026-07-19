@@ -5,6 +5,7 @@ import * as Area from "./Area";
 import {
   isCloseTo,
   isQuantityCloseTo,
+  testAnchors,
   testRoundtrips,
 } from "./internal/testUtils";
 import * as Length from "./Length";
@@ -25,6 +26,18 @@ describe("Area", () => {
     [Area.squareYards, Area.inSquareYards],
     [Area.acres, Area.inAcres],
     [Area.squareMiles, Area.inSquareMiles],
+  ]);
+
+  testAnchors(Area.inSquareMeters, [
+    [Area.squareMillimeters, 1e-6],
+    [Area.squareCentimeters, 1e-4],
+    [Area.hectares, 1e4],
+    [Area.squareKilometers, 1e6],
+    [Area.squareInches, 6.4516e-4],
+    [Area.squareFeet, 0.09290304],
+    [Area.squareYards, 0.83612736],
+    [Area.acres, 4046.8564224],
+    [Area.squareMiles, 2589988.110336],
   ]);
 
   it("is the product of two lengths", () => {

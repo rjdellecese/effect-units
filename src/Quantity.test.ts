@@ -6,6 +6,7 @@ import {
   deepStrictEqual,
 } from "@effect/vitest/utils";
 import * as Array from "effect/Array";
+import * as Either from "effect/Either";
 import * as Equal from "effect/Equal";
 import * as FastCheck from "effect/FastCheck";
 import * as Schema from "effect/Schema";
@@ -216,6 +217,24 @@ describe("schema", () => {
     deepStrictEqual(encoded, { unit: "(Meters/Seconds)", value: 1 });
     assertTrue(Equal.equals(Schema.decodeSync(Speed)(encoded), quantity));
   });
+
+  it("rejects non-finite values at the wire boundary", () => {
+    // In-memory arithmetic produces Infinity/NaN by design, but JSON would
+    // silently turn them into null — so encoding must fail loudly instead.
+    const MetersPerSecond = Unit.rate(Length.Meters, "Seconds");
+    const Speed = Quantity.Quantity(MetersPerSecond);
+    const infinite = Quantity.per(Length.meters(1), Quantity.make("Seconds", 0));
+
+    assertTrue(Either.isLeft(Schema.encodeEither(Speed)(infinite)));
+    assertTrue(
+      Either.isLeft(
+        Schema.decodeUnknownEither(Speed)({
+          unit: "(Meters/Seconds)",
+          value: null,
+        }),
+      ),
+    );
+  });
 });
 
 describe("equals", () => {
@@ -272,6 +291,21 @@ describe("equalsWithin", () => {
       ),
     );
   });
+
+  it("is reflexive for infinite quantities", () => {
+    const infinite = Length.meters(Infinity);
+
+    assertTrue(
+      Quantity.equalsWithin(infinite, infinite, Length.meters(1)),
+    );
+    assertFalse(
+      Quantity.equalsWithin(
+        infinite,
+        Length.meters(-Infinity),
+        Length.meters(1),
+      ),
+    );
+  });
 });
 
 describe("comparison", () => {
@@ -293,6 +327,16 @@ describe("comparison", () => {
     assertFalse(Quantity.lessThan(nan, Length.meters(1)));
     assertFalse(Quantity.greaterThan(nan, Length.meters(1)));
     assertFalse(Quantity.lessThanOrEqualTo(nan, nan));
+  });
+
+  it("min and max propagate NaN regardless of argument order", () => {
+    const nan = Quantity.make("Meters", NaN);
+    const five = Length.meters(5);
+
+    assertTrue(Number.isNaN(Quantity.min(nan, five).value));
+    assertTrue(Number.isNaN(Quantity.min(five, nan).value));
+    assertTrue(Number.isNaN(Quantity.max(nan, five).value));
+    assertTrue(Number.isNaN(Quantity.max(five, nan).value));
   });
 });
 

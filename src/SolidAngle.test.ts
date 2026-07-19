@@ -2,7 +2,7 @@ import { describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 
 import * as Angle from "./Angle";
-import { isCloseTo, testRoundtrips } from "./internal/testUtils";
+import { isCloseTo, testAnchors, testRoundtrips } from "./internal/testUtils";
 import * as SolidAngle from "./SolidAngle";
 
 describe("SolidAngle", () => {
@@ -10,6 +10,11 @@ describe("SolidAngle", () => {
     [SolidAngle.steradians, SolidAngle.inSteradians],
     [SolidAngle.spats, SolidAngle.inSpats],
     [SolidAngle.squareDegrees, SolidAngle.inSquareDegrees],
+  ]);
+
+  testAnchors(SolidAngle.inSteradians, [
+    [SolidAngle.spats, 4 * Math.PI],
+    [SolidAngle.squareDegrees, (Math.PI / 180) ** 2],
   ]);
 
   it("one spat is 4π steradians", () => {

@@ -3,7 +3,7 @@ import { assertEquals, assertTrue } from "@effect/vitest/utils";
 import * as FastCheck from "effect/FastCheck";
 
 import * as Angle from "./Angle";
-import { isCloseTo, testRoundtrips } from "./internal/testUtils";
+import { isCloseTo, testAnchors, testRoundtrips } from "./internal/testUtils";
 
 describe("Angle", () => {
   testRoundtrips([
@@ -12,6 +12,13 @@ describe("Angle", () => {
     [Angle.turns, Angle.inTurns],
     [Angle.minutes, Angle.inMinutes],
     [Angle.seconds, Angle.inSeconds],
+  ]);
+
+  testAnchors(Angle.inRadians, [
+    [Angle.degrees, Math.PI / 180],
+    [Angle.turns, 2 * Math.PI],
+    [Angle.minutes, Math.PI / 10800],
+    [Angle.seconds, Math.PI / 648000],
   ]);
 
   it("relates degrees to turns", () => {

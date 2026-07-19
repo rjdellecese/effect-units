@@ -5,6 +5,7 @@ import * as Density from "./Density";
 import {
   isCloseTo,
   isQuantityCloseTo,
+  testAnchors,
   testRoundtrips,
 } from "./internal/testUtils";
 import * as Mass from "./Mass";
@@ -17,6 +18,12 @@ describe("Density", () => {
     [Density.gramsPerCubicCentimeter, Density.inGramsPerCubicCentimeter],
     [Density.poundsPerCubicInch, Density.inPoundsPerCubicInch],
     [Density.poundsPerCubicFoot, Density.inPoundsPerCubicFoot],
+  ]);
+
+  testAnchors(Density.inKilogramsPerCubicMeter, [
+    [Density.gramsPerCubicCentimeter, 1000],
+    [Density.poundsPerCubicInch, 0.45359237 / 1.6387064e-5],
+    [Density.poundsPerCubicFoot, 0.45359237 / 0.028316846592],
   ]);
 
   it("is a mass per a volume", () => {

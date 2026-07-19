@@ -29,6 +29,8 @@ export const BaseUnit = Schema.Literal(
 
 export type BaseUnit = typeof BaseUnit.Type;
 
+const isBaseUnit = Schema.is(BaseUnit);
+
 export interface Product<in out U1 extends Unit, in out U2 extends Unit>
   extends Equal.Equal, Inspectable.Inspectable {
   readonly _tag: "Product";
@@ -59,8 +61,8 @@ const Proto = {
   [Equal.symbol](this: Unit, that: unknown): boolean {
     return isUnit(that) && equals(this, that);
   },
-  [Hash.symbol](this: Unit): number {
-    return Hash.string(encode(this));
+  [Hash.symbol](this: Unit & object): number {
+    return Hash.cached(this, Hash.string(encode(this)));
   },
   toJSON(this: Unit): string {
     return encode(this);
@@ -93,7 +95,7 @@ export const cubed = <U extends Unit>(unit: U): Cubed<U> =>
 
 export const isUnit = (u: unknown): u is Unit =>
   typeof u === "string"
-    ? Schema.is(BaseUnit)(u)
+    ? isBaseUnit(u)
     : Predicate.isRecord(u) &&
       (u._tag === "Product"
         ? isUnit(u.left) && isUnit(u.right)
@@ -129,52 +131,65 @@ export const encode = (u: Unit): string =>
 // the remaining input.
 type Parsed = readonly [unit: Unit, rest: string];
 
+const baseUnitName = /^[A-Za-z]+/;
+
+// Far deeper than any legitimate unit tree; bounds recursion so adversarial
+// input fails with Option.none() instead of a stack overflow.
+const maxDepth = 64;
+
 const parseBaseUnit = (input: string): Option.Option<Parsed> =>
   pipe(
-    String.match(/^[A-Za-z]+/)(input),
+    String.match(baseUnitName)(input),
     Option.flatMap((matches) => Option.fromNullable(matches[0])),
-    Option.filter(Schema.is(BaseUnit)),
+    Option.filter(isBaseUnit),
     Option.map((name) => [name, String.slice(name.length)(input)] as const),
   );
 
-const parseComposite = (input: string): Option.Option<Parsed> =>
-  pipe(
-    parseTree(String.slice(1)(input)),
-    Option.flatMap(([first, afterFirst]) =>
-      pipe(
-        String.charAt(0)(afterFirst),
-        Option.filter(
-          (operator): operator is "*" | "/" =>
-            operator === "*" || operator === "/",
-        ),
-        Option.flatMap((operator) =>
-          pipe(
-            parseTree(String.slice(1)(afterFirst)),
-            Option.flatMap(([second, afterSecond]) =>
-              String.startsWith(")")(afterSecond)
-                ? Option.some([
-                    operator === "*"
-                      ? product(first, second)
-                      : rate(first, second),
-                    String.slice(1)(afterSecond),
-                  ] as const)
-                : Option.none(),
-            ),
-          ),
-        ),
+const parseComposite = (
+  input: string,
+  depth: number,
+): Option.Option<Parsed> =>
+  Option.gen(function* () {
+    const [first, afterFirst] = yield* parseTree(
+      String.slice(1)(input),
+      depth,
+    );
+    const operator = yield* pipe(
+      String.charAt(0)(afterFirst),
+      Option.filter(
+        (character): character is "*" | "/" =>
+          character === "*" || character === "/",
       ),
-    ),
-  );
+    );
+    const [second, afterSecond] = yield* parseTree(
+      String.slice(1)(afterFirst),
+      depth,
+    );
 
-const parseTree = (input: string): Option.Option<Parsed> =>
-  String.startsWith("(")(input) ? parseComposite(input) : parseBaseUnit(input);
+    if (!String.startsWith(")")(afterSecond)) {
+      return yield* Option.none();
+    }
+
+    return [
+      operator === "*" ? product(first, second) : rate(first, second),
+      String.slice(1)(afterSecond),
+    ] as const;
+  });
+
+const parseTree = (input: string, depth: number): Option.Option<Parsed> =>
+  depth > maxDepth
+    ? Option.none()
+    : String.startsWith("(")(input)
+      ? parseComposite(input, depth + 1)
+      : parseBaseUnit(input);
 
 /**
  * Parses the canonical encoding produced by {@link encode}. Returns
- * `Option.none()` for anything else.
+ * `Option.none()` for anything else, including trees nested beyond any
+ * depth the library's unit algebra can produce.
  */
 export const decode = (input: string): Option.Option<Unit> =>
-  parseTree(input).pipe(
+  parseTree(input, 0).pipe(
     Option.flatMap(([unit, rest]) =>
       rest === "" ? Option.some(unit) : Option.none(),
     ),

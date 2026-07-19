@@ -20,7 +20,7 @@
   "scripts": {
     "build": "tsc --build tsconfig.json",
     "prepare": "pnpm run build",
-    "typecheck": "tsc --build tsconfig.json",
+    "typecheck": "tsc --build tsconfig.json && tsc --project tsconfig.test.json",
     "test": "vitest --run",
     "test:watch": "vitest"
   },

@@ -1,5 +1,4 @@
 import * as Function from "effect/Function";
-import * as Match from "effect/Match";
 import * as Schema from "effect/Schema";
 
 export const Prefix = Schema.Literal(
@@ -31,40 +30,32 @@ export const Prefix = Schema.Literal(
 
 export type Prefix = typeof Prefix.Type;
 
-const base10Exponent = (prefix: Prefix) =>
-  Match.value(prefix).pipe(
-    (matcher) =>
-      matcher.pipe(
-        Match.when("Quetta", () => 30),
-        Match.when("Ronna", () => 27),
-        Match.when("Yotta", () => 24),
-        Match.when("Zetta", () => 21),
-        Match.when("Exa", () => 18),
-        Match.when("Peta", () => 15),
-        Match.when("Tera", () => 12),
-        Match.when("Giga", () => 9),
-        Match.when("Mega", () => 6),
-        Match.when("Kilo", () => 3),
-        Match.when("Hecto", () => 2),
-        Match.when("Deca", () => 1),
-      ),
-    (matcher) =>
-      matcher.pipe(
-        Match.when("Deci", () => -1),
-        Match.when("Centi", () => -2),
-        Match.when("Milli", () => -3),
-        Match.when("Micro", () => -6),
-        Match.when("Nano", () => -9),
-        Match.when("Pico", () => -12),
-        Match.when("Femto", () => -15),
-        Match.when("Atto", () => -18),
-        Match.when("Zepto", () => -21),
-        Match.when("Yocto", () => -24),
-        Match.when("Ronto", () => -27),
-        Match.when("Quecto", () => -30),
-      ),
-    Match.exhaustive,
-  );
+const base10Exponents: Record<Prefix, number> = {
+  Quetta: 30,
+  Ronna: 27,
+  Yotta: 24,
+  Zetta: 21,
+  Exa: 18,
+  Peta: 15,
+  Tera: 12,
+  Giga: 9,
+  Mega: 6,
+  Kilo: 3,
+  Hecto: 2,
+  Deca: 1,
+  Deci: -1,
+  Centi: -2,
+  Milli: -3,
+  Micro: -6,
+  Nano: -9,
+  Pico: -12,
+  Femto: -15,
+  Atto: -18,
+  Zepto: -21,
+  Yocto: -24,
+  Ronto: -27,
+  Quecto: -30,
+};
 
 export const toBase: {
   (value: number): (prefix: Prefix) => number;
@@ -72,7 +63,7 @@ export const toBase: {
 } = Function.dual(
   2,
   (prefix: Prefix, value: number): number =>
-    value * 10 ** base10Exponent(prefix),
+    value * 10 ** base10Exponents[prefix],
 );
 
 export const toPrefixed: {
@@ -84,5 +75,5 @@ export const toPrefixed: {
     // Dividing by the same factor toBase multiplies by, rather than
     // multiplying by its inverse, keeps roundtrips as close to exact as
     // floats allow.
-    value / 10 ** base10Exponent(prefix),
+    value / 10 ** base10Exponents[prefix],
 );

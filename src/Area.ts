@@ -1,5 +1,6 @@
 import * as Constants from "./internal/constants";
 import * as Length from "./Length";
+import * as Prefix from "./Prefix";
 import * as Quantity from "./Quantity";
 import * as Unit from "./Unit";
 
@@ -21,7 +22,7 @@ export const squareMeters = (n: number) => make(n);
 
 export const inSquareMeters = (a: Area) => a.value;
 
-const squareMetersPerSquareMillimeter = 1e-6;
+const squareMetersPerSquareMillimeter = Prefix.toBase("Milli", 1) ** 2;
 
 export const squareMillimeters = (n: number) =>
   make(n * squareMetersPerSquareMillimeter);
@@ -29,7 +30,7 @@ export const squareMillimeters = (n: number) =>
 export const inSquareMillimeters = (a: Area) =>
   a.value / squareMetersPerSquareMillimeter;
 
-const squareMetersPerSquareCentimeter = 1e-4;
+const squareMetersPerSquareCentimeter = Prefix.toBase("Centi", 1) ** 2;
 
 export const squareCentimeters = (n: number) =>
   make(n * squareMetersPerSquareCentimeter);
@@ -37,13 +38,14 @@ export const squareCentimeters = (n: number) =>
 export const inSquareCentimeters = (a: Area) =>
   a.value / squareMetersPerSquareCentimeter;
 
-const squareMetersPerHectare = 10_000;
+/** One hectare is one square hectometer. */
+const squareMetersPerHectare = Prefix.toBase("Hecto", 1) ** 2;
 
 export const hectares = (n: number) => make(n * squareMetersPerHectare);
 
 export const inHectares = (a: Area) => a.value / squareMetersPerHectare;
 
-const squareMetersPerSquareKilometer = 1e6;
+const squareMetersPerSquareKilometer = Prefix.toBase("Kilo", 1) ** 2;
 
 export const squareKilometers = (n: number) =>
   make(n * squareMetersPerSquareKilometer);

@@ -6,6 +6,7 @@ import * as Force from "./Force";
 import {
   isCloseTo,
   isQuantityCloseTo,
+  testAnchors,
   testRoundtrips,
 } from "./internal/testUtils";
 import * as Pressure from "./Pressure";
@@ -18,6 +19,13 @@ describe("Pressure", () => {
     [Pressure.megapascals, Pressure.inMegapascals],
     [Pressure.poundsPerSquareInch, Pressure.inPoundsPerSquareInch],
     [Pressure.atmospheres, Pressure.inAtmospheres],
+  ]);
+
+  testAnchors(Pressure.inPascals, [
+    [Pressure.kilopascals, 1e3],
+    [Pressure.megapascals, 1e6],
+    [Pressure.poundsPerSquareInch, 4.4482216152605 / 6.4516e-4],
+    [Pressure.atmospheres, 101325],
   ]);
 
   it("is a force per an area", () => {

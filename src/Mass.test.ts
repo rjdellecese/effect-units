@@ -1,7 +1,7 @@
 import { describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 
-import { isCloseTo, testRoundtrips } from "./internal/testUtils";
+import { isCloseTo, testAnchors, testRoundtrips } from "./internal/testUtils";
 import * as Mass from "./Mass";
 
 describe("Mass", () => {
@@ -19,6 +19,18 @@ describe("Mass", () => {
     [Mass.pounds, Mass.inPounds],
     [Mass.longTons, Mass.inLongTons],
     [Mass.shortTons, Mass.inShortTons],
+  ]);
+
+  testAnchors(Mass.inKilograms, [
+    [Mass.grams, 1e-3],
+    [Mass.milligrams, 1e-6],
+    [Mass.micrograms, 1e-9],
+    [Mass.nanograms, 1e-12],
+    [Mass.metricTons, 1e3],
+    [Mass.ounces, 0.45359237 / 16],
+    [Mass.pounds, 0.45359237],
+    [Mass.longTons, 1016.0469088],
+    [Mass.shortTons, 907.18474],
   ]);
 
   it("relates pounds to ounces", () => {

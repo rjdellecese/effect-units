@@ -62,19 +62,23 @@ export const inJulianYears = (d: Duration) => d.value / secondsPerJulianYear;
  * become `Infinity` seconds.
  */
 export const fromDuration = (duration: EffectDuration.Duration): Duration =>
-  make(EffectDuration.toMillis(duration) / 1000);
+  milliseconds(EffectDuration.toMillis(duration));
 
 /**
  * Converts a `Duration` quantity to an `effect/Duration`, rounding to the
- * nearest nanosecond. Returns `Option.none()` when the quantity is negative
- * or not finite (`effect/Duration`s are non-negative).
+ * nearest nanosecond. Returns `Option.none()` when the quantity is negative,
+ * not finite, or too large for a whole number of nanoseconds to be
+ * representable (`effect/Duration`s are non-negative).
  */
 export const toDuration = (
   d: Duration,
-): Option.Option<EffectDuration.Duration> =>
-  Number.isFinite(d.value) && d.value >= 0
-    ? Option.some(EffectDuration.nanos(BigInt(Math.round(d.value * 1e9))))
+): Option.Option<EffectDuration.Duration> => {
+  const nanos = d.value * 1e9;
+
+  return Number.isFinite(nanos) && nanos >= 0
+    ? Option.some(EffectDuration.nanos(BigInt(Math.round(nanos))))
     : Option.none();
+};
 
 /**
  * The signed duration from `start` to `end` (negative when `end` is earlier
@@ -84,14 +88,27 @@ export const between = (
   start: DateTime.DateTime,
   end: DateTime.DateTime,
 ): Duration =>
-  make((DateTime.toEpochMillis(end) - DateTime.toEpochMillis(start)) / 1000);
+  milliseconds(DateTime.toEpochMillis(end) - DateTime.toEpochMillis(start));
 
 /**
  * Adds a duration to a `DateTime`, rounding to the nearest millisecond (the
- * resolution of `DateTime`).
+ * resolution of `DateTime`). Returns `Option.none()` when the duration is
+ * not finite or the result falls outside the representable `DateTime`
+ * range.
  */
 export const addTo = (
   dateTime: DateTime.DateTime,
   duration: Duration,
-): DateTime.DateTime =>
-  DateTime.add(dateTime, { millis: Math.round(duration.value * 1000) });
+): Option.Option<DateTime.DateTime> => {
+  const millis = Math.round(inMilliseconds(duration));
+
+  if (!Number.isFinite(millis)) {
+    return Option.none();
+  }
+
+  const result = DateTime.add(dateTime, { millis });
+
+  return Number.isNaN(DateTime.toEpochMillis(result))
+    ? Option.none()
+    : Option.some(result);
+};

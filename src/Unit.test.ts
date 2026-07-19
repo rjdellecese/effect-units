@@ -84,6 +84,14 @@ describe("Unit", () => {
     );
   });
 
+  it("the schema rejects deeply nested input without overflowing the stack", () => {
+    assertTrue(
+      Either.isLeft(
+        Schema.decodeEither(Unit.Unit)("(".repeat(100_000) + "Meters"),
+      ),
+    );
+  });
+
   it("composite units inspect as their canonical encoding", () => {
     const metersPerSecond = Unit.rate("Meters", "Seconds");
 

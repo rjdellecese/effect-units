@@ -2,24 +2,34 @@ import * as Equal from "effect/Equal";
 import * as Function from "effect/Function";
 import * as Hash from "effect/Hash";
 import * as Inspectable from "effect/Inspectable";
-import * as Match from "effect/Match";
 import * as Pipeable from "effect/Pipeable";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 
+import {
+  normalizeZero,
+  ValueObjectProto,
+  valueEquals,
+} from "./internal/valueObject";
 import * as Unit from "./Unit";
 
 export const TypeId = Symbol.for("effect-units/Quantity");
 export type TypeId = typeof TypeId;
 
 export const QuantityFromSelf = <const U extends Unit.Unit>(unit: U) =>
-  Schema.declare((u: unknown): u is Quantity<U> => isQuantity(unit)(u));
+  Schema.declare(hasUnit(unit));
 
+/**
+ * Note that the wire format only admits finite values: NaN and ±Infinity
+ * (which in-memory arithmetic produces under IEEE semantics) fail loudly at
+ * encode rather than corrupting silently through JSON (where they would
+ * become `null`).
+ */
 export const Quantity = <const U extends Unit.Unit>(unit: U) =>
   Schema.transform(
     Schema.Struct({
       unit: Schema.Literal(Unit.encode(unit)),
-      value: Schema.Number,
+      value: Schema.Number.pipe(Schema.finite()),
     }),
     QuantityFromSelf(unit),
     {
@@ -41,27 +51,26 @@ export interface Quantity<U extends Unit.Unit>
   readonly value: number;
 }
 
-const isQuantity =
-  <U extends Unit.Unit = Unit.Unit>(unit?: U) =>
-  (u: unknown): u is Quantity<U> =>
-    Predicate.hasProperty(u, TypeId) &&
-    (unit
-      ? Predicate.hasProperty(u, "unit") &&
-        Unit.isUnit(u.unit) &&
-        Unit.equals(u.unit, unit)
-      : true);
+const isQuantity = (u: unknown): u is Quantity<Unit.Unit> =>
+  Predicate.hasProperty(u, TypeId);
 
-const valueEquals = (a: number, b: number): boolean =>
-  a === b || (Number.isNaN(a) && Number.isNaN(b));
+const hasUnit =
+  <U extends Unit.Unit>(unit: U) =>
+  (u: unknown): u is Quantity<U> =>
+    isQuantity(u) && Unit.equals(u.unit, unit);
 
 const Proto = {
+  ...ValueObjectProto,
   [TypeId]: TypeId,
   [Equal.symbol](this: Quantity<Unit.Unit>, that: unknown): boolean {
-    return isQuantity()(that) && equals(this, that);
+    return isQuantity(that) && equals(this, that);
   },
   [Hash.symbol](this: Quantity<Unit.Unit>): number {
-    return Hash.combine(Hash.string(Unit.encode(this.unit)))(
-      Hash.number(this.value),
+    return Hash.cached(
+      this,
+      Hash.combine(Hash.string(Unit.encode(this.unit)))(
+        Hash.number(this.value),
+      ),
     );
   },
   toJSON(this: Quantity<Unit.Unit>) {
@@ -71,15 +80,6 @@ const Proto = {
       value: this.value,
     };
   },
-  toString(this: Quantity<Unit.Unit>): string {
-    return Inspectable.format(this.toJSON());
-  },
-  [Inspectable.NodeInspectSymbol](this: Quantity<Unit.Unit>) {
-    return this.toJSON();
-  },
-  pipe() {
-    return Pipeable.pipeArguments(this, arguments);
-  },
 } as const;
 
 export const make = <U extends Unit.Unit>(
@@ -88,9 +88,7 @@ export const make = <U extends Unit.Unit>(
 ): Quantity<U> =>
   Object.assign(Object.create(Proto), {
     unit,
-    // Normalize -0 to 0 so the two float zeros are one value for
-    // equality and hashing.
-    value: value === 0 ? 0 : value,
+    value: normalizeZero(value),
   });
 
 /**
@@ -106,8 +104,9 @@ export const equals = <U extends Unit.Unit>(
 
 /**
  * Tolerance-based equality: whether `a` and `b` differ by no more than
- * `tolerance` (a quantity in the same units). Returns false if any value
- * involved is NaN.
+ * `tolerance` (a quantity in the same units). Identical values — including
+ * two equal infinities — are always equal within any tolerance; NaN is
+ * never equal to anything.
  */
 export const equalsWithin: {
   <U extends Unit.Unit>(
@@ -125,7 +124,9 @@ export const equalsWithin: {
     a: Quantity<Unit.Unit>,
     b: Quantity<Unit.Unit>,
     tolerance: Quantity<Unit.Unit>,
-  ): boolean => Math.abs(a.value - b.value) <= Math.abs(tolerance.value),
+  ): boolean =>
+    a.value === b.value ||
+    Math.abs(a.value - b.value) <= Math.abs(tolerance.value),
 );
 
 export const multiply: {
@@ -140,17 +141,9 @@ export const multiply: {
     a: Quantity<Unit.Unit> | number,
     b: Quantity<Unit.Unit> | number,
   ): Quantity<Unit.Unit> =>
-    Match.value({ a, b }).pipe(
-      Match.when(
-        { a: isQuantity(), b: Predicate.isNumber },
-        ({ a: a_, b: b_ }) => make(a_.unit, a_.value * b_),
-      ),
-      Match.when(
-        { a: Predicate.isNumber, b: isQuantity() },
-        ({ a: a_, b: b_ }) => make(b_.unit, a_ * b_.value),
-      ),
-      Match.orElseAbsurd,
-    ),
+    Predicate.isNumber(a)
+      ? make((b as Quantity<Unit.Unit>).unit, a * (b as Quantity<Unit.Unit>).value)
+      : make(a.unit, a.value * (b as number)),
 );
 
 /** Division by zero yields ±Infinity (or NaN for 0/0). */
@@ -211,10 +204,10 @@ export const cubed = <U extends Unit.Unit>(
   make(Unit.cubed(a.unit), a.value * a.value * a.value);
 
 /**
- * Divides one quantity by another, producing a rate: `per(dependent, independent)` is
- * the rate of change of `dependent` per unit of `independent` (e.g. `per(length,
- * duration)` is a speed). Division by zero yields ±Infinity (or NaN for
- * 0/0).
+ * Divides one quantity by another, producing a rate: `per(dependent,
+ * independent)` is the rate of change of `dependent` per unit of
+ * `independent` (e.g. `per(length, duration)` is a speed). Division by zero
+ * yields ±Infinity (or NaN for 0/0).
  */
 export const per: {
   <Independent extends Unit.Unit>(
@@ -232,7 +225,10 @@ export const per: {
     dependent: Quantity<Unit.Unit>,
     independent: Quantity<Unit.Unit>,
   ): Quantity<Unit.Rate<Unit.Unit, Unit.Unit>> =>
-    make(Unit.rate(dependent.unit, independent.unit), dependent.value / independent.value),
+    make(
+      Unit.rate(dependent.unit, independent.unit),
+      dependent.value / independent.value,
+    ),
 );
 
 /**
@@ -298,8 +294,7 @@ export const for_: {
   (
     independent: Quantity<Unit.Unit>,
     rate: Quantity<Unit.Rate<Unit.Unit, Unit.Unit>>,
-  ): Quantity<Unit.Unit> =>
-    make(rate.unit.dependent, rate.value * independent.value),
+  ): Quantity<Unit.Unit> => at(rate, independent),
 );
 
 /**
@@ -348,8 +343,9 @@ export const over_: {
 
 // Comparison
 //
-// All comparisons follow IEEE semantics for NaN: every comparison involving
-// NaN is false.
+// The ordering predicates follow IEEE semantics for NaN: every comparison
+// involving NaN is false. min and max propagate NaN deterministically, like
+// Math.min/Math.max.
 
 export const lessThan: {
   <U extends Unit.Unit>(b: Quantity<U>): (a: Quantity<U>) => boolean;
@@ -387,22 +383,24 @@ export const greaterThanOrEqualTo: {
     a.value >= b.value,
 );
 
+/** Propagates NaN: if either argument is NaN, the NaN quantity is returned. */
 export const min: {
   <U extends Unit.Unit>(b: Quantity<U>): (a: Quantity<U>) => Quantity<U>;
   <U extends Unit.Unit>(a: Quantity<U>, b: Quantity<U>): Quantity<U>;
 } = Function.dual(
   2,
   (a: Quantity<Unit.Unit>, b: Quantity<Unit.Unit>): Quantity<Unit.Unit> =>
-    b.value < a.value ? b : a,
+    Number.isNaN(a.value) ? a : Number.isNaN(b.value) ? b : b.value < a.value ? b : a,
 );
 
+/** Propagates NaN: if either argument is NaN, the NaN quantity is returned. */
 export const max: {
   <U extends Unit.Unit>(b: Quantity<U>): (a: Quantity<U>) => Quantity<U>;
   <U extends Unit.Unit>(a: Quantity<U>, b: Quantity<U>): Quantity<U>;
 } = Function.dual(
   2,
   (a: Quantity<Unit.Unit>, b: Quantity<Unit.Unit>): Quantity<Unit.Unit> =>
-    b.value > a.value ? b : a,
+    Number.isNaN(a.value) ? a : Number.isNaN(b.value) ? b : b.value > a.value ? b : a,
 );
 
 // Guards

@@ -1,5 +1,6 @@
 import * as Constants from "./internal/constants";
 import * as Mass from "./Mass";
+import * as Prefix from "./Prefix";
 import * as Quantity from "./Quantity";
 import * as Unit from "./Unit";
 import * as Volume from "./Volume";
@@ -29,7 +30,9 @@ export const kilogramsPerCubicMeter = (n: number) => make(n);
 
 export const inKilogramsPerCubicMeter = (d: Density) => d.value;
 
-const kilogramsPerCubicMeterPerGramPerCubicCentimeter = 1000;
+/** A gram is a milli-kilogram; a cubic centimeter is a centi-meter cubed. */
+const kilogramsPerCubicMeterPerGramPerCubicCentimeter =
+  Prefix.toBase("Milli", 1) / Prefix.toBase("Centi", 1) ** 3;
 
 export const gramsPerCubicCentimeter = (n: number) =>
   make(n * kilogramsPerCubicMeterPerGramPerCubicCentimeter);
