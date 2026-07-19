@@ -1,6 +1,12 @@
 name: "Setup"
 description: "Sets up Node.js and pnpm and installs dependencies"
 
+inputs:
+  registry-url:
+    description: "Optional npm registry to configure for publishing"
+    required: false
+    default: ""
+
 runs:
   using: "composite"
   steps:
@@ -12,6 +18,7 @@ runs:
       with:
         node-version-file: ".node-version"
         cache: "pnpm"
+        registry-url: ${{ inputs.registry-url }}
 
     - name: Install dependencies
       run: pnpm install

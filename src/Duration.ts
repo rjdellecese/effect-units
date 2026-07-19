@@ -2,9 +2,9 @@ import * as DateTime from "effect/DateTime";
 import * as EffectDuration from "effect/Duration";
 import * as Option from "effect/Option";
 
-import * as Constants from "./internal/constants";
-import * as Prefix from "./Prefix";
-import * as Quantity from "./Quantity";
+import * as Constants from "./internal/constants.js";
+import * as Prefix from "./Prefix.js";
+import * as Quantity from "./Quantity.js";
 
 export type Seconds = "Seconds";
 export const Seconds: Seconds = "Seconds";

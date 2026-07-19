@@ -4,7 +4,7 @@ effect-units is a single-package TypeScript library providing typed quantities a
 
 ## Build System
 
-The package is built with tsdown (JavaScript output, `dist: false` for declarations) plus TypeScript: `tsc -b tsconfig.src.json` emits the `.d.ts` declarations. `tsconfig.json` is the noEmit typecheck project covering all sources, tests, and root config files; both extend `tsconfig.base.json`.
+The package is built with tsdown (JavaScript output; `dts: false` delegates declarations to tsc) plus TypeScript: `tsc -b tsconfig.src.json` emits the `.d.ts` declarations. `tsconfig.json` is the noEmit typecheck project covering all sources, tests, and root config files; both extend `tsconfig.base.json`. Relative imports use TS-ESM `.js` extensions (`import * as Unit from "./Unit.js"`) so the emitted declarations resolve under Node16/NodeNext module resolution.
 
 ### Key Commands
 
@@ -18,8 +18,8 @@ The package is built with tsdown (JavaScript output, `dist: false` for declarati
 
 ## Conventions
 
-- Import Effect modules from their submodule paths (e.g. `import * as Schema from "effect/Schema"`), never from bare `"effect"` — enforced by Oxlint's `no-restricted-imports`.
-- Tests are colocated with sources as `src/*.test.ts` and use `@effect/vitest`.
+- Import Effect modules from their submodule paths (e.g. `import * as Schema from "effect/Schema"`), not from bare `"effect"` — enforced for value imports by Oxlint's `no-restricted-imports` (type-only imports are exempt from the lint rule, but follow the convention anyway).
+- Tests are colocated with sources as `src/*.test.ts` and use `@effect/vitest`; shared test helpers live in `test/` (excluded from the build and coverage).
 - Source modules are PascalCase (one module per unit/quantity); helpers are camelCase.
 
 ## Versioning and Publishing

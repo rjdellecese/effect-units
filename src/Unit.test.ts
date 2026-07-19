@@ -5,7 +5,7 @@ import * as Equal from "effect/Equal";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-import * as Unit from "./Unit";
+import * as Unit from "./Unit.js";
 
 describe("Unit", () => {
   const newtons = Unit.product(

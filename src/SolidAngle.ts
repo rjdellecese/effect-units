@@ -1,5 +1,5 @@
-import * as Angle from "./Angle";
-import * as Quantity from "./Quantity";
+import * as Angle from "./Angle.js";
+import * as Quantity from "./Quantity.js";
 
 export type Steradians = "Steradians";
 export const Steradians: Steradians = "Steradians";

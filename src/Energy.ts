@@ -1,9 +1,9 @@
-import * as Force from "./Force";
-import * as Constants from "./internal/constants";
-import * as Length from "./Length";
-import * as Prefix from "./Prefix";
-import * as Quantity from "./Quantity";
-import * as Unit from "./Unit";
+import * as Force from "./Force.js";
+import * as Constants from "./internal/constants.js";
+import * as Length from "./Length.js";
+import * as Prefix from "./Prefix.js";
+import * as Quantity from "./Quantity.js";
+import * as Unit from "./Unit.js";
 
 export type Joules = Unit.Product<Force.Newtons, Length.Meters>;
 export const Joules: Joules = Unit.product(Force.Newtons, Length.Meters);

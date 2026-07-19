@@ -1,8 +1,8 @@
-import * as Constants from "./internal/constants";
-import * as Length from "./Length";
-import * as Prefix from "./Prefix";
-import * as Quantity from "./Quantity";
-import * as Unit from "./Unit";
+import * as Constants from "./internal/constants.js";
+import * as Length from "./Length.js";
+import * as Prefix from "./Prefix.js";
+import * as Quantity from "./Quantity.js";
+import * as Unit from "./Unit.js";
 
 export type CubicMeters = Unit.Cubed<Length.Meters>;
 export const CubicMeters: CubicMeters = Unit.cubed(Length.Meters);

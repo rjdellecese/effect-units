@@ -5,11 +5,11 @@ import {
   isQuantityCloseTo,
   testAnchors,
   testRoundtrips,
-} from "./internal/testUtils";
-import * as Molarity from "./Molarity";
-import * as Quantity from "./Quantity";
-import * as SubstanceAmount from "./SubstanceAmount";
-import * as Volume from "./Volume";
+} from "../test/testUtils.js";
+import * as Molarity from "./Molarity.js";
+import * as Quantity from "./Quantity.js";
+import * as SubstanceAmount from "./SubstanceAmount.js";
+import * as Volume from "./Volume.js";
 
 describe("Molarity", () => {
   testRoundtrips([

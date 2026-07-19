@@ -4,8 +4,8 @@ import * as Array from "effect/Array";
 import * as FastCheck from "effect/FastCheck";
 import { pipe } from "effect/Function";
 
-import type * as Quantity from "../Quantity";
-import * as Unit from "../Unit";
+import type * as Quantity from "../src/Quantity.js";
+import * as Unit from "../src/Unit.js";
 
 export interface Tolerance {
   readonly relativeTolerance?: number;

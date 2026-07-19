@@ -1,8 +1,8 @@
-import * as Area from "./Area";
-import * as Constants from "./internal/constants";
-import * as LuminousIntensity from "./LuminousIntensity";
-import * as Quantity from "./Quantity";
-import * as Unit from "./Unit";
+import * as Area from "./Area.js";
+import * as Constants from "./internal/constants.js";
+import * as LuminousIntensity from "./LuminousIntensity.js";
+import * as Quantity from "./Quantity.js";
+import * as Unit from "./Unit.js";
 
 export type Nits = Unit.Rate<LuminousIntensity.Candelas, Area.SquareMeters>;
 export const Nits: Nits = Unit.rate(

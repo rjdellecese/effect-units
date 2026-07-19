@@ -1,7 +1,7 @@
 import { describe } from "@effect/vitest";
 
-import * as Charge from "./Charge";
-import { testAnchors, testRoundtrips } from "./internal/testUtils";
+import * as Charge from "./Charge.js";
+import { testAnchors, testRoundtrips } from "../test/testUtils.js";
 
 describe("Charge", () => {
   testRoundtrips([

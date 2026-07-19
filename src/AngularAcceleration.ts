@@ -1,7 +1,7 @@
-import * as AngularSpeed from "./AngularSpeed";
-import * as Duration from "./Duration";
-import * as Quantity from "./Quantity";
-import * as Unit from "./Unit";
+import * as AngularSpeed from "./AngularSpeed.js";
+import * as Duration from "./Duration.js";
+import * as Quantity from "./Quantity.js";
+import * as Unit from "./Unit.js";
 
 export type RadiansPerSecondSquared = Unit.Rate<
   AngularSpeed.RadiansPerSecond,

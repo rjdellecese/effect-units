@@ -1,8 +1,8 @@
-import * as Prefix from "./Prefix";
-import * as Quantity from "./Quantity";
-import * as SubstanceAmount from "./SubstanceAmount";
-import * as Unit from "./Unit";
-import * as Volume from "./Volume";
+import * as Prefix from "./Prefix.js";
+import * as Quantity from "./Quantity.js";
+import * as SubstanceAmount from "./SubstanceAmount.js";
+import * as Unit from "./Unit.js";
+import * as Volume from "./Volume.js";
 
 export type MolesPerCubicMeter = Unit.Rate<
   SubstanceAmount.Moles,

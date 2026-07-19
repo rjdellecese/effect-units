@@ -12,11 +12,11 @@ import * as FastCheck from "effect/FastCheck";
 import * as Schema from "effect/Schema";
 import * as String from "effect/String";
 
-import { isCloseTo, double } from "./internal/testUtils";
-import * as Length from "./Length";
-import * as Mass from "./Mass";
-import * as Quantity from "./Quantity";
-import * as Unit from "./Unit";
+import { isCloseTo, double } from "../test/testUtils.js";
+import * as Length from "./Length.js";
+import * as Mass from "./Mass.js";
+import * as Quantity from "./Quantity.js";
+import * as Unit from "./Unit.js";
 
 const nonZeroDouble = double.filter((n) => n !== 0);
 

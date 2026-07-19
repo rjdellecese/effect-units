@@ -8,5 +8,5 @@
     "tsBuildInfoFile": "dist/tsconfig.src.tsbuildinfo"
   },
   "include": ["src"],
-  "exclude": ["src/**/*.test.ts", "src/internal/testUtils.ts"]
+  "exclude": ["src/**/*.test.ts"]
 }

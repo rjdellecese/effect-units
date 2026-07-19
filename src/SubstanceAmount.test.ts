@@ -1,7 +1,7 @@
 import { describe } from "@effect/vitest";
 
-import { testAnchors, testRoundtrips } from "./internal/testUtils";
-import * as SubstanceAmount from "./SubstanceAmount";
+import { testAnchors, testRoundtrips } from "../test/testUtils.js";
+import * as SubstanceAmount from "./SubstanceAmount.js";
 
 describe("SubstanceAmount", () => {
   testRoundtrips([

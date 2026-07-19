@@ -12,8 +12,8 @@ import {
   normalizeZero,
   ValueObjectProto,
   valueEquals,
-} from "./internal/valueObject";
-import * as Quantity from "./Quantity";
+} from "./internal/valueObject.js";
+import * as Quantity from "./Quantity.js";
 
 export const TypeId = Symbol.for("effect-units/Temperature");
 export type TypeId = typeof TypeId;

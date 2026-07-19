@@ -10,8 +10,8 @@ import {
   normalizeZero,
   ValueObjectProto,
   valueEquals,
-} from "./internal/valueObject";
-import * as Unit from "./Unit";
+} from "./internal/valueObject.js";
+import * as Unit from "./Unit.js";
 
 export const TypeId = Symbol.for("effect-units/Quantity");
 export type TypeId = typeof TypeId;

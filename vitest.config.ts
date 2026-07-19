@@ -1,23 +1,16 @@
 import { defineConfig } from "vitest/config";
 
+// Coverage and test-file typechecking are opted into by the `test` script
+// (`vitest run --coverage --typecheck`) so watch mode stays fast.
 export default defineConfig({
   test: {
     environment: "node",
     include: ["src/**/*.test.ts"],
     typecheck: {
-      enabled: true,
       include: ["src/**/*.test.ts"],
     },
     coverage: {
-      enabled: true,
-      exclude: [
-        "tsdown.config.ts",
-        "vitest.config.ts",
-        "coverage/**/*",
-        "dist/**/*",
-        "src/**/*.test.ts",
-        "src/internal/testUtils.ts",
-      ],
+      exclude: ["test/**/*"],
     },
   },
 });

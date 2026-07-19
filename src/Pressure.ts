@@ -1,9 +1,9 @@
-import * as Area from "./Area";
-import * as Force from "./Force";
-import * as Constants from "./internal/constants";
-import * as Prefix from "./Prefix";
-import * as Quantity from "./Quantity";
-import * as Unit from "./Unit";
+import * as Area from "./Area.js";
+import * as Force from "./Force.js";
+import * as Constants from "./internal/constants.js";
+import * as Prefix from "./Prefix.js";
+import * as Quantity from "./Quantity.js";
+import * as Unit from "./Unit.js";
 
 export type Pascals = Unit.Rate<Force.Newtons, Area.SquareMeters>;
 export const Pascals: Pascals = Unit.rate(Force.Newtons, Area.SquareMeters);

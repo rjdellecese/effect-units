@@ -1,9 +1,9 @@
-import * as Acceleration from "./Acceleration";
-import * as Constants from "./internal/constants";
-import * as Mass from "./Mass";
-import * as Prefix from "./Prefix";
-import * as Quantity from "./Quantity";
-import * as Unit from "./Unit";
+import * as Acceleration from "./Acceleration.js";
+import * as Constants from "./internal/constants.js";
+import * as Mass from "./Mass.js";
+import * as Prefix from "./Prefix.js";
+import * as Quantity from "./Quantity.js";
+import * as Unit from "./Unit.js";
 
 export type Newtons = Unit.Product<
   Mass.Kilograms,

@@ -1,16 +1,16 @@
 import { describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 
-import * as Area from "./Area";
-import * as Force from "./Force";
+import * as Area from "./Area.js";
+import * as Force from "./Force.js";
 import {
   isCloseTo,
   isQuantityCloseTo,
   testAnchors,
   testRoundtrips,
-} from "./internal/testUtils";
-import * as Pressure from "./Pressure";
-import * as Quantity from "./Quantity";
+} from "../test/testUtils.js";
+import * as Pressure from "./Pressure.js";
+import * as Quantity from "./Quantity.js";
 
 describe("Pressure", () => {
   testRoundtrips([

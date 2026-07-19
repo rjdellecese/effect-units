@@ -2,8 +2,8 @@ import { describe, it } from "@effect/vitest";
 import { assertEquals, assertTrue } from "@effect/vitest/utils";
 import * as FastCheck from "effect/FastCheck";
 
-import * as Angle from "./Angle";
-import { isCloseTo, testAnchors, testRoundtrips } from "./internal/testUtils";
+import * as Angle from "./Angle.js";
+import { isCloseTo, testAnchors, testRoundtrips } from "../test/testUtils.js";
 
 describe("Angle", () => {
   testRoundtrips([

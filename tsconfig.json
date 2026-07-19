@@ -6,6 +6,6 @@
     "tsBuildInfoFile": "node_modules/.cache/tsc/tsconfig.tsbuildinfo",
     "rootDir": "."
   },
-  "include": ["*.ts", "src/**/*"],
+  "include": ["*.ts", "src/**/*", "test/**/*"],
   "exclude": ["dist", "coverage", "node_modules"]
 }

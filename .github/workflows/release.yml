@@ -17,21 +17,11 @@ jobs:
       pull-requests: write
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup
         with:
-          node-version-file: ".node-version"
-          cache: "pnpm"
           registry-url: "https://registry.npmjs.org"
-
-      - name: Install dependencies
-        run: pnpm install
 
       - name: Create release pull request or publish
         uses: changesets/action@v1

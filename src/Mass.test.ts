@@ -1,8 +1,8 @@
 import { describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 
-import { isCloseTo, testAnchors, testRoundtrips } from "./internal/testUtils";
-import * as Mass from "./Mass";
+import { isCloseTo, testAnchors, testRoundtrips } from "../test/testUtils.js";
+import * as Mass from "./Mass.js";
 
 describe("Mass", () => {
   testRoundtrips([

@@ -9,7 +9,6 @@
   "env": {
     "builtin": true
   },
-  "ignorePatterns": ["**/dist/**", "**/coverage/**", "**/node_modules/**"],
   "rules": {
     "no-unused-vars": [
       "error",
@@ -27,13 +26,6 @@
   },
   "overrides": [
     {
-      "files": ["**/*.{ts,tsx,mts,cts}"],
-      "rules": {
-        "typescript/consistent-type-imports": "error",
-        "no-shadow": "error"
-      }
-    },
-    {
       "files": ["**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}"],
       "rules": {
         "unicorn/filename-case": [
@@ -45,6 +37,8 @@
     {
       "files": ["**/*.{ts,tsx,mts,cts}"],
       "rules": {
+        "typescript/consistent-type-imports": "error",
+        "no-shadow": "error",
         "no-restricted-imports": [
           "error",
           {

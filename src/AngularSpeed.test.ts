@@ -3,16 +3,16 @@ import { assertTrue } from "@effect/vitest/utils";
 import * as Equal from "effect/Equal";
 import * as FastCheck from "effect/FastCheck";
 
-import * as Angle from "./Angle";
-import * as AngularSpeed from "./AngularSpeed";
-import * as Duration from "./Duration";
+import * as Angle from "./Angle.js";
+import * as AngularSpeed from "./AngularSpeed.js";
+import * as Duration from "./Duration.js";
 import {
   double,
   isQuantityCloseTo,
   testAnchors,
   testRoundtrips,
-} from "./internal/testUtils";
-import * as Quantity from "./Quantity";
+} from "../test/testUtils.js";
+import * as Quantity from "./Quantity.js";
 
 describe("AngularSpeed", () => {
   testRoundtrips([

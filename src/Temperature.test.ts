@@ -8,8 +8,8 @@ import * as Equal from "effect/Equal";
 import * as FastCheck from "effect/FastCheck";
 import * as Schema from "effect/Schema";
 
-import { double, isCloseTo, testRoundtrips } from "./internal/testUtils";
-import * as Temperature from "./Temperature";
+import { double, isCloseTo, testRoundtrips } from "../test/testUtils.js";
+import * as Temperature from "./Temperature.js";
 
 describe("Temperature", () => {
   // Temperature conversions are additive (offset by 273.15), so their error

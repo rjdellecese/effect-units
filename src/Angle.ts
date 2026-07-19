@@ -1,4 +1,4 @@
-import * as Quantity from "./Quantity";
+import * as Quantity from "./Quantity.js";
 
 export type Radians = "Radians";
 export const Radians: Radians = "Radians";

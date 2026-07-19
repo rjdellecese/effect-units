@@ -1,7 +1,7 @@
 import { defineConfig } from "tsdown";
 
 export default defineConfig({
-  entry: ["src/**/*.ts", "!src/**/*.test.ts", "!src/internal/testUtils.ts"],
+  entry: ["src/**/*.ts", "!src/**/*.test.ts"],
   platform: "neutral",
   outDir: "dist",
   clean: true,

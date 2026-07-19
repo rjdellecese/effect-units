@@ -1,7 +1,7 @@
 import { describe } from "@effect/vitest";
 
-import * as Capacitance from "./Capacitance";
-import { testAnchors, testRoundtrips } from "./internal/testUtils";
+import * as Capacitance from "./Capacitance.js";
+import { testAnchors, testRoundtrips } from "../test/testUtils.js";
 
 describe("Capacitance", () => {
   testRoundtrips([

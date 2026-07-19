@@ -1,10 +1,6 @@
 // PostToolUse hook: lints (and auto-fixes) the just-written file with Oxlint.
-//
-// @see https://docs.claude.com/en/docs/claude-code/hooks
 
-import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
-import { extname } from "node:path";
+import { runOnFile } from "./runOnFile.mjs";
 
 // File extensions that Oxlint lints in this project
 //
@@ -20,18 +16,25 @@ const SUPPORTED_EXTENSIONS = new Set([
   ".cts",
 ]);
 
-const input = JSON.parse(readFileSync(0, "utf8"));
-const filePath = input.tool_input?.file_path;
+const result = runOnFile({
+  extensions: SUPPORTED_EXTENSIONS,
+  binPath: "node_modules/oxlint/bin/oxlint",
+  args: ["--fix"],
+});
 
-if (
-  typeof filePath === "string" &&
-  SUPPORTED_EXTENSIONS.has(extname(filePath).toLowerCase())
-) {
-  // Oxlint exits non-zero when lint problems remain after fixing; that is not
-  // a hook failure (the edit still succeeds), so we only surface its stderr.
-  spawnSync("pnpm", ["oxlint", "--fix", filePath], {
-    stdio: ["ignore", "ignore", "inherit"],
-  });
-
+if (result === null || result.status === 0) {
   console.log("{}");
+} else {
+  // Oxlint exits non-zero when problems remain after fixing and prints its
+  // diagnostics to stdout. That is not a hook failure (the edit still
+  // succeeds), but a plain-exit hook's output never reaches the model, so
+  // relay the diagnostics as additional context.
+  console.log(
+    JSON.stringify({
+      hookSpecificOutput: {
+        hookEventName: "PostToolUse",
+        additionalContext: `Oxlint found problems in ${result.filePath} that --fix could not fix:\n${result.stdout}${result.stderr}`,
+      },
+    }),
+  );
 }
