@@ -39,8 +39,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      # dpdm fails on real (runtime) import cycles; type-only `import type`
-      # cycles are ignored.
       - run: pnpm circular
 
   test:
