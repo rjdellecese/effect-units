@@ -1,15 +1,15 @@
 import { describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 
-import * as Area from "./Area.js";
+import * as Area from "./Area.ts";
 import {
   isQuantityCloseTo,
   testAnchors,
   testRoundtrips,
-} from "../test/testUtils.js";
-import * as Luminance from "./Luminance.js";
-import * as LuminousIntensity from "./LuminousIntensity.js";
-import * as Quantity from "./Quantity.js";
+} from "../test/testUtils.ts";
+import * as Luminance from "./Luminance.ts";
+import * as LuminousIntensity from "./LuminousIntensity.ts";
+import * as Quantity from "./Quantity.ts";
 
 describe("Luminance", () => {
   testRoundtrips([

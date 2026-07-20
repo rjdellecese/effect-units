@@ -1,9 +1,9 @@
 import { describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 
-import * as Angle from "./Angle.js";
-import { isCloseTo, testAnchors, testRoundtrips } from "../test/testUtils.js";
-import * as SolidAngle from "./SolidAngle.js";
+import * as Angle from "./Angle.ts";
+import { isCloseTo, testAnchors, testRoundtrips } from "../test/testUtils.ts";
+import * as SolidAngle from "./SolidAngle.ts";
 
 describe("SolidAngle", () => {
   testRoundtrips([

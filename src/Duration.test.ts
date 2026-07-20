@@ -5,8 +5,8 @@ import * as EffectDuration from "effect/Duration";
 import * as FastCheck from "effect/FastCheck";
 import * as Option from "effect/Option";
 
-import * as Duration from "./Duration.js";
-import { isCloseTo, testAnchors, testRoundtrips } from "../test/testUtils.js";
+import * as Duration from "./Duration.ts";
+import { isCloseTo, testAnchors, testRoundtrips } from "../test/testUtils.ts";
 
 describe("Duration", () => {
   testRoundtrips([

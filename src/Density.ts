@@ -1,9 +1,9 @@
-import * as Constants from "./internal/constants.js";
-import * as Mass from "./Mass.js";
-import * as Prefix from "./Prefix.js";
-import * as Quantity from "./Quantity.js";
-import * as Unit from "./Unit.js";
-import * as Volume from "./Volume.js";
+import * as Constants from "./internal/constants.ts";
+import * as Mass from "./Mass.ts";
+import * as Prefix from "./Prefix.ts";
+import * as Quantity from "./Quantity.ts";
+import * as Unit from "./Unit.ts";
+import * as Volume from "./Volume.ts";
 
 export type KilogramsPerCubicMeter = Unit.Rate<
   Mass.Kilograms,

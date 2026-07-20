@@ -1,4 +1,4 @@
-import * as Quantity from "./Quantity.js";
+import * as Quantity from "./Quantity.ts";
 
 export type Lumens = "Lumens";
 export const Lumens: Lumens = "Lumens";

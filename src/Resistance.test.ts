@@ -1,11 +1,11 @@
 import { describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 
-import * as Current from "./Current.js";
-import { isQuantityCloseTo, testRoundtrip } from "../test/testUtils.js";
-import * as Quantity from "./Quantity.js";
-import * as Resistance from "./Resistance.js";
-import * as Voltage from "./Voltage.js";
+import * as Current from "./Current.ts";
+import { isQuantityCloseTo, testRoundtrip } from "../test/testUtils.ts";
+import * as Quantity from "./Quantity.ts";
+import * as Resistance from "./Resistance.ts";
+import * as Voltage from "./Voltage.ts";
 
 describe("Resistance", () => {
   testRoundtrip(Resistance.ohms, Resistance.inOhms);

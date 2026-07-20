@@ -1,7 +1,7 @@
 import { describe } from "@effect/vitest";
 
-import * as Inductance from "./Inductance.js";
-import { testAnchors, testRoundtrips } from "../test/testUtils.js";
+import * as Inductance from "./Inductance.ts";
+import { testAnchors, testRoundtrips } from "../test/testUtils.ts";
 
 describe("Inductance", () => {
   testRoundtrips([

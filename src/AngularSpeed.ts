@@ -1,8 +1,8 @@
-import * as Angle from "./Angle.js";
-import * as Duration from "./Duration.js";
-import * as Constants from "./internal/constants.js";
-import * as Quantity from "./Quantity.js";
-import * as Unit from "./Unit.js";
+import * as Angle from "./Angle.ts";
+import * as Duration from "./Duration.ts";
+import * as Constants from "./internal/constants.ts";
+import * as Quantity from "./Quantity.ts";
+import * as Unit from "./Unit.ts";
 
 export type RadiansPerSecond = Unit.Rate<Angle.Radians, Duration.Seconds>;
 export const RadiansPerSecond: RadiansPerSecond = Unit.rate(

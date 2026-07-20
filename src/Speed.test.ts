@@ -1,16 +1,16 @@
 import { describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 
-import * as Duration from "./Duration.js";
+import * as Duration from "./Duration.ts";
 import {
   isCloseTo,
   isQuantityCloseTo,
   testAnchors,
   testRoundtrips,
-} from "../test/testUtils.js";
-import * as Length from "./Length.js";
-import * as Quantity from "./Quantity.js";
-import * as Speed from "./Speed.js";
+} from "../test/testUtils.ts";
+import * as Length from "./Length.ts";
+import * as Quantity from "./Quantity.ts";
+import * as Speed from "./Speed.ts";
 
 describe("Speed", () => {
   testRoundtrips([

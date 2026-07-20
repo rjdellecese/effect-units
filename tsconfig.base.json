@@ -27,8 +27,10 @@
     "stripInternal": true,
     "lib": ["ESNext"],
     "target": "ESNext",
-    "moduleResolution": "Bundler",
-    "module": "ESNext",
+    "moduleResolution": "NodeNext",
+    "module": "NodeNext",
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
     "plugins": [
       {
         "name": "@effect/language-service",

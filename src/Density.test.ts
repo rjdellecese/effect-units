@@ -1,16 +1,16 @@
 import { describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 
-import * as Density from "./Density.js";
+import * as Density from "./Density.ts";
 import {
   isCloseTo,
   isQuantityCloseTo,
   testAnchors,
   testRoundtrips,
-} from "../test/testUtils.js";
-import * as Mass from "./Mass.js";
-import * as Quantity from "./Quantity.js";
-import * as Volume from "./Volume.js";
+} from "../test/testUtils.ts";
+import * as Mass from "./Mass.ts";
+import * as Quantity from "./Quantity.ts";
+import * as Volume from "./Volume.ts";
 
 describe("Density", () => {
   testRoundtrips([

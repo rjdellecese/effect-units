@@ -1,5 +1,5 @@
-import * as Prefix from "./Prefix.js";
-import * as Quantity from "./Quantity.js";
+import * as Prefix from "./Prefix.ts";
+import * as Quantity from "./Quantity.ts";
 
 export type Moles = "Moles";
 export const Moles: Moles = "Moles";

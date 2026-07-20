@@ -1,8 +1,8 @@
-import * as Charge from "./Charge.js";
-import * as Duration from "./Duration.js";
-import * as Prefix from "./Prefix.js";
-import * as Quantity from "./Quantity.js";
-import * as Unit from "./Unit.js";
+import * as Charge from "./Charge.ts";
+import * as Duration from "./Duration.ts";
+import * as Prefix from "./Prefix.ts";
+import * as Quantity from "./Quantity.ts";
+import * as Unit from "./Unit.ts";
 
 export type Amperes = Unit.Rate<Charge.Coulombs, Duration.Seconds>;
 export const Amperes: Amperes = Unit.rate(Charge.Coulombs, Duration.Seconds);

@@ -1,9 +1,9 @@
-import * as Duration from "./Duration.js";
-import * as Constants from "./internal/constants.js";
-import * as Length from "./Length.js";
-import * as Prefix from "./Prefix.js";
-import * as Quantity from "./Quantity.js";
-import * as Unit from "./Unit.js";
+import * as Duration from "./Duration.ts";
+import * as Constants from "./internal/constants.ts";
+import * as Length from "./Length.ts";
+import * as Prefix from "./Prefix.ts";
+import * as Quantity from "./Quantity.ts";
+import * as Unit from "./Unit.ts";
 
 export type MetersPerSecond = Unit.Rate<Length.Meters, Duration.Seconds>;
 export const MetersPerSecond: MetersPerSecond = Unit.rate(

@@ -1,8 +1,8 @@
-import * as Area from "./Area.js";
-import * as Constants from "./internal/constants.js";
-import * as LuminousFlux from "./LuminousFlux.js";
-import * as Quantity from "./Quantity.js";
-import * as Unit from "./Unit.js";
+import * as Area from "./Area.ts";
+import * as Constants from "./internal/constants.ts";
+import * as LuminousFlux from "./LuminousFlux.ts";
+import * as Quantity from "./Quantity.ts";
+import * as Unit from "./Unit.ts";
 
 export type Lux = Unit.Rate<LuminousFlux.Lumens, Area.SquareMeters>;
 export const Lux: Lux = Unit.rate(LuminousFlux.Lumens, Area.SquareMeters);

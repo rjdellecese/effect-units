@@ -1,6 +1,6 @@
-import * as Duration from "./Duration.js";
-import * as Quantity from "./Quantity.js";
-import * as Unit from "./Unit.js";
+import * as Duration from "./Duration.ts";
+import * as Quantity from "./Quantity.ts";
+import * as Unit from "./Unit.ts";
 
 // Screen-space units. Note that these are unrelated to `Length.cssPixels`,
 // which is a physical length (1/96 of an inch).

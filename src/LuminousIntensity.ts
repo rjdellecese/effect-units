@@ -1,7 +1,7 @@
-import * as LuminousFlux from "./LuminousFlux.js";
-import * as Quantity from "./Quantity.js";
-import * as SolidAngle from "./SolidAngle.js";
-import * as Unit from "./Unit.js";
+import * as LuminousFlux from "./LuminousFlux.ts";
+import * as Quantity from "./Quantity.ts";
+import * as SolidAngle from "./SolidAngle.ts";
+import * as Unit from "./Unit.ts";
 
 export type Candelas = Unit.Rate<LuminousFlux.Lumens, SolidAngle.Steradians>;
 export const Candelas: Candelas = Unit.rate(

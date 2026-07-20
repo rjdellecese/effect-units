@@ -1,10 +1,10 @@
 import { describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 
-import * as Duration from "./Duration.js";
-import { isQuantityCloseTo, testRoundtrip } from "../test/testUtils.js";
-import * as Pixels from "./Pixels.js";
-import * as Quantity from "./Quantity.js";
+import * as Duration from "./Duration.ts";
+import { isQuantityCloseTo, testRoundtrip } from "../test/testUtils.ts";
+import * as Pixels from "./Pixels.ts";
+import * as Quantity from "./Quantity.ts";
 
 describe("Pixels", () => {
   testRoundtrip(Pixels.pixels, Pixels.inPixels);

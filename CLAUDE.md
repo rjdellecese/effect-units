@@ -4,7 +4,7 @@ effect-units is a single-package TypeScript library providing typed quantities a
 
 ## Build System
 
-The package is built with tsdown (JavaScript output; `dts: false` delegates declarations to tsc) plus TypeScript: `tsc -b tsconfig.src.json` emits the `.d.ts` declarations. `tsconfig.json` is the noEmit typecheck project covering all sources, tests, and root config files; both extend `tsconfig.base.json`. Relative imports use TS-ESM `.js` extensions (`import * as Unit from "./Unit.js"`) so the emitted declarations resolve under Node16/NodeNext module resolution.
+The package is built with tsdown (JavaScript output; `dts: false` delegates declarations to tsc) plus TypeScript: `tsc -b tsconfig.src.json` emits the `.d.ts` declarations. `tsconfig.json` is the noEmit typecheck project covering all sources, tests, and root config files; both extend `tsconfig.base.json`. Relative imports use `.ts` extensions (`import * as Unit from "./Unit.ts"`, the Effect v4 convention): `rewriteRelativeImportExtensions` rewrites them to `.js` in tsdown's JavaScript output, declarations keep the `.ts` specifiers (which consumers' TypeScript resolves), and NodeNext module resolution makes tsc error on any extensionless relative import.
 
 ### Key Commands
 
