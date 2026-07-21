@@ -115,3 +115,10 @@ pnpm install
 pnpm test
 pnpm build
 ```
+
+## License
+
+[BSD 3-Clause](./LICENSE). effect-units derives from
+[`ianmackenzie/elm-units`](https://github.com/ianmackenzie/elm-units)
+(copyright Ian Mackenzie, also BSD 3-Clause); its copyright notice is
+retained in [LICENSE](./LICENSE).

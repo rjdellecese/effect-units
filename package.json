@@ -28,7 +28,7 @@
       "default": "./dist/*.js"
     }
   },
-  "license": "UNLICENSED",
+  "license": "BSD-3-Clause",
   "packageManager": "pnpm@11.10.0",
   "peerDependencies": {
     "effect": "^3.21.4"
