@@ -1,7 +1,7 @@
-import * as Current from "./Current";
-import * as Quantity from "./Quantity";
-import * as Unit from "./Unit";
-import * as Voltage from "./Voltage";
+import * as Current from "./Current.ts";
+import * as Quantity from "./Quantity.ts";
+import * as Unit from "./Unit.ts";
+import * as Voltage from "./Voltage.ts";
 
 export type Ohms = Unit.Rate<Voltage.Volts, Current.Amperes>;
 export const Ohms: Ohms = Unit.rate(Voltage.Volts, Current.Amperes);

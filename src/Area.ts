@@ -1,8 +1,8 @@
-import * as Constants from "./internal/constants";
-import * as Length from "./Length";
-import * as Prefix from "./Prefix";
-import * as Quantity from "./Quantity";
-import * as Unit from "./Unit";
+import * as Constants from "./internal/constants.ts";
+import * as Length from "./Length.ts";
+import * as Prefix from "./Prefix.ts";
+import * as Quantity from "./Quantity.ts";
+import * as Unit from "./Unit.ts";
 
 export type SquareMeters = Unit.Squared<Length.Meters>;
 export const SquareMeters: SquareMeters = Unit.squared(Length.Meters);
@@ -58,8 +58,7 @@ export const inSquareKilometers = (a: Area) =>
 const squareMetersPerSquareInch =
   Constants.metersPerInch * Constants.metersPerInch;
 
-export const squareInches = (n: number) =>
-  make(n * squareMetersPerSquareInch);
+export const squareInches = (n: number) => make(n * squareMetersPerSquareInch);
 
 export const inSquareInches = (a: Area) => a.value / squareMetersPerSquareInch;
 

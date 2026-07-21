@@ -1,5 +1,5 @@
-import * as Prefix from "./Prefix";
-import * as Quantity from "./Quantity";
+import * as Prefix from "./Prefix.ts";
+import * as Quantity from "./Quantity.ts";
 
 export type Henries = "Henries";
 export const Henries: Henries = "Henries";

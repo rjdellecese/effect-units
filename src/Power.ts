@@ -1,9 +1,9 @@
-import * as Duration from "./Duration";
-import * as Energy from "./Energy";
-import * as Constants from "./internal/constants";
-import * as Prefix from "./Prefix";
-import * as Quantity from "./Quantity";
-import * as Unit from "./Unit";
+import * as Duration from "./Duration.ts";
+import * as Energy from "./Energy.ts";
+import * as Constants from "./internal/constants.ts";
+import * as Prefix from "./Prefix.ts";
+import * as Quantity from "./Quantity.ts";
+import * as Unit from "./Unit.ts";
 
 export type Watts = Unit.Rate<Energy.Joules, Duration.Seconds>;
 export const Watts: Watts = Unit.rate(Energy.Joules, Duration.Seconds);

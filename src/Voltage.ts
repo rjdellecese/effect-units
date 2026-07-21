@@ -1,7 +1,7 @@
-import * as Current from "./Current";
-import * as Power from "./Power";
-import * as Quantity from "./Quantity";
-import * as Unit from "./Unit";
+import * as Current from "./Current.ts";
+import * as Power from "./Power.ts";
+import * as Quantity from "./Quantity.ts";
+import * as Unit from "./Unit.ts";
 
 export type Volts = Unit.Rate<Power.Watts, Current.Amperes>;
 export const Volts: Volts = Unit.rate(Power.Watts, Current.Amperes);

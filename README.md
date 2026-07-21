@@ -20,47 +20,47 @@ pnpm add github:rjdellecese/effect-units#main
 
 ### Core
 
-| Module | Role |
-| --- | --- |
+| Module                  | Role                                                                                                           |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------- |
 | `effect-units/Quantity` | Typed quantity values with arithmetic and unit algebra (`times`, `squared`, `cubed`, `per`, `at`, `over`, ...) |
-| `effect-units/Unit` | Unit trees: base units composed with `Product` and `Rate` |
-| `effect-units/Prefix` | SI prefixes |
+| `effect-units/Unit`     | Unit trees: base units composed with `Product` and `Rate`                                                      |
+| `effect-units/Prefix`   | SI prefixes                                                                                                    |
 
 ### Units
 
-| Module | Underlying units |
-| --- | --- |
-| `effect-units/Length` | `Meters` |
-| `effect-units/Duration` | `Seconds` (with `effect/Duration` and `effect/DateTime` interop) |
-| `effect-units/Mass` | `Kilograms` |
-| `effect-units/Angle` | `Radians` (with DMS conversion and trigonometry) |
-| `effect-units/Area` | `Squared<Meters>` |
-| `effect-units/Volume` | `Cubed<Meters>` |
-| `effect-units/Speed` | `Rate<Meters, Seconds>` |
-| `effect-units/Acceleration` | `Rate<MetersPerSecond, Seconds>` |
-| `effect-units/AngularSpeed` | `Rate<Radians, Seconds>` |
-| `effect-units/AngularAcceleration` | `Rate<RadiansPerSecond, Seconds>` |
-| `effect-units/Force` | `Product<Kilograms, MetersPerSecondSquared>` |
-| `effect-units/Energy` | `Product<Newtons, Meters>` |
-| `effect-units/Torque` | `Product<Newtons, Meters>` (same as energy, as in `elm-units`) |
-| `effect-units/Power` | `Rate<Joules, Seconds>` |
-| `effect-units/Pressure` | `Rate<Newtons, SquareMeters>` |
-| `effect-units/Density` | `Rate<Kilograms, CubicMeters>` |
-| `effect-units/Charge` | `Coulombs` |
-| `effect-units/Current` | `Rate<Coulombs, Seconds>` |
-| `effect-units/Voltage` | `Rate<Watts, Amperes>` |
-| `effect-units/Resistance` | `Rate<Volts, Amperes>` |
-| `effect-units/Capacitance` | `Farads` |
-| `effect-units/Inductance` | `Henries` |
-| `effect-units/SolidAngle` | `Steradians` |
-| `effect-units/LuminousFlux` | `Lumens` |
-| `effect-units/LuminousIntensity` | `Rate<Lumens, Steradians>` |
-| `effect-units/Illuminance` | `Rate<Lumens, SquareMeters>` |
-| `effect-units/Luminance` | `Rate<Candelas, SquareMeters>` |
-| `effect-units/SubstanceAmount` | `Moles` |
-| `effect-units/Molarity` | `Rate<Moles, CubicMeters>` |
-| `effect-units/Pixels` | `Pixels` (screen space), plus pixel rates and areas |
-| `effect-units/Temperature` | Absolute `Temperature` (kelvins) and relative `Delta` (`CelsiusDegrees`) |
+| Module                             | Underlying units                                                         |
+| ---------------------------------- | ------------------------------------------------------------------------ |
+| `effect-units/Length`              | `Meters`                                                                 |
+| `effect-units/Duration`            | `Seconds` (with `effect/Duration` and `effect/DateTime` interop)         |
+| `effect-units/Mass`                | `Kilograms`                                                              |
+| `effect-units/Angle`               | `Radians` (with DMS conversion and trigonometry)                         |
+| `effect-units/Area`                | `Squared<Meters>`                                                        |
+| `effect-units/Volume`              | `Cubed<Meters>`                                                          |
+| `effect-units/Speed`               | `Rate<Meters, Seconds>`                                                  |
+| `effect-units/Acceleration`        | `Rate<MetersPerSecond, Seconds>`                                         |
+| `effect-units/AngularSpeed`        | `Rate<Radians, Seconds>`                                                 |
+| `effect-units/AngularAcceleration` | `Rate<RadiansPerSecond, Seconds>`                                        |
+| `effect-units/Force`               | `Product<Kilograms, MetersPerSecondSquared>`                             |
+| `effect-units/Energy`              | `Product<Newtons, Meters>`                                               |
+| `effect-units/Torque`              | `Product<Newtons, Meters>` (same as energy, as in `elm-units`)           |
+| `effect-units/Power`               | `Rate<Joules, Seconds>`                                                  |
+| `effect-units/Pressure`            | `Rate<Newtons, SquareMeters>`                                            |
+| `effect-units/Density`             | `Rate<Kilograms, CubicMeters>`                                           |
+| `effect-units/Charge`              | `Coulombs`                                                               |
+| `effect-units/Current`             | `Rate<Coulombs, Seconds>`                                                |
+| `effect-units/Voltage`             | `Rate<Watts, Amperes>`                                                   |
+| `effect-units/Resistance`          | `Rate<Volts, Amperes>`                                                   |
+| `effect-units/Capacitance`         | `Farads`                                                                 |
+| `effect-units/Inductance`          | `Henries`                                                                |
+| `effect-units/SolidAngle`          | `Steradians`                                                             |
+| `effect-units/LuminousFlux`        | `Lumens`                                                                 |
+| `effect-units/LuminousIntensity`   | `Rate<Lumens, Steradians>`                                               |
+| `effect-units/Illuminance`         | `Rate<Lumens, SquareMeters>`                                             |
+| `effect-units/Luminance`           | `Rate<Candelas, SquareMeters>`                                           |
+| `effect-units/SubstanceAmount`     | `Moles`                                                                  |
+| `effect-units/Molarity`            | `Rate<Moles, CubicMeters>`                                               |
+| `effect-units/Pixels`              | `Pixels` (screen space), plus pixel rates and areas                      |
+| `effect-units/Temperature`         | Absolute `Temperature` (kelvins) and relative `Delta` (`CelsiusDegrees`) |
 
 ## Example
 
@@ -75,10 +75,7 @@ const inInches = Length.inInches(height);
 
 const area = Quantity.times(height, height); // Quantity<Squared<"Meters">>
 
-const speed = Quantity.per(
-  Length.miles(3),
-  Duration.hours(1),
-); // Quantity<Rate<"Meters", "Seconds">>, usable as a Speed
+const speed = Quantity.per(Length.miles(3), Duration.hours(1)); // Quantity<Rate<"Meters", "Seconds">>, usable as a Speed
 
 const distance = Quantity.at(speed, Duration.minutes(20));
 ```

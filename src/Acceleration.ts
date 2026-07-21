@@ -1,8 +1,8 @@
-import * as Duration from "./Duration";
-import * as Constants from "./internal/constants";
-import * as Quantity from "./Quantity";
-import * as Speed from "./Speed";
-import * as Unit from "./Unit";
+import * as Duration from "./Duration.ts";
+import * as Constants from "./internal/constants.ts";
+import * as Quantity from "./Quantity.ts";
+import * as Speed from "./Speed.ts";
+import * as Unit from "./Unit.ts";
 
 export type MetersPerSecondSquared = Unit.Rate<
   Speed.MetersPerSecond,

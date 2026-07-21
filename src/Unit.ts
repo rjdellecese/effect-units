@@ -41,7 +41,8 @@ export interface Product<in out U1 extends Unit, in out U2 extends Unit>
 export interface Rate<
   in out Dependent extends Unit,
   in out Independent extends Unit,
-> extends Equal.Equal, Inspectable.Inspectable {
+>
+  extends Equal.Equal, Inspectable.Inspectable {
   readonly _tag: "Rate";
   readonly dependent: Dependent;
   readonly independent: Independent;
@@ -145,15 +146,9 @@ const parseBaseUnit = (input: string): Option.Option<Parsed> =>
     Option.map((name) => [name, String.slice(name.length)(input)] as const),
   );
 
-const parseComposite = (
-  input: string,
-  depth: number,
-): Option.Option<Parsed> =>
+const parseComposite = (input: string, depth: number): Option.Option<Parsed> =>
   Option.gen(function* () {
-    const [first, afterFirst] = yield* parseTree(
-      String.slice(1)(input),
-      depth,
-    );
+    const [first, afterFirst] = yield* parseTree(String.slice(1)(input), depth);
     const operator = yield* pipe(
       String.charAt(0)(afterFirst),
       Option.filter(

@@ -1,5 +1,5 @@
-import * as Angle from "./Angle";
-import * as Quantity from "./Quantity";
+import * as Angle from "./Angle.ts";
+import * as Quantity from "./Quantity.ts";
 
 export type Steradians = "Steradians";
 export const Steradians: Steradians = "Steradians";
@@ -27,8 +27,7 @@ export const inSpats = (s: SolidAngle) => s.value / steradiansPerSpat;
 /** One square degree is (π/180)² steradians. */
 const steradiansPerSquareDegree = (Math.PI / 180) * (Math.PI / 180);
 
-export const squareDegrees = (n: number) =>
-  make(n * steradiansPerSquareDegree);
+export const squareDegrees = (n: number) => make(n * steradiansPerSquareDegree);
 
 export const inSquareDegrees = (s: SolidAngle) =>
   s.value / steradiansPerSquareDegree;

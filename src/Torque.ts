@@ -1,8 +1,8 @@
-import * as Force from "./Force";
-import * as Constants from "./internal/constants";
-import * as Length from "./Length";
-import * as Quantity from "./Quantity";
-import * as Unit from "./Unit";
+import * as Force from "./Force.ts";
+import * as Constants from "./internal/constants.ts";
+import * as Length from "./Length.ts";
+import * as Quantity from "./Quantity.ts";
+import * as Unit from "./Unit.ts";
 
 export type NewtonMeters = Unit.Product<Force.Newtons, Length.Meters>;
 export const NewtonMeters: NewtonMeters = Unit.product(

@@ -1,7 +1,7 @@
-import * as AngularSpeed from "./AngularSpeed";
-import * as Duration from "./Duration";
-import * as Quantity from "./Quantity";
-import * as Unit from "./Unit";
+import * as AngularSpeed from "./AngularSpeed.ts";
+import * as Duration from "./Duration.ts";
+import * as Quantity from "./Quantity.ts";
+import * as Unit from "./Unit.ts";
 
 export type RadiansPerSecondSquared = Unit.Rate<
   AngularSpeed.RadiansPerSecond,
@@ -38,8 +38,7 @@ export const inDegreesPerSecondSquared = (a: AngularAcceleration) =>
 
 const radiansPerTurn = 2 * Math.PI;
 
-export const turnsPerSecondSquared = (n: number) =>
-  make(n * radiansPerTurn);
+export const turnsPerSecondSquared = (n: number) => make(n * radiansPerTurn);
 
 export const inTurnsPerSecondSquared = (a: AngularAcceleration) =>
   a.value / radiansPerTurn;

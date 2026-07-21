@@ -2,9 +2,9 @@ import * as DateTime from "effect/DateTime";
 import * as EffectDuration from "effect/Duration";
 import * as Option from "effect/Option";
 
-import * as Constants from "./internal/constants";
-import * as Prefix from "./Prefix";
-import * as Quantity from "./Quantity";
+import * as Constants from "./internal/constants.ts";
+import * as Prefix from "./Prefix.ts";
+import * as Quantity from "./Quantity.ts";
 
 export type Seconds = "Seconds";
 export const Seconds: Seconds = "Seconds";
@@ -29,8 +29,7 @@ export const inMilliseconds = (d: Duration) =>
 
 export const minutes = (n: number) => make(n * Constants.secondsPerMinute);
 
-export const inMinutes = (d: Duration) =>
-  d.value / Constants.secondsPerMinute;
+export const inMinutes = (d: Duration) => d.value / Constants.secondsPerMinute;
 
 export const hours = (n: number) => make(n * Constants.secondsPerHour);
 

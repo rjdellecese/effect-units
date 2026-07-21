@@ -1,8 +1,8 @@
-import * as Angle from "./Angle";
-import * as Duration from "./Duration";
-import * as Constants from "./internal/constants";
-import * as Quantity from "./Quantity";
-import * as Unit from "./Unit";
+import * as Angle from "./Angle.ts";
+import * as Duration from "./Duration.ts";
+import * as Constants from "./internal/constants.ts";
+import * as Quantity from "./Quantity.ts";
+import * as Unit from "./Unit.ts";
 
 export type RadiansPerSecond = Unit.Rate<Angle.Radians, Duration.Seconds>;
 export const RadiansPerSecond: RadiansPerSecond = Unit.rate(
@@ -13,8 +13,7 @@ export const RadiansPerSecond: RadiansPerSecond = Unit.rate(
 export type AngularSpeed = Quantity.Quantity<RadiansPerSecond>;
 
 export const AngularSpeed = Quantity.Quantity(RadiansPerSecond);
-export const AngularSpeedFromSelf =
-  Quantity.QuantityFromSelf(RadiansPerSecond);
+export const AngularSpeedFromSelf = Quantity.QuantityFromSelf(RadiansPerSecond);
 
 const make = (value: number): AngularSpeed =>
   Quantity.make(RadiansPerSecond, value);
@@ -36,8 +35,7 @@ const radiansPerTurn = 2 * Math.PI;
 
 export const turnsPerSecond = (n: number) => make(n * radiansPerTurn);
 
-export const inTurnsPerSecond = (s: AngularSpeed) =>
-  s.value / radiansPerTurn;
+export const inTurnsPerSecond = (s: AngularSpeed) => s.value / radiansPerTurn;
 
 const radiansPerSecondPerTurnPerMinute =
   radiansPerTurn / Constants.secondsPerMinute;

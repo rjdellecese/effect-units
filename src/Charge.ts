@@ -1,6 +1,6 @@
-import * as Constants from "./internal/constants";
-import * as Prefix from "./Prefix";
-import * as Quantity from "./Quantity";
+import * as Constants from "./internal/constants.ts";
+import * as Prefix from "./Prefix.ts";
+import * as Quantity from "./Quantity.ts";
 
 export type Coulombs = "Coulombs";
 export const Coulombs: Coulombs = "Coulombs";

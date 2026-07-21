@@ -1,9 +1,9 @@
-import * as Acceleration from "./Acceleration";
-import * as Constants from "./internal/constants";
-import * as Mass from "./Mass";
-import * as Prefix from "./Prefix";
-import * as Quantity from "./Quantity";
-import * as Unit from "./Unit";
+import * as Acceleration from "./Acceleration.ts";
+import * as Constants from "./internal/constants.ts";
+import * as Mass from "./Mass.ts";
+import * as Prefix from "./Prefix.ts";
+import * as Quantity from "./Quantity.ts";
+import * as Unit from "./Unit.ts";
 
 export type Newtons = Unit.Product<
   Mass.Kilograms,

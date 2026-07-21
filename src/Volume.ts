@@ -1,8 +1,8 @@
-import * as Constants from "./internal/constants";
-import * as Length from "./Length";
-import * as Prefix from "./Prefix";
-import * as Quantity from "./Quantity";
-import * as Unit from "./Unit";
+import * as Constants from "./internal/constants.ts";
+import * as Length from "./Length.ts";
+import * as Prefix from "./Prefix.ts";
+import * as Quantity from "./Quantity.ts";
+import * as Unit from "./Unit.ts";
 
 export type CubicMeters = Unit.Cubed<Length.Meters>;
 export const CubicMeters: CubicMeters = Unit.cubed(Length.Meters);
@@ -32,8 +32,7 @@ const cubicMetersPerMilliliter = Prefix.toBase("Milli", cubicMetersPerLiter);
 
 export const milliliters = (n: number) => make(n * cubicMetersPerMilliliter);
 
-export const inMilliliters = (v: Volume) =>
-  v.value / cubicMetersPerMilliliter;
+export const inMilliliters = (v: Volume) => v.value / cubicMetersPerMilliliter;
 
 export const cubicCentimeters = (n: number) =>
   make(n * cubicMetersPerMilliliter);
@@ -103,8 +102,7 @@ export const inUsFluidOunces = (v: Volume) =>
 
 const cubicMetersPerUsDryGallon = 0.00440488377086;
 
-export const usDryGallons = (n: number) =>
-  make(n * cubicMetersPerUsDryGallon);
+export const usDryGallons = (n: number) => make(n * cubicMetersPerUsDryGallon);
 
 export const inUsDryGallons = (v: Volume) =>
   v.value / cubicMetersPerUsDryGallon;
@@ -113,8 +111,7 @@ const cubicMetersPerUsDryQuart = cubicMetersPerUsDryGallon / 4;
 
 export const usDryQuarts = (n: number) => make(n * cubicMetersPerUsDryQuart);
 
-export const inUsDryQuarts = (v: Volume) =>
-  v.value / cubicMetersPerUsDryQuart;
+export const inUsDryQuarts = (v: Volume) => v.value / cubicMetersPerUsDryQuart;
 
 const cubicMetersPerUsDryPint = cubicMetersPerUsDryGallon / 8;
 

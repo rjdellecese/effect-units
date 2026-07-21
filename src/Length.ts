@@ -1,6 +1,6 @@
-import * as Constants from "./internal/constants";
-import * as Prefix from "./Prefix";
-import * as Quantity from "./Quantity";
+import * as Constants from "./internal/constants.ts";
+import * as Prefix from "./Prefix.ts";
+import * as Quantity from "./Quantity.ts";
 
 export type Meters = "Meters";
 export const Meters: Meters = "Meters";
@@ -40,13 +40,11 @@ export const inMeters = (l: Length) => l.value;
 
 export const centimeters = (n: number) => make(Prefix.toBase("Centi", n));
 
-export const inCentimeters = (l: Length) =>
-  Prefix.toPrefixed("Centi", l.value);
+export const inCentimeters = (l: Length) => Prefix.toPrefixed("Centi", l.value);
 
 export const millimeters = (n: number) => make(Prefix.toBase("Milli", n));
 
-export const inMillimeters = (l: Length) =>
-  Prefix.toPrefixed("Milli", l.value);
+export const inMillimeters = (l: Length) => Prefix.toPrefixed("Milli", l.value);
 
 // Imperial
 

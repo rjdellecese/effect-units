@@ -1,4 +1,4 @@
-import * as Quantity from "./Quantity";
+import * as Quantity from "./Quantity.ts";
 
 export type Radians = "Radians";
 export const Radians: Radians = "Radians";
@@ -57,8 +57,7 @@ export const fromDms = ({
   readonly minutes: number;
   readonly seconds: number;
 }): Angle => {
-  const totalArcseconds =
-    wholeDegrees * 3600 + wholeMinutes * 60 + dmsSeconds;
+  const totalArcseconds = wholeDegrees * 3600 + wholeMinutes * 60 + dmsSeconds;
   const magnitude = totalArcseconds * radiansPerArcsecond;
 
   return make(sign === "Positive" ? magnitude : -magnitude);
@@ -101,8 +100,7 @@ export const acos = (n: number): Angle => make(Math.acos(n));
 
 export const atan = (n: number): Angle => make(Math.atan(n));
 
-export const atan2 = (y: number, x: number): Angle =>
-  make(Math.atan2(y, x));
+export const atan2 = (y: number, x: number): Angle => make(Math.atan2(y, x));
 
 /** Normalizes an angle into the range `(-π, π]`. */
 export const normalize = (a: Angle): Angle => {

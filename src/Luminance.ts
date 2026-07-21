@@ -1,8 +1,8 @@
-import * as Area from "./Area";
-import * as Constants from "./internal/constants";
-import * as LuminousIntensity from "./LuminousIntensity";
-import * as Quantity from "./Quantity";
-import * as Unit from "./Unit";
+import * as Area from "./Area.ts";
+import * as Constants from "./internal/constants.ts";
+import * as LuminousIntensity from "./LuminousIntensity.ts";
+import * as Quantity from "./Quantity.ts";
+import * as Unit from "./Unit.ts";
 
 export type Nits = Unit.Rate<LuminousIntensity.Candelas, Area.SquareMeters>;
 export const Nits: Nits = Unit.rate(
