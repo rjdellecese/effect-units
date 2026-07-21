@@ -1,0 +1,53 @@
+import { describe, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+
+import * as Area from "../src/Area.ts";
+import * as Force from "../src/Force.ts";
+import {
+  isCloseTo,
+  isQuantityCloseTo,
+  testAnchors,
+  testRoundtrips,
+} from "./testUtils.ts";
+import * as Pressure from "../src/Pressure.ts";
+import * as Quantity from "../src/Quantity.ts";
+
+describe("Pressure", () => {
+  testRoundtrips([
+    [Pressure.pascals, Pressure.inPascals],
+    [Pressure.kilopascals, Pressure.inKilopascals],
+    [Pressure.megapascals, Pressure.inMegapascals],
+    [Pressure.poundsPerSquareInch, Pressure.inPoundsPerSquareInch],
+    [Pressure.atmospheres, Pressure.inAtmospheres],
+  ]);
+
+  testAnchors(Pressure.inPascals, [
+    [Pressure.kilopascals, 1e3],
+    [Pressure.megapascals, 1e6],
+    [Pressure.poundsPerSquareInch, 4.4482216152605 / 6.4516e-4],
+    [Pressure.atmospheres, 101325],
+  ]);
+
+  it("is a force per an area", () => {
+    assertTrue(
+      isQuantityCloseTo(
+        Quantity.per(Force.newtons(10), Area.squareMeters(2)),
+        Pressure.pascals(5),
+      ),
+    );
+  });
+
+  it("relates atmospheres to pascals", () => {
+    assertTrue(isCloseTo(Pressure.inPascals(Pressure.atmospheres(1)), 101325));
+  });
+
+  it("relates pounds per square inch to pascals", () => {
+    assertTrue(
+      isCloseTo(
+        Pressure.inPascals(Pressure.poundsPerSquareInch(1)),
+        6894.757293168361,
+        { relativeTolerance: 1e-12 },
+      ),
+    );
+  });
+});
