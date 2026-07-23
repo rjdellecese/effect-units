@@ -54,16 +54,18 @@ describe("ExactMass", () => {
     );
   });
 
-  it("matches the float module bit-for-bit where its factors are leaves", () => {
-    // longTons is excluded: the float chain (0.45359237 * 2240) double-rounds
-    // one ulp above the correctly rounded exact value, and the float side
-    // keeps its historical value by design. Ounces divide the pound by a
-    // power of two, so that float chain stays exact.
+  it("matches the float module bit-for-bit", () => {
+    // Every float factor is the correctly rounded float of the exact
+    // defining rational, so the two families agree exactly.
     for (const [exactCtor, floatCtor] of [
       [ExactMass.grams, Mass.grams],
+      [ExactMass.milligrams, Mass.milligrams],
+      [ExactMass.micrograms, Mass.micrograms],
+      [ExactMass.nanograms, Mass.nanograms],
       [ExactMass.metricTons, Mass.metricTons],
       [ExactMass.ounces, Mass.ounces],
       [ExactMass.pounds, Mass.pounds],
+      [ExactMass.longTons, Mass.longTons],
       [ExactMass.shortTons, Mass.shortTons],
     ] as const) {
       assertEquals(

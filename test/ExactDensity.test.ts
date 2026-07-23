@@ -59,12 +59,12 @@ describe("ExactDensity", () => {
     );
   });
 
-  it("matches the float module bit-for-bit where its factors are leaves", () => {
-    // No gramsPerCubicCentimeter or poundsPerCubicInch here: the float
-    // factors divide by a cubed length factor, and the chained roundings
-    // land one ulp away from the correctly rounded exact value (the float
-    // side keeps its historical value by design).
+  it("matches the float module bit-for-bit", () => {
+    // Every float factor is the correctly rounded float of the exact
+    // defining rational, so the two families agree exactly.
     for (const [exactCtor, floatCtor] of [
+      [ExactDensity.gramsPerCubicCentimeter, Density.gramsPerCubicCentimeter],
+      [ExactDensity.poundsPerCubicInch, Density.poundsPerCubicInch],
       [ExactDensity.poundsPerCubicFoot, Density.poundsPerCubicFoot],
     ] as const) {
       assertEquals(

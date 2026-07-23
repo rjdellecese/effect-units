@@ -80,35 +80,20 @@ describe("exact constants are bit-identical to the float constants", () => {
 });
 
 describe("exact prefixes agree with Prefix", () => {
-  // V8's `**` is not correctly rounded for 10^-21 and 10^-24, so the float
-  // side's Zepto and Yocto factors sit one ulp off the true powers of ten
-  // (no unit module uses either prefix). The exact side has no such
-  // artifact; those two compare within a ulp instead of bit-for-bit.
-  const notCorrectlyRoundedInFloat: ReadonlySet<Prefix.Prefix> = new Set([
-    "Zepto",
-    "Yocto",
-  ]);
-
   it("matches toBase and toPrefixed for every prefix", () => {
     for (const prefix of Prefix.Prefix.literals) {
-      const exactToBase = Rational.unsafeToNumber(
-        ExactPrefix.toBase(prefix, Rational.one),
+      // toBase factors are bit-identical: the float side parses decimal
+      // literals, which are correctly rounded for every power of ten.
+      assertEquals(
+        Rational.unsafeToNumber(ExactPrefix.toBase(prefix, Rational.one)),
+        Prefix.toBase(prefix, 1),
       );
-      if (notCorrectlyRoundedInFloat.has(prefix)) {
-        assertTrue(
-          isCloseTo(exactToBase, Prefix.toBase(prefix, 1), {
-            relativeTolerance: Number.EPSILON,
-          }),
-        );
-      } else {
-        assertEquals(exactToBase, Prefix.toBase(prefix, 1));
-      }
       // toPrefixed is compared within a ulp rather than bit-for-bit: the
-      // float side divides by 10^k, which for six negative exponents (Nano,
-      // Femto, Atto, Zepto, Yocto, Quecto) is itself inexact, so its
-      // reciprocal misses the true power of ten by one ulp. The exact side
-      // has no such artifact — unit modules only bake in toBase factors,
-      // which match exactly.
+      // float side deliberately divides by the toBase factor (for roundtrip
+      // stability), and dividing 1 by a correctly rounded 10^k is itself one
+      // rounding, which for a few negative exponents misses the true power
+      // of ten by one ulp. The exact side has no such artifact — unit
+      // modules only bake in toBase factors, which match exactly.
       assertTrue(
         isCloseTo(
           Rational.unsafeToNumber(ExactPrefix.toPrefixed(prefix, Rational.one)),
@@ -178,6 +163,9 @@ describe("representative module factors are bit-identical", () => {
       Rational.make(5n, 9n),
       Temperature.fahrenheitDegrees(1).value,
     ],
+    ["thou", Rational.make(127n, 5000000n), Length.thou(1).value],
+    ["cssPixel", Rational.make(127n, 480000n), Length.cssPixels(1).value],
+    ["pica", Rational.make(127n, 30000n), Length.picas(1).value],
   ];
 
   for (const [label, exact, float] of cases) {
@@ -185,30 +173,6 @@ describe("representative module factors are bit-identical", () => {
       assertEquals(Rational.unsafeToNumber(exact), float);
     });
   }
-
-  it("documents the three float chains that double-round", () => {
-    // The float module derives thou, cssPixels, and picas by dividing the
-    // already-rounded 0.0254 — two roundings, which lands one ulp away from
-    // the correctly rounded true rational. Per design, the float side keeps
-    // its historical bit pattern and the exact side stays mathematically
-    // true; both sides are pinned here so any movement fails loudly.
-    const pairs: ReadonlyArray<
-      readonly [exact: Rational.Rational, float: number]
-    > = [
-      [Rational.make(127n, 5000000n), Length.thou(1).value],
-      [Rational.make(127n, 480000n), Length.cssPixels(1).value],
-      [Rational.make(127n, 30000n), Length.picas(1).value],
-    ];
-
-    for (const [exact, float] of pairs) {
-      const evaluated = Rational.unsafeToNumber(exact);
-
-      assertTrue(evaluated !== float);
-      assertTrue(
-        isCloseTo(evaluated, float, { relativeTolerance: Number.EPSILON }),
-      );
-    }
-  });
 
   it("matches the celsius offset", () => {
     assertEquals(

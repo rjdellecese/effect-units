@@ -49,8 +49,12 @@ export const cubicInches = (n: number) => make(n * cubicMetersPerCubicInch);
 
 export const inCubicInches = (v: Volume) => v.value / cubicMetersPerCubicInch;
 
-const cubicMetersPerCubicFoot =
-  Constants.metersPerFoot * Constants.metersPerFoot * Constants.metersPerFoot;
+/**
+ * Exactly (381/1250)^3 = 0.028316846592 cubic meters, written as one
+ * division of exact integers so the factor is correctly rounded (cubing the
+ * already-rounded foot would land one ulp off).
+ */
+const cubicMetersPerCubicFoot = (381 * 381 * 381) / (1250 * 1250 * 1250);
 
 export const cubicFeet = (n: number) => make(n * cubicMetersPerCubicFoot);
 

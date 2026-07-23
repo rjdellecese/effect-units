@@ -73,15 +73,15 @@ describe("ExactVolume", () => {
     );
   });
 
-  it("matches the float module bit-for-bit where its chains stay exact", () => {
-    // cubicFeet is excluded: the float chain (0.3048 ** 3) double-rounds one
-    // ulp above the correctly rounded exact value, and the float side keeps
-    // its historical value by design.
+  it("matches the float module bit-for-bit", () => {
+    // Every float factor is the correctly rounded float of the exact
+    // defining rational, so the two families agree exactly.
     for (const [exactCtor, floatCtor] of [
       [ExactVolume.liters, Volume.liters],
       [ExactVolume.milliliters, Volume.milliliters],
       [ExactVolume.cubicCentimeters, Volume.cubicCentimeters],
       [ExactVolume.cubicInches, Volume.cubicInches],
+      [ExactVolume.cubicFeet, Volume.cubicFeet],
       [ExactVolume.cubicYards, Volume.cubicYards],
       [ExactVolume.usLiquidGallons, Volume.usLiquidGallons],
       [ExactVolume.usLiquidQuarts, Volume.usLiquidQuarts],

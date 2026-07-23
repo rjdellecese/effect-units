@@ -38,7 +38,9 @@ export const micrograms = (n: number) => make(n * kilogramsPerMicrogram);
 
 export const inMicrograms = (m: Mass) => m.value / kilogramsPerMicrogram;
 
-const kilogramsPerNanogram = Prefix.toBase("Nano", kilogramsPerGram);
+// A literal rather than a prefix chain: composing two power-of-ten factors
+// rounds twice and lands one ulp off the true 10^-12.
+const kilogramsPerNanogram = 1e-12;
 
 export const nanograms = (n: number) => make(n * kilogramsPerNanogram);
 
@@ -65,8 +67,12 @@ export const pounds = (n: number) => make(n * kilogramsPerPound);
 
 export const inPounds = (m: Mass) => m.value / kilogramsPerPound;
 
-/** One long ton (UK) is 2240 pounds. */
-const kilogramsPerLongTon = kilogramsPerPound * 2240;
+/**
+ * One long ton (UK) is 2240 pounds: exactly 1016.0469088 kg, written as one
+ * division of exact integers so the factor is correctly rounded
+ * (multiplying the already-rounded pound would land one ulp off).
+ */
+const kilogramsPerLongTon = (45359237 * 2240) / 1e8;
 
 export const longTons = (n: number) => make(n * kilogramsPerLongTon);
 

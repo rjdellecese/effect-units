@@ -54,15 +54,14 @@ describe("ExactPressure", () => {
     );
   });
 
-  it("matches the float module bit-for-bit where its factors are leaves", () => {
-    // No poundsPerSquareInch here: the float factor divides by a squared
-    // inch factor, and the chained roundings land one ulp away from the
-    // correctly rounded exact value (the float side keeps its historical
-    // value by design).
+  it("matches the float module bit-for-bit", () => {
+    // Every float factor is the correctly rounded float of the exact
+    // defining rational, so the two families agree exactly.
     for (const [exactCtor, floatCtor] of [
       [ExactPressure.kilopascals, Pressure.kilopascals],
       [ExactPressure.megapascals, Pressure.megapascals],
       [ExactPressure.atmospheres, Pressure.atmospheres],
+      [ExactPressure.poundsPerSquareInch, Pressure.poundsPerSquareInch],
     ] as const) {
       assertEquals(
         Rational.unsafeToNumber(exactCtor(Rational.one).value),

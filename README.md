@@ -202,10 +202,13 @@ is a bug.
 
 The library is two-track: `Quantity` values are plain 64-bit floats (as in
 `elm-units`) with measurement semantics, and `ExactQuantity` values are
-arbitrary-precision rationals with accounting/algebraic semantics. The
-float track is unchanged by the exact track's existence — its constants are
-test-pinned to their historical bit patterns, and no float module imports
-any bigint code.
+arbitrary-precision rationals with accounting/algebraic semantics. The two
+tracks agree at every conversion factor: each float factor is the correctly
+rounded float of its exact defining rational (asserted bit-for-bit against
+the exact modules in the test suite), and no float module imports any
+bigint code. What remains float-only is _arithmetic on runtime values_ —
+e.g. the float `Temperature.degreesFahrenheit` rounds per operation as any
+float affine map must, where `ExactTemperature` is exact.
 
 On the float track, arithmetic follows IEEE 754 semantics: division by
 zero yields ±Infinity, invalid operations yield NaN, and every operation
