@@ -117,6 +117,16 @@ never collide with built-in names on the wire. A custom unit is always
 distinct from a built-in base unit with the same name:
 `Unit.custom("Meters")` is not `"Meters"`.
 
+Precision: integer minor units are exact in float64 up to
+`Number.MAX_SAFE_INTEGER` (2^53 − 1) cents, but rate arithmetic (`per`,
+`at`, ...) is ordinary IEEE 754 division and multiplication — measurement
+semantics, not accounting semantics. Keep your money library as the system
+of record: round explicitly when converting a computed quantity back (or
+raise the dinero `scale` to keep sub-minor-unit precision), and reject
+amounts beyond the safe-integer range (e.g. from dinero's bigint
+calculator) at the boundary rather than letting them degrade silently. See
+`test/CustomUnits.test.ts` for a boundary that does both.
+
 ## Numbers, precision, and equality
 
 Values are plain 64-bit floats (as in `elm-units`), and arithmetic follows

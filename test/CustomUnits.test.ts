@@ -4,6 +4,7 @@ import {
   assertFalse,
   assertTrue,
   deepStrictEqual,
+  throws,
 } from "@effect/vitest/utils";
 import * as Either from "effect/Either";
 import * as Equal from "effect/Equal";
@@ -34,6 +35,13 @@ const inDollars = (m: Money): number => m.value / 100;
 // The structural shape of a dinero.js v2 snapshot ({ amount, currency,
 // scale }); dinero itself is intentionally not a dependency — conversion
 // happens at the boundary, and the quantity's value stays a number.
+//
+// Precision contract: quantity arithmetic is IEEE 754 (Quantity.per/at
+// divide and multiply freely), while dinero amounts must be integers that
+// float64 represents exactly — i.e. within Number.MAX_SAFE_INTEGER. So the
+// boundary rounds explicitly on the way out and rejects amounts float64
+// cannot hold exactly (e.g. from dinero's bigint calculator) on the way in,
+// rather than degrading silently.
 
 interface DineroSnapshot {
   readonly amount: number;
@@ -47,14 +55,22 @@ interface DineroSnapshot {
 
 const USD = { code: "USD", base: 10, exponent: 2 } as const;
 
-const toDinero = (m: Money): DineroSnapshot => ({
-  amount: m.value,
-  currency: USD,
-  scale: USD.exponent,
-});
+const toDinero = (m: Money, scale: number = USD.exponent): DineroSnapshot => {
+  const amount = Math.round(m.value * 10 ** (scale - USD.exponent));
+  if (!Number.isSafeInteger(amount)) {
+    throw new Error(`toDinero: amount ${amount} is not a safe integer`);
+  }
+  return { amount, currency: USD, scale };
+};
 
-const fromDinero = (snapshot: DineroSnapshot): Money =>
-  make(snapshot.amount / 10 ** (snapshot.scale - USD.exponent));
+const fromDinero = (snapshot: DineroSnapshot): Money => {
+  if (!Number.isSafeInteger(snapshot.amount)) {
+    throw new Error(
+      `fromDinero: amount ${snapshot.amount} is not a safe integer`,
+    );
+  }
+  return make(snapshot.amount / 10 ** (snapshot.scale - USD.exponent));
+};
 
 describe("custom units (a consumer-authored USD module)", () => {
   it("constructors agree on minor units", () => {
@@ -130,5 +146,39 @@ describe("custom units (a consumer-authored USD module)", () => {
         cents(450),
       ),
     );
+  });
+
+  it("rounds computed (non-integer) values explicitly on the way out", () => {
+    // Rate math is IEEE 754: $2 over 3 meters, priced for 1 meter, is a
+    // repeating fraction (66.666... cents) — a valid measurement, but not a
+    // valid dinero amount until it is rounded.
+    const cost = Quantity.at(
+      Quantity.per(dollars(2), Length.meters(3)),
+      Length.meters(1),
+    );
+
+    assertTrue(isCloseTo(inCents(cost), 200 / 3));
+    deepStrictEqual(toDinero(cost), { amount: 67, currency: USD, scale: 2 });
+    // Raising the scale keeps sub-cent precision instead of discarding it.
+    deepStrictEqual(toDinero(cost, 4), {
+      amount: 6667,
+      currency: USD,
+      scale: 4,
+    });
+  });
+
+  it("rejects amounts float64 cannot represent exactly", () => {
+    // Beyond Number.MAX_SAFE_INTEGER (2^53 - 1), integer amounts — e.g.
+    // from dinero's bigint calculator — silently lose precision as floats,
+    // so the boundary refuses them instead.
+    throws(() =>
+      fromDinero({
+        amount: Number.MAX_SAFE_INTEGER + 1,
+        currency: USD,
+        scale: 2,
+      }),
+    );
+    throws(() => fromDinero({ amount: 450.5, currency: USD, scale: 2 }));
+    throws(() => toDinero(cents(Number.MAX_SAFE_INTEGER), 4));
   });
 });
