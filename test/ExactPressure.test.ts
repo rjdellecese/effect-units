@@ -55,8 +55,6 @@ describe("ExactPressure", () => {
   });
 
   it("matches the float module bit-for-bit", () => {
-    // Every float factor is the correctly rounded float of the exact
-    // defining rational, so the two families agree exactly.
     for (const [exactCtor, floatCtor] of [
       [ExactPressure.kilopascals, Pressure.kilopascals],
       [ExactPressure.megapascals, Pressure.megapascals],

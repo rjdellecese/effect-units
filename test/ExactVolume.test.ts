@@ -74,8 +74,6 @@ describe("ExactVolume", () => {
   });
 
   it("matches the float module bit-for-bit", () => {
-    // Every float factor is the correctly rounded float of the exact
-    // defining rational, so the two families agree exactly.
     for (const [exactCtor, floatCtor] of [
       [ExactVolume.liters, Volume.liters],
       [ExactVolume.milliliters, Volume.milliliters],

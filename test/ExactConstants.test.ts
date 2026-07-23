@@ -82,8 +82,6 @@ describe("exact constants are bit-identical to the float constants", () => {
 describe("exact prefixes agree with Prefix", () => {
   it("matches toBase and toPrefixed for every prefix", () => {
     for (const prefix of Prefix.Prefix.literals) {
-      // toBase factors are bit-identical: the float side parses decimal
-      // literals, which are correctly rounded for every power of ten.
       assertEquals(
         Rational.unsafeToNumber(ExactPrefix.toBase(prefix, Rational.one)),
         Prefix.toBase(prefix, 1),
