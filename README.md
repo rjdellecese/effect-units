@@ -20,11 +20,13 @@ pnpm add github:rjdellecese/effect-units#main
 
 ### Core
 
-| Module                  | Role                                                                                                           |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `effect-units/Quantity` | Typed quantity values with arithmetic and unit algebra (`times`, `squared`, `cubed`, `per`, `at`, `over`, ...) |
-| `effect-units/Unit`     | Unit trees: base units (built-in or custom) composed with `Product` and `Rate`                                 |
-| `effect-units/Prefix`   | SI prefixes                                                                                                    |
+| Module                       | Role                                                                                                           |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `effect-units/Quantity`      | Typed quantity values with arithmetic and unit algebra (`times`, `squared`, `cubed`, `per`, `at`, `over`, ...) |
+| `effect-units/ExactQuantity` | The exact counterpart of `Quantity`: rational-valued, same algebra, division returns `Option`                  |
+| `effect-units/Rational`      | Arbitrary-precision rationals (reduced bigint fractions) in the `effect/BigDecimal` idiom                      |
+| `effect-units/Unit`          | Unit trees: base units (built-in or custom) composed with `Product` and `Rate`                                 |
+| `effect-units/Prefix`        | SI prefixes                                                                                                    |
 
 ### Units
 
@@ -61,6 +63,18 @@ pnpm add github:rjdellecese/effect-units#main
 | `effect-units/Molarity`            | `Rate<Moles, CubicMeters>`                                               |
 | `effect-units/Pixels`              | `Pixels` (screen space), plus pixel rates and areas                      |
 | `effect-units/Temperature`         | Absolute `Temperature` (kelvins) and relative `Delta` (`CelsiusDegrees`) |
+
+### Exact units
+
+Every unit module above whose conversion factors are exact rationals has an
+exact twin named with an `Exact` prefix (`effect-units/ExactLength`,
+`effect-units/ExactSpeed`, `effect-units/ExactTemperature`, ...), taking and
+returning `Rational` values with lossless conversions. The rule for what has
+a twin: **if a conversion factor involves π, it stays float-only.** That
+excludes `Angle`, `AngularSpeed`, `AngularAcceleration`, and `SolidAngle`
+entirely, `parsecs` within `ExactLength`, and `footLamberts` within
+`ExactLuminance` — everything else converts exactly (an exact US liquid
+gallon is _exactly_ 231 cubic inches; 212 °F is _exactly_ 100 °C).
 
 ## Example
 
@@ -125,15 +139,78 @@ of record: round explicitly when converting a computed quantity back (or
 raise the dinero `scale` to keep sub-minor-unit precision), and reject
 amounts beyond the safe-integer range (e.g. from dinero's bigint
 calculator) at the boundary rather than letting them degrade silently. See
-`test/CustomUnits.test.ts` for a boundary that does both.
+`test/CustomUnits.test.ts` for a boundary that does both — or use
+`ExactQuantity` for money instead, where none of these caveats apply (see
+below).
+
+## Exact quantities
+
+`ExactQuantity` is the exact interpreter of the same unit algebra: the
+value is a `Rational` (an arbitrary-precision reduced fraction of bigints),
+so sums, products, and — crucially — rates lose nothing. `$2 per 3 meters`
+_is_ 200/3 cents per meter, and applying that rate to 3 meters recovers
+exactly $2:
+
+```ts
+import * as ExactLength from "effect-units/ExactLength";
+import * as ExactQuantity from "effect-units/ExactQuantity";
+import * as Rational from "effect-units/Rational";
+import * as Unit from "effect-units/Unit";
+
+const Usd = Unit.custom("USD");
+const cents = (r: Rational.Rational) => ExactQuantity.make(Usd, r);
+
+const rate = ExactQuantity.unsafePer(
+  cents(Rational.make(200n)),
+  ExactLength.meters(Rational.make(3n)),
+); // exactly 200/3 cents per meter
+
+const cost = ExactQuantity.at(rate, ExactLength.meters(Rational.make(3n)));
+// exactly 200 cents — Equal.equals, not isCloseTo
+```
+
+Because ℚ has no infinities or NaN, partiality lives in the types instead
+of sentinel values: `per`, `at_`, `over`, `over_`, `divide`, and
+`Rational.reciprocal` return `Option` (`Option.none()` exactly when the
+divisor is zero), each with an `unsafe*` twin that throws. Everything else
+— `sum`, `subtract`, `multiply`, `times`, `squared`, `cubed`, `at`,
+`for_`, comparisons — is total and exact, `equals` is decidable, and
+quantities are safe `HashMap` keys with no NaN or -0 caveats.
+
+Rounding happens only at explicitly parameterized boundaries:
+
+- `ExactQuantity.fromQuantity` (float → exact) is **lossless** — every
+  finite double is a dyadic rational; NaN/±Infinity give `Option.none()`.
+- `ExactQuantity.toQuantity` (exact → float) is **one correct rounding**.
+- `Rational.toBigDecimal({ scale, mode })` and `Rational.round({ mode })`
+  name their rounding at the call site, using `effect/BigDecimal`'s
+  `RoundingMode` vocabulary — the right way out to a money library like
+  dinero.js (see `test/ExactCustomUnits.test.ts`).
+- `ExactDuration` converts to and from `effect/Duration` exactly
+  (nanosecond bigints are rationals) and rounds explicitly for
+  millisecond-resolution `DateTime`.
+
+The wire format is `{ unit, value }` with the value as a canonical fraction
+string (`"200/3"`, `"3"`) — exact on the wire, no width ceiling. The cost
+of exactness is that values grow: every operation reduces by gcd, but sums
+over unrelated denominators genuinely accumulate size, and rational
+arithmetic is slower than floats. Use `Quantity` for measurement and
+simulation; use `ExactQuantity` where a lost cent (or a lost nanosecond)
+is a bug.
 
 ## Numbers, precision, and equality
 
-Values are plain 64-bit floats (as in `elm-units`), and arithmetic follows
-IEEE 754 semantics: division by zero yields ±Infinity, invalid operations
-yield NaN, and every operation carries ordinary float rounding (~15-16
-significant digits). Check results with `Quantity.isNaN`, `isInfinite`, and
-`isFinite`.
+The library is two-track: `Quantity` values are plain 64-bit floats (as in
+`elm-units`) with measurement semantics, and `ExactQuantity` values are
+arbitrary-precision rationals with accounting/algebraic semantics. The
+float track is unchanged by the exact track's existence — its constants are
+test-pinned to their historical bit patterns, and no float module imports
+any bigint code.
+
+On the float track, arithmetic follows IEEE 754 semantics: division by
+zero yields ±Infinity, invalid operations yield NaN, and every operation
+carries ordinary float rounding (~15-16 significant digits). Check results
+with `Quantity.isNaN`, `isInfinite`, and `isFinite`.
 
 Equality is two-tier:
 
