@@ -1,7 +1,8 @@
 /**
- * Shared machinery for the library's float-backed value objects (`Quantity`
- * and `Temperature`), so their equality, normalization, and inspection
- * semantics are defined in exactly one place.
+ * Shared machinery for the library's value objects (`Quantity`,
+ * `Temperature`, `Rational`, and their exact counterparts), so equality,
+ * normalization, and inspection semantics are defined in exactly one place.
+ * The float helpers below apply only to the float-backed types.
  *
  * @module
  */
