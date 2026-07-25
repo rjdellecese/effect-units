@@ -1,5 +1,10 @@
 import { describe, it } from "@effect/vitest";
-import { assertEquals, assertFalse, assertTrue } from "@effect/vitest/utils";
+import {
+  assertEquals,
+  assertFalse,
+  assertTrue,
+  throws,
+} from "@effect/vitest/utils";
 import * as Either from "effect/Either";
 import * as Equal from "effect/Equal";
 import * as Option from "effect/Option";
@@ -44,6 +49,9 @@ describe("Unit", () => {
       Unit.squared("Meters"),
       Unit.cubed("Meters"),
       newtons,
+      Unit.custom("USD"),
+      Unit.rate(Unit.custom("USD"), "Meters"),
+      Unit.squared(Unit.custom("USD")),
     ];
 
     for (const unit of units) {
@@ -64,6 +72,13 @@ describe("Unit", () => {
       "Meters/Seconds",
       "(Meters/Seconds))",
       "(Meters/)",
+      "[USD",
+      "USD]",
+      "[]",
+      "[US D]",
+      "[1USD]",
+      "[US*D]",
+      "[USD]x",
     ];
 
     for (const input of invalid) {
@@ -90,6 +105,69 @@ describe("Unit", () => {
         Schema.decodeEither(Unit.Unit)("(".repeat(100_000) + "Meters"),
       ),
     );
+  });
+
+  describe("custom units", () => {
+    it("support Equal and Hash", () => {
+      assertTrue(Equal.equals(Unit.custom("USD"), Unit.custom("USD")));
+      assertFalse(Equal.equals(Unit.custom("USD"), Unit.custom("EUR")));
+      assertTrue(
+        Equal.equals(
+          Unit.rate(Unit.custom("USD"), "Meters"),
+          Unit.rate(Unit.custom("USD"), "Meters"),
+        ),
+      );
+    });
+
+    it("are distinct from base units with the same name", () => {
+      assertFalse(Unit.equals(Unit.custom("Meters"), "Meters"));
+      assertFalse(Unit.equals("Meters", Unit.custom("Meters")));
+      assertFalse(
+        Unit.equals(
+          Unit.custom("USD"),
+          Unit.rate(Unit.custom("USD"), "Meters"),
+        ),
+      );
+    });
+
+    it("encode in bracketed form", () => {
+      assertEquals(Unit.encode(Unit.custom("USD")), "[USD]");
+      assertEquals(
+        Unit.encode(Unit.rate(Unit.custom("USD"), "Meters")),
+        "([USD]/Meters)",
+      );
+    });
+
+    it("roundtrip through the schema", () => {
+      const usdPerMeter = Unit.rate(Unit.custom("USD"), "Meters");
+      const encoded = Schema.encodeSync(Unit.Unit)(usdPerMeter);
+
+      assertEquals(encoded, "([USD]/Meters)");
+      assertTrue(
+        Equal.equals(Schema.decodeSync(Unit.Unit)(encoded), usdPerMeter),
+      );
+    });
+
+    it("UnitFromSelf validates the id", () => {
+      assertTrue(Schema.is(Unit.UnitFromSelf)({ _tag: "Custom", id: "USD" }));
+      assertFalse(
+        Schema.is(Unit.UnitFromSelf)({ _tag: "Custom", id: "not valid!" }),
+      );
+      assertFalse(Schema.is(Unit.UnitFromSelf)({ _tag: "Custom", id: 1 }));
+    });
+
+    it("custom throws on invalid ids", () => {
+      throws(() => Unit.custom(""));
+      throws(() => Unit.custom("US D"));
+      throws(() => Unit.custom("US/D"));
+      throws(() => Unit.custom("1USD"));
+      throws(() => Unit.custom("[USD]"));
+    });
+
+    it("inspect as their canonical encoding", () => {
+      assertEquals(Unit.custom("USD").toString(), "[USD]");
+      assertEquals(JSON.stringify(Unit.custom("USD")), '"[USD]"');
+    });
   });
 
   it("composite units inspect as their canonical encoding", () => {

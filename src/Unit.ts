@@ -48,7 +48,22 @@ export interface Rate<
   readonly independent: Independent;
 }
 
-export type Unit = BaseUnit | Product<Unit, Unit> | Rate<Unit, Unit>;
+/**
+ * A user-defined base unit, identified by `Id`. Custom units are leaves of
+ * the unit tree, just like {@link BaseUnit}, and compose freely with
+ * `Product` and `Rate`.
+ */
+export interface Custom<in out Id extends string>
+  extends Equal.Equal, Inspectable.Inspectable {
+  readonly _tag: "Custom";
+  readonly id: Id;
+}
+
+export type Unit =
+  | BaseUnit
+  | Custom<string>
+  | Product<Unit, Unit>
+  | Rate<Unit, Unit>;
 
 export type Squared<U extends Unit> = Product<U, U>;
 
@@ -88,6 +103,27 @@ export const rate = <Dependent extends Unit, Independent extends Unit>(
 ): Rate<Dependent, Independent> =>
   Object.assign(Object.create(Proto), { _tag: "Rate", dependent, independent });
 
+const validCustomId = /^[A-Za-z][A-Za-z0-9]*$/;
+
+/**
+ * Creates a {@link Custom} base unit. The id must match
+ * `/^[A-Za-z][A-Za-z0-9]*$/` — the charset keeps ids trivially safe inside
+ * the canonical encoding's grammar. Ids are expected to be developer-written
+ * literals, so an invalid id throws (a defect, not a recoverable error).
+ *
+ * A custom unit is always distinct from a {@link BaseUnit} with the same
+ * name: `Unit.custom("Meters")` encodes as `"[Meters]"` and never equals
+ * `"Meters"`.
+ */
+export const custom = <Id extends string>(id: Id): Custom<Id> => {
+  if (!validCustomId.test(id)) {
+    throw new Error(
+      `Unit.custom: invalid id ${JSON.stringify(id)} (expected /^[A-Za-z][A-Za-z0-9]*$/)`,
+    );
+  }
+  return Object.assign(Object.create(Proto), { _tag: "Custom", id });
+};
+
 export const squared = <U extends Unit>(unit: U): Squared<U> =>
   product(unit, unit);
 
@@ -100,21 +136,28 @@ export const isUnit = (u: unknown): u is Unit =>
     : Predicate.isRecord(u) &&
       (u._tag === "Product"
         ? isUnit(u.left) && isUnit(u.right)
-        : u._tag === "Rate" && isUnit(u.dependent) && isUnit(u.independent));
+        : u._tag === "Rate"
+          ? isUnit(u.dependent) && isUnit(u.independent)
+          : u._tag === "Custom" &&
+            Predicate.isString(u.id) &&
+            validCustomId.test(u.id));
 
 export const equals = (a: Unit, b: Unit): boolean =>
   typeof a === "string" || typeof b === "string"
     ? a === b
-    : a._tag === "Product" && b._tag === "Product"
-      ? equals(a.left, b.left) && equals(a.right, b.right)
-      : a._tag === "Rate" &&
-        b._tag === "Rate" &&
-        equals(a.dependent, b.dependent) &&
-        equals(a.independent, b.independent);
+    : a._tag === "Custom" || b._tag === "Custom"
+      ? a._tag === "Custom" && b._tag === "Custom" && a.id === b.id
+      : a._tag === "Product" && b._tag === "Product"
+        ? equals(a.left, b.left) && equals(a.right, b.right)
+        : a._tag === "Rate" &&
+          b._tag === "Rate" &&
+          equals(a.dependent, b.dependent) &&
+          equals(a.independent, b.independent);
 
 /**
- * The canonical string encoding of a unit tree, e.g. `"Meters"`,
- * `"(Meters/Seconds)"`, or `"(Kilograms*((Meters/Seconds)/Seconds))"`.
+ * The canonical string encoding of a unit tree, e.g. `"Meters"`, `"[USD]"`
+ * (a custom unit), `"(Meters/Seconds)"`, or
+ * `"(Kilograms*((Meters/Seconds)/Seconds))"`.
  *
  * This is a stable serialization format — it appears as the `unit` field of
  * a `Quantity`'s encoded form and feeds unit hashing. It doubles as the
@@ -124,9 +167,11 @@ export const equals = (a: Unit, b: Unit): boolean =>
 export const encode = (u: Unit): string =>
   typeof u === "string"
     ? u
-    : u._tag === "Product"
-      ? `(${encode(u.left)}*${encode(u.right)})`
-      : `(${encode(u.dependent)}/${encode(u.independent)})`;
+    : u._tag === "Custom"
+      ? `[${u.id}]`
+      : u._tag === "Product"
+        ? `(${encode(u.left)}*${encode(u.right)})`
+        : `(${encode(u.dependent)}/${encode(u.independent)})`;
 
 // A parse step consumes a prefix of the input, yielding the parsed unit and
 // the remaining input.
@@ -144,6 +189,21 @@ const parseBaseUnit = (input: string): Option.Option<Parsed> =>
     Option.flatMap((matches) => Option.fromNullable(matches[0])),
     Option.filter(isBaseUnit),
     Option.map((name) => [name, String.slice(name.length)(input)] as const),
+  );
+
+const customUnit = /^\[[A-Za-z][A-Za-z0-9]*\]/;
+
+const parseCustom = (input: string): Option.Option<Parsed> =>
+  pipe(
+    String.match(customUnit)(input),
+    Option.flatMap((matches) => Option.fromNullable(matches[0])),
+    Option.map(
+      (matched) =>
+        [
+          custom(matched.slice(1, -1)),
+          String.slice(matched.length)(input),
+        ] as const,
+    ),
   );
 
 const parseComposite = (input: string, depth: number): Option.Option<Parsed> =>
@@ -176,7 +236,9 @@ const parseTree = (input: string, depth: number): Option.Option<Parsed> =>
     ? Option.none()
     : String.startsWith("(")(input)
       ? parseComposite(input, depth + 1)
-      : parseBaseUnit(input);
+      : String.startsWith("[")(input)
+        ? parseCustom(input)
+        : parseBaseUnit(input);
 
 /**
  * Parses the canonical encoding produced by {@link encode}. Returns

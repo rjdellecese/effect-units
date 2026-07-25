@@ -48,8 +48,13 @@ export const inMillimeters = (l: Length) => Prefix.toPrefixed("Milli", l.value);
 
 // Imperial
 
-/** One thou is one thousandth of an inch. */
-const metersPerThou = Constants.metersPerInch / 1000;
+/**
+ * One thou is one thousandth of an inch: exactly 127/5,000,000 meters,
+ * written as one division of exact integers so the factor is the correctly
+ * rounded float of the defined value (dividing the already-rounded
+ * metersPerInch would land one ulp off).
+ */
+const metersPerThou = 127 / 5_000_000;
 
 export const thou = (n: number) => make(n * metersPerThou);
 
@@ -73,8 +78,8 @@ export const inMiles = (l: Length) => l.value / Constants.metersPerMile;
 
 // Typography
 
-/** One CSS pixel is 1/96 of an inch. */
-const metersPerCssPixel = Constants.metersPerInch / 96;
+/** One CSS pixel is 1/96 of an inch: exactly 127/480,000 meters. */
+const metersPerCssPixel = 127 / 480_000;
 
 export const cssPixels = (n: number) => make(n * metersPerCssPixel);
 
@@ -87,8 +92,8 @@ export const points = (n: number) => make(n * metersPerPoint);
 
 export const inPoints = (l: Length) => l.value / metersPerPoint;
 
-/** One pica is 1/6 of an inch. */
-const metersPerPica = Constants.metersPerInch / 6;
+/** One pica is 1/6 of an inch: exactly 127/30,000 meters. */
+const metersPerPica = 127 / 30_000;
 
 export const picas = (n: number) => make(n * metersPerPica);
 

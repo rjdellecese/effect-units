@@ -1,6 +1,5 @@
 import * as Area from "./Area.ts";
 import * as Force from "./Force.ts";
-import * as Constants from "./internal/constants.ts";
 import * as Prefix from "./Prefix.ts";
 import * as Quantity from "./Quantity.ts";
 import * as Unit from "./Unit.ts";
@@ -31,10 +30,14 @@ export const megapascals = (n: number) => make(Prefix.toBase("Mega", n));
 export const inMegapascals = (p: Pressure) =>
   Prefix.toPrefixed("Mega", p.value);
 
-/** One pound per square inch is one pound of force per square inch. */
-const pascalsPerPoundPerSquareInch =
-  Constants.newtonsPerPoundForce /
-  (Constants.metersPerInch * Constants.metersPerInch);
+/**
+ * One pound per square inch is one pound of force per square inch: exactly
+ * 8,896,443,230,521/1,290,320,000 pascals (the pound-force and inch
+ * definitions combined into one reduced fraction), written as one division
+ * of exact integers so the factor is correctly rounded — chaining the
+ * already-rounded constants would land one ulp off.
+ */
+const pascalsPerPoundPerSquareInch = 8_896_443_230_521 / 1_290_320_000;
 
 export const poundsPerSquareInch = (n: number) =>
   make(n * pascalsPerPoundPerSquareInch);
