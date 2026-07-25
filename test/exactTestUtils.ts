@@ -15,7 +15,9 @@ import * as Rational from "../src/Rational.ts";
 export const rational = FastCheck.tuple(
   FastCheck.bigInt({ min: -(2n ** 64n), max: 2n ** 64n }),
   FastCheck.bigInt({ min: 1n, max: 2n ** 32n }),
-).map(([numerator, denominator]) => Rational.make(numerator, denominator));
+).map(([numerator, denominator]) =>
+  Rational.unsafeMake(numerator, denominator),
+);
 
 export const nonZeroRational = rational.filter((r) => !Rational.isZero(r));
 

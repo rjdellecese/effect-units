@@ -21,7 +21,7 @@ export const zero = make(Rational.zero);
 
 // Metric
 
-const metersPerAngstrom = Rational.make(1n, 10n ** 10n);
+const metersPerAngstrom = Rational.unsafeMake(1n, 10n ** 10n);
 
 export const angstroms = (r: Rational.Rational) =>
   make(Rational.multiply(r, metersPerAngstrom));
@@ -68,7 +68,7 @@ export const inMillimeters = (l: ExactLength) =>
 /** One thou is one thousandth of an inch. */
 const metersPerThou = Rational.multiply(
   ExactConstants.metersPerInch,
-  Rational.make(1n, 1000n),
+  Rational.unsafeMake(1n, 1000n),
 );
 
 export const thou = (r: Rational.Rational) =>
@@ -106,7 +106,7 @@ export const inMiles = (l: ExactLength) =>
 /** One CSS pixel is 1/96 of an inch. */
 const metersPerCssPixel = Rational.multiply(
   ExactConstants.metersPerInch,
-  Rational.make(1n, 96n),
+  Rational.unsafeMake(1n, 96n),
 );
 
 export const cssPixels = (r: Rational.Rational) =>
@@ -118,7 +118,7 @@ export const inCssPixels = (l: ExactLength) =>
 /** One point is 1/72 of an inch. */
 const metersPerPoint = Rational.multiply(
   ExactConstants.metersPerInch,
-  Rational.make(1n, 72n),
+  Rational.unsafeMake(1n, 72n),
 );
 
 export const points = (r: Rational.Rational) =>
@@ -130,7 +130,7 @@ export const inPoints = (l: ExactLength) =>
 /** One pica is 1/6 of an inch. */
 const metersPerPica = Rational.multiply(
   ExactConstants.metersPerInch,
-  Rational.make(1n, 6n),
+  Rational.unsafeMake(1n, 6n),
 );
 
 export const picas = (r: Rational.Rational) =>
@@ -144,7 +144,7 @@ export const inPicas = (l: ExactLength) =>
 // NOTE: no parsecs — one parsec is 648,000/π astronomical units, and π has
 // no exact rational representation. Use Length.parsecs on the float side.
 
-const metersPerAstronomicalUnit = Rational.make(149597870700n);
+const metersPerAstronomicalUnit = Rational.unsafeMake(149597870700n);
 
 export const astronomicalUnits = (r: Rational.Rational) =>
   make(Rational.multiply(r, metersPerAstronomicalUnit));
@@ -152,7 +152,7 @@ export const astronomicalUnits = (r: Rational.Rational) =>
 export const inAstronomicalUnits = (l: ExactLength) =>
   Rational.unsafeDivide(l.value, metersPerAstronomicalUnit);
 
-const metersPerLightYear = Rational.make(9460730472580800n);
+const metersPerLightYear = Rational.unsafeMake(9460730472580800n);
 
 export const lightYears = (r: Rational.Rational) =>
   make(Rational.multiply(r, metersPerLightYear));

@@ -17,21 +17,21 @@ describe("ExactForce", () => {
   ]);
 
   testExactAnchors(ExactForce.inNewtons, [
-    [ExactForce.kilonewtons, Rational.make(1000n)],
-    [ExactForce.meganewtons, Rational.make(1000000n)],
+    [ExactForce.kilonewtons, Rational.unsafeMake(1000n)],
+    [ExactForce.meganewtons, Rational.unsafeMake(1000000n)],
     [
       ExactForce.pounds,
       Rational.multiply(
-        Rational.make(45359237n, 100000000n),
-        Rational.make(196133n, 20000n),
+        Rational.unsafeMake(45359237n, 100000000n),
+        Rational.unsafeMake(196133n, 20000n),
       ),
     ],
     [
       ExactForce.kips,
       Rational.multiplyAll([
-        Rational.make(45359237n, 100000000n),
-        Rational.make(196133n, 20000n),
-        Rational.make(1000n),
+        Rational.unsafeMake(45359237n, 100000000n),
+        Rational.unsafeMake(196133n, 20000n),
+        Rational.unsafeMake(1000n),
       ]),
     ],
   ]);
@@ -40,13 +40,13 @@ describe("ExactForce", () => {
     assertTrue(
       Equal.equals(
         ExactForce.inPounds(ExactForce.kips(Rational.one)),
-        Rational.make(1000n),
+        Rational.unsafeMake(1000n),
       ),
     );
     assertTrue(
       Equal.equals(
         ExactForce.inNewtons(ExactForce.kilonewtons(Rational.one)),
-        Rational.make(1000n),
+        Rational.unsafeMake(1000n),
       ),
     );
   });

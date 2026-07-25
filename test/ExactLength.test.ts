@@ -29,45 +29,45 @@ describe("ExactLength", () => {
   ]);
 
   testExactAnchors(ExactLength.inMeters, [
-    [ExactLength.angstroms, Rational.make(1n, 10n ** 10n)],
-    [ExactLength.nanometers, Rational.make(1n, 10n ** 9n)],
-    [ExactLength.kilometers, Rational.make(1000n)],
-    [ExactLength.centimeters, Rational.make(1n, 100n)],
-    [ExactLength.thou, Rational.make(127n, 5000000n)],
-    [ExactLength.inches, Rational.make(127n, 5000n)],
-    [ExactLength.feet, Rational.make(381n, 1250n)],
-    [ExactLength.yards, Rational.make(1143n, 1250n)],
-    [ExactLength.miles, Rational.make(201168n, 125n)],
-    [ExactLength.cssPixels, Rational.make(127n, 480000n)],
-    [ExactLength.points, Rational.make(127n, 360000n)],
-    [ExactLength.picas, Rational.make(127n, 30000n)],
-    [ExactLength.astronomicalUnits, Rational.make(149597870700n)],
-    [ExactLength.lightYears, Rational.make(9460730472580800n)],
+    [ExactLength.angstroms, Rational.unsafeMake(1n, 10n ** 10n)],
+    [ExactLength.nanometers, Rational.unsafeMake(1n, 10n ** 9n)],
+    [ExactLength.kilometers, Rational.unsafeMake(1000n)],
+    [ExactLength.centimeters, Rational.unsafeMake(1n, 100n)],
+    [ExactLength.thou, Rational.unsafeMake(127n, 5000000n)],
+    [ExactLength.inches, Rational.unsafeMake(127n, 5000n)],
+    [ExactLength.feet, Rational.unsafeMake(381n, 1250n)],
+    [ExactLength.yards, Rational.unsafeMake(1143n, 1250n)],
+    [ExactLength.miles, Rational.unsafeMake(201168n, 125n)],
+    [ExactLength.cssPixels, Rational.unsafeMake(127n, 480000n)],
+    [ExactLength.points, Rational.unsafeMake(127n, 360000n)],
+    [ExactLength.picas, Rational.unsafeMake(127n, 30000n)],
+    [ExactLength.astronomicalUnits, Rational.unsafeMake(149597870700n)],
+    [ExactLength.lightYears, Rational.unsafeMake(9460730472580800n)],
   ]);
 
   it("relates units exactly", () => {
     assertTrue(
       Equal.equals(
         ExactLength.inInches(ExactLength.feet(Rational.one)),
-        Rational.make(12n),
+        Rational.unsafeMake(12n),
       ),
     );
     assertTrue(
       Equal.equals(
         ExactLength.inFeet(ExactLength.miles(Rational.one)),
-        Rational.make(5280n),
+        Rational.unsafeMake(5280n),
       ),
     );
     assertTrue(
       Equal.equals(
         ExactLength.inThou(ExactLength.inches(Rational.one)),
-        Rational.make(1000n),
+        Rational.unsafeMake(1000n),
       ),
     );
     assertTrue(
       Equal.equals(
         ExactLength.inCentimeters(ExactLength.inches(Rational.one)),
-        Rational.make(127n, 50n),
+        Rational.unsafeMake(127n, 50n),
       ),
     );
   });

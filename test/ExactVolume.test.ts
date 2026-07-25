@@ -30,17 +30,23 @@ describe("ExactVolume", () => {
   ]);
 
   testExactAnchors(ExactVolume.inCubicMeters, [
-    [ExactVolume.liters, Rational.make(1n, 1000n)],
-    [ExactVolume.milliliters, Rational.make(1n, 10n ** 6n)],
-    [ExactVolume.cubicCentimeters, Rational.make(1n, 10n ** 6n)],
-    [ExactVolume.cubicInches, Rational.make(2048383n, 125000000000n)],
-    [ExactVolume.cubicFeet, Rational.make(55306341n, 1953125000n)],
-    [ExactVolume.cubicYards, Rational.make(1493271207n, 1953125000n)],
-    [ExactVolume.usLiquidGallons, Rational.make(3785411784n, 10n ** 12n)],
-    [ExactVolume.usFluidOunces, Rational.make(3785411784n, 128n * 10n ** 12n)],
-    [ExactVolume.usDryGallons, Rational.make(440488377086n, 10n ** 14n)],
-    [ExactVolume.imperialGallons, Rational.make(454609n, 10n ** 8n)],
-    [ExactVolume.imperialFluidOunces, Rational.make(454609n, 160n * 10n ** 8n)],
+    [ExactVolume.liters, Rational.unsafeMake(1n, 1000n)],
+    [ExactVolume.milliliters, Rational.unsafeMake(1n, 10n ** 6n)],
+    [ExactVolume.cubicCentimeters, Rational.unsafeMake(1n, 10n ** 6n)],
+    [ExactVolume.cubicInches, Rational.unsafeMake(2048383n, 125000000000n)],
+    [ExactVolume.cubicFeet, Rational.unsafeMake(55306341n, 1953125000n)],
+    [ExactVolume.cubicYards, Rational.unsafeMake(1493271207n, 1953125000n)],
+    [ExactVolume.usLiquidGallons, Rational.unsafeMake(3785411784n, 10n ** 12n)],
+    [
+      ExactVolume.usFluidOunces,
+      Rational.unsafeMake(3785411784n, 128n * 10n ** 12n),
+    ],
+    [ExactVolume.usDryGallons, Rational.unsafeMake(440488377086n, 10n ** 14n)],
+    [ExactVolume.imperialGallons, Rational.unsafeMake(454609n, 10n ** 8n)],
+    [
+      ExactVolume.imperialFluidOunces,
+      Rational.unsafeMake(454609n, 160n * 10n ** 8n),
+    ],
   ]);
 
   it("relates units exactly", () => {
@@ -48,13 +54,13 @@ describe("ExactVolume", () => {
     assertTrue(
       Equal.equals(
         ExactVolume.inCubicInches(ExactVolume.usLiquidGallons(Rational.one)),
-        Rational.make(231n),
+        Rational.unsafeMake(231n),
       ),
     );
     assertTrue(
       Equal.equals(
         ExactVolume.inUsFluidOunces(ExactVolume.usLiquidGallons(Rational.one)),
-        Rational.make(128n),
+        Rational.unsafeMake(128n),
       ),
     );
     assertTrue(
@@ -62,13 +68,13 @@ describe("ExactVolume", () => {
         ExactVolume.inImperialFluidOunces(
           ExactVolume.imperialGallons(Rational.one),
         ),
-        Rational.make(160n),
+        Rational.unsafeMake(160n),
       ),
     );
     assertTrue(
       Equal.equals(
         ExactVolume.inLiters(ExactVolume.cubicMeters(Rational.one)),
-        Rational.make(1000n),
+        Rational.unsafeMake(1000n),
       ),
     );
   });

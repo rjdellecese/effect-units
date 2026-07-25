@@ -57,7 +57,7 @@ export const nanograms = (r: Rational.Rational) =>
 export const inNanograms = (m: ExactMass) =>
   Rational.unsafeDivide(m.value, kilogramsPerNanogram);
 
-const kilogramsPerMetricTon = Rational.make(1000n);
+const kilogramsPerMetricTon = Rational.unsafeMake(1000n);
 
 export const metricTons = (r: Rational.Rational) =>
   make(Rational.multiply(r, kilogramsPerMetricTon));
@@ -72,7 +72,7 @@ const kilogramsPerPound = ExactConstants.kilogramsPerPound;
 /** One ounce is 1/16 of a pound. */
 const kilogramsPerOunce = Rational.multiply(
   kilogramsPerPound,
-  Rational.make(1n, 16n),
+  Rational.unsafeMake(1n, 16n),
 );
 
 export const ounces = (r: Rational.Rational) =>
@@ -90,7 +90,7 @@ export const inPounds = (m: ExactMass) =>
 /** One long ton (UK) is 2240 pounds. */
 const kilogramsPerLongTon = Rational.multiply(
   kilogramsPerPound,
-  Rational.make(2240n),
+  Rational.unsafeMake(2240n),
 );
 
 export const longTons = (r: Rational.Rational) =>
@@ -102,7 +102,7 @@ export const inLongTons = (m: ExactMass) =>
 /** One short ton (US) is 2000 pounds. */
 const kilogramsPerShortTon = Rational.multiply(
   kilogramsPerPound,
-  Rational.make(2000n),
+  Rational.unsafeMake(2000n),
 );
 
 export const shortTons = (r: Rational.Rational) =>

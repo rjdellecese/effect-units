@@ -16,10 +16,10 @@ describe("ExactInductance", () => {
   ]);
 
   testExactAnchors(ExactInductance.inHenries, [
-    [ExactInductance.nanohenries, Rational.make(1n, 10n ** 9n)],
-    [ExactInductance.microhenries, Rational.make(1n, 10n ** 6n)],
-    [ExactInductance.millihenries, Rational.make(1n, 1000n)],
-    [ExactInductance.kilohenries, Rational.make(1000n)],
+    [ExactInductance.nanohenries, Rational.unsafeMake(1n, 10n ** 9n)],
+    [ExactInductance.microhenries, Rational.unsafeMake(1n, 10n ** 6n)],
+    [ExactInductance.millihenries, Rational.unsafeMake(1n, 1000n)],
+    [ExactInductance.kilohenries, Rational.unsafeMake(1000n)],
   ]);
 
   it("matches the float module bit-for-bit where its factors are leaves", () => {

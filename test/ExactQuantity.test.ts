@@ -184,8 +184,8 @@ describe("equality and comparison", () => {
   it("equates equivalent fractions across representations", () => {
     assertTrue(
       Equal.equals(
-        meters(Rational.make(2n, 4n)),
-        meters(Rational.make(1n, 2n)),
+        meters(Rational.unsafeMake(2n, 4n)),
+        meters(Rational.unsafeMake(1n, 2n)),
       ),
     );
     assertFalse(Equal.equals(meters(Rational.one), seconds(Rational.one)));
@@ -195,23 +195,23 @@ describe("equality and comparison", () => {
   it("equalsWithin compares against a rational tolerance", () => {
     assertTrue(
       ExactQuantity.equalsWithin(
-        meters(Rational.make(1n)),
-        meters(Rational.make(1001n, 1000n)),
-        meters(Rational.make(1n, 100n)),
+        meters(Rational.unsafeMake(1n)),
+        meters(Rational.unsafeMake(1001n, 1000n)),
+        meters(Rational.unsafeMake(1n, 100n)),
       ),
     );
     assertFalse(
       ExactQuantity.equalsWithin(
-        meters(Rational.make(1n)),
-        meters(Rational.make(102n, 100n)),
-        meters(Rational.make(1n, 100n)),
+        meters(Rational.unsafeMake(1n)),
+        meters(Rational.unsafeMake(102n, 100n)),
+        meters(Rational.unsafeMake(1n, 100n)),
       ),
     );
   });
 
   it("orders quantities totally", () => {
-    const short = meters(Rational.make(1n, 3n));
-    const long = meters(Rational.make(1n, 2n));
+    const short = meters(Rational.unsafeMake(1n, 3n));
+    const long = meters(Rational.unsafeMake(1n, 2n));
 
     assertTrue(ExactQuantity.lessThan(short, long));
     assertTrue(ExactQuantity.lessThanOrEqualTo(short, short));
@@ -267,12 +267,12 @@ describe("interop with the float module", () => {
   });
 
   it("toQuantity rounds a non-dyadic value once, correctly", () => {
-    const third = meters(Rational.make(1n, 3n));
+    const third = meters(Rational.unsafeMake(1n, 3n));
 
     assertEquals(ExactQuantity.unsafeToQuantity(third).value, 1 / 3);
     assertTrue(
       Option.isNone(
-        ExactQuantity.toQuantity(meters(Rational.make(2n ** 1024n))),
+        ExactQuantity.toQuantity(meters(Rational.unsafeMake(2n ** 1024n))),
       ),
     );
   });
@@ -281,7 +281,7 @@ describe("interop with the float module", () => {
     const exact = ExactQuantity.unsafeFromQuantity(Length.meters(1.5));
 
     assertTrue(Unit.equals(exact.unit, Length.Meters));
-    assertTrue(Equal.equals(exact.value, Rational.make(3n, 2n)));
+    assertTrue(Equal.equals(exact.value, Rational.unsafeMake(3n, 2n)));
   });
 });
 
@@ -289,13 +289,13 @@ describe("schema", () => {
   const Meters = ExactQuantity.ExactQuantity("Meters");
 
   it("roundtrips, freezing the wire format", () => {
-    const q = meters(Rational.make(3n, 2n));
+    const q = meters(Rational.unsafeMake(3n, 2n));
     const encoded = Schema.encodeSync(Meters)(q);
 
     deepStrictEqual(encoded, { unit: "Meters", value: "3/2" });
     assertTrue(Equal.equals(Schema.decodeSync(Meters)(encoded), q));
 
-    const integral = Schema.encodeSync(Meters)(meters(Rational.make(3n)));
+    const integral = Schema.encodeSync(Meters)(meters(Rational.unsafeMake(3n)));
 
     deepStrictEqual(integral, { unit: "Meters", value: "3" });
   });
@@ -337,7 +337,7 @@ describe("inspection", () => {
     deepStrictEqual(
       ExactQuantity.make(
         Unit.rate("Meters", "Seconds"),
-        Rational.make(3n, 2n),
+        Rational.unsafeMake(3n, 2n),
       ).toJSON(),
       {
         _id: "ExactQuantity",

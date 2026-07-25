@@ -14,8 +14,8 @@ describe("ExactCharge", () => {
   ]);
 
   testExactAnchors(ExactCharge.inCoulombs, [
-    [ExactCharge.ampereHours, Rational.make(3600n)],
-    [ExactCharge.milliampereHours, Rational.make(18n, 5n)],
+    [ExactCharge.ampereHours, Rational.unsafeMake(3600n)],
+    [ExactCharge.milliampereHours, Rational.unsafeMake(18n, 5n)],
   ]);
 
   it("matches the float module bit-for-bit where its factors are leaves", () => {

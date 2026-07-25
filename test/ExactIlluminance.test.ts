@@ -13,7 +13,7 @@ describe("ExactIlluminance", () => {
   ]);
 
   testExactAnchors(ExactIlluminance.inLux, [
-    [ExactIlluminance.footCandles, Rational.make(1562500n, 145161n)],
+    [ExactIlluminance.footCandles, Rational.unsafeMake(1562500n, 145161n)],
   ]);
 
   it("matches the float module bit-for-bit where its factors are exact chains", () => {

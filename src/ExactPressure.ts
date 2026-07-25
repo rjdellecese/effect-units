@@ -51,7 +51,7 @@ export const inPoundsPerSquareInch = (p: ExactPressure) =>
   Rational.unsafeDivide(p.value, pascalsPerPoundPerSquareInch);
 
 /** One standard atmosphere is 101325 pascals. */
-const pascalsPerAtmosphere = Rational.make(101_325n);
+const pascalsPerAtmosphere = Rational.unsafeMake(101_325n);
 
 export const atmospheres = (r: Rational.Rational) =>
   make(Rational.multiply(r, pascalsPerAtmosphere));

@@ -22,26 +22,26 @@ describe("ExactDensity", () => {
   ]);
 
   testExactAnchors(ExactDensity.inKilogramsPerCubicMeter, [
-    [ExactDensity.gramsPerCubicCentimeter, Rational.make(1000n)],
+    [ExactDensity.gramsPerCubicCentimeter, Rational.unsafeMake(1000n)],
     [
       ExactDensity.poundsPerCubicInch,
       Rational.unsafeDivide(
-        Rational.make(45359237n, 100000000n),
+        Rational.unsafeMake(45359237n, 100000000n),
         Rational.multiplyAll([
-          Rational.make(127n, 5000n),
-          Rational.make(127n, 5000n),
-          Rational.make(127n, 5000n),
+          Rational.unsafeMake(127n, 5000n),
+          Rational.unsafeMake(127n, 5000n),
+          Rational.unsafeMake(127n, 5000n),
         ]),
       ),
     ],
     [
       ExactDensity.poundsPerCubicFoot,
       Rational.unsafeDivide(
-        Rational.make(45359237n, 100000000n),
+        Rational.unsafeMake(45359237n, 100000000n),
         Rational.multiplyAll([
-          Rational.make(381n, 1250n),
-          Rational.make(381n, 1250n),
-          Rational.make(381n, 1250n),
+          Rational.unsafeMake(381n, 1250n),
+          Rational.unsafeMake(381n, 1250n),
+          Rational.unsafeMake(381n, 1250n),
         ]),
       ),
     ],
@@ -54,7 +54,7 @@ describe("ExactDensity", () => {
         ExactDensity.inPoundsPerCubicFoot(
           ExactDensity.poundsPerCubicInch(Rational.one),
         ),
-        Rational.make(1728n),
+        Rational.unsafeMake(1728n),
       ),
     );
   });

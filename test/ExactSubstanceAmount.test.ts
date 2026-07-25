@@ -21,15 +21,15 @@ describe("ExactSubstanceAmount", () => {
   ]);
 
   testExactAnchors(ExactSubstanceAmount.inMoles, [
-    [ExactSubstanceAmount.picomoles, Rational.make(1n, 10n ** 12n)],
-    [ExactSubstanceAmount.nanomoles, Rational.make(1n, 10n ** 9n)],
-    [ExactSubstanceAmount.micromoles, Rational.make(1n, 10n ** 6n)],
-    [ExactSubstanceAmount.millimoles, Rational.make(1n, 1000n)],
-    [ExactSubstanceAmount.centimoles, Rational.make(1n, 100n)],
-    [ExactSubstanceAmount.decimoles, Rational.make(1n, 10n)],
-    [ExactSubstanceAmount.kilomoles, Rational.make(1000n)],
-    [ExactSubstanceAmount.megamoles, Rational.make(10n ** 6n)],
-    [ExactSubstanceAmount.gigamoles, Rational.make(10n ** 9n)],
+    [ExactSubstanceAmount.picomoles, Rational.unsafeMake(1n, 10n ** 12n)],
+    [ExactSubstanceAmount.nanomoles, Rational.unsafeMake(1n, 10n ** 9n)],
+    [ExactSubstanceAmount.micromoles, Rational.unsafeMake(1n, 10n ** 6n)],
+    [ExactSubstanceAmount.millimoles, Rational.unsafeMake(1n, 1000n)],
+    [ExactSubstanceAmount.centimoles, Rational.unsafeMake(1n, 100n)],
+    [ExactSubstanceAmount.decimoles, Rational.unsafeMake(1n, 10n)],
+    [ExactSubstanceAmount.kilomoles, Rational.unsafeMake(1000n)],
+    [ExactSubstanceAmount.megamoles, Rational.unsafeMake(10n ** 6n)],
+    [ExactSubstanceAmount.gigamoles, Rational.unsafeMake(10n ** 9n)],
   ]);
 
   it("matches the float module bit-for-bit where its factors are leaves", () => {

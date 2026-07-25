@@ -28,27 +28,27 @@ describe("ExactTemperature", () => {
   it("relates the Celsius, Fahrenheit, and Kelvin scales exactly", () => {
     assertTrue(
       Equal.equals(
-        ExactTemperature.degreesFahrenheit(Rational.make(32n)),
+        ExactTemperature.degreesFahrenheit(Rational.unsafeMake(32n)),
         ExactTemperature.degreesCelsius(Rational.zero),
       ),
     );
     assertTrue(
       Equal.equals(
-        ExactTemperature.degreesFahrenheit(Rational.make(212n)),
-        ExactTemperature.degreesCelsius(Rational.make(100n)),
+        ExactTemperature.degreesFahrenheit(Rational.unsafeMake(212n)),
+        ExactTemperature.degreesCelsius(Rational.unsafeMake(100n)),
       ),
     );
     assertTrue(
       Equal.equals(
         ExactTemperature.inDegreesFahrenheit(
-          ExactTemperature.degreesCelsius(Rational.make(100n)),
+          ExactTemperature.degreesCelsius(Rational.unsafeMake(100n)),
         ),
-        Rational.make(212n),
+        Rational.unsafeMake(212n),
       ),
     );
     assertTrue(
       Equal.equals(
-        ExactTemperature.degreesCelsius(Rational.make(-5463n, 20n)),
+        ExactTemperature.degreesCelsius(Rational.unsafeMake(-5463n, 20n)),
         ExactTemperature.absoluteZero,
       ),
     );
@@ -72,17 +72,17 @@ describe("ExactTemperature", () => {
     assertTrue(
       Equal.equals(
         ExactTemperature.inCelsiusDegrees(
-          ExactTemperature.fahrenheitDegrees(Rational.make(9n)),
+          ExactTemperature.fahrenheitDegrees(Rational.unsafeMake(9n)),
         ),
-        Rational.make(5n),
+        Rational.unsafeMake(5n),
       ),
     );
   });
 
   it("orders temperatures", () => {
     const cold = ExactTemperature.degreesCelsius(Rational.zero);
-    const warm = ExactTemperature.degreesCelsius(Rational.make(20n));
-    const hot = ExactTemperature.degreesCelsius(Rational.make(100n));
+    const warm = ExactTemperature.degreesCelsius(Rational.unsafeMake(20n));
+    const hot = ExactTemperature.degreesCelsius(Rational.unsafeMake(100n));
 
     assertTrue(ExactTemperature.lessThan(cold, warm));
     assertTrue(ExactTemperature.greaterThan(hot, warm));
@@ -137,7 +137,7 @@ describe("ExactTemperature", () => {
       assertTrue(
         Equal.equals(
           ExactTemperature.inKelvins(Option.getOrThrow(temperature)),
-          Rational.make(1n, 2n),
+          Rational.unsafeMake(1n, 2n),
         ),
       );
     });

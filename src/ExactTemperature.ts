@@ -90,7 +90,7 @@ export const inKelvins = (t: ExactTemperature) => t.value;
 
 export const absoluteZero = kelvins(Rational.zero);
 
-const zeroCelsiusInKelvins = Rational.make(5463n, 20n);
+const zeroCelsiusInKelvins = Rational.unsafeMake(5463n, 20n);
 
 export const degreesCelsius = (r: Rational.Rational): ExactTemperature =>
   make(Rational.sum(r, zeroCelsiusInKelvins));
@@ -99,17 +99,20 @@ export const inDegreesCelsius = (t: ExactTemperature) =>
   Rational.subtract(t.value, zeroCelsiusInKelvins);
 
 /** The size of a Fahrenheit degree relative to a Celsius degree. */
-const fiveNinths = Rational.make(5n, 9n);
+const fiveNinths = Rational.unsafeMake(5n, 9n);
 
 export const degreesFahrenheit = (r: Rational.Rational): ExactTemperature =>
   degreesCelsius(
-    Rational.multiply(Rational.subtract(r, Rational.make(32n)), fiveNinths),
+    Rational.multiply(
+      Rational.subtract(r, Rational.unsafeMake(32n)),
+      fiveNinths,
+    ),
   );
 
 export const inDegreesFahrenheit = (t: ExactTemperature) =>
   Rational.sum(
     Rational.unsafeDivide(inDegreesCelsius(t), fiveNinths),
-    Rational.make(32n),
+    Rational.unsafeMake(32n),
   );
 
 // Deltas

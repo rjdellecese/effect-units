@@ -21,7 +21,7 @@ export const inMetersPerSecond = (s: ExactSpeed) => s.value;
 
 /** One kilometer per hour is exactly 5/18 meters per second. */
 const metersPerSecondPerKilometerPerHour = Rational.unsafeDivide(
-  Rational.make(1000n),
+  Rational.unsafeMake(1000n),
   ExactConstants.secondsPerHour,
 );
 

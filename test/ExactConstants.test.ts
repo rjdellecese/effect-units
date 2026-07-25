@@ -18,7 +18,7 @@ import * as Volume from "../src/Volume.ts";
 const rational = FastCheck.tuple(
   FastCheck.bigInt({ min: -(2n ** 64n), max: 2n ** 64n }),
   FastCheck.bigInt({ min: 1n, max: 2n ** 32n }),
-).map(([n, d]) => Rational.make(n, d));
+).map(([n, d]) => Rational.unsafeMake(n, d));
 
 describe("float constants stay pinned to their historical bit patterns", () => {
   // Hardcoded literals, not imports: a change to either family must fail
@@ -125,45 +125,61 @@ describe("representative module factors are bit-identical", () => {
   const cases: ReadonlyArray<
     readonly [label: string, exact: Rational.Rational, float: number]
   > = [
-    ["angstrom", Rational.make(1n, 10n ** 10n), Length.angstroms(1).value],
-    ["point", Rational.make(127n, 360000n), Length.points(1).value],
+    [
+      "angstrom",
+      Rational.unsafeMake(1n, 10n ** 10n),
+      Length.angstroms(1).value,
+    ],
+    ["point", Rational.unsafeMake(127n, 360000n), Length.points(1).value],
     [
       "astronomicalUnit",
-      Rational.make(149597870700n),
+      Rational.unsafeMake(149597870700n),
       Length.astronomicalUnits(1).value,
     ],
-    ["lightYear", Rational.make(9460730472580800n), Length.lightYears(1).value],
-    ["julianYear", Rational.make(31557600n), Duration.julianYears(1).value],
+    [
+      "lightYear",
+      Rational.unsafeMake(9460730472580800n),
+      Length.lightYears(1).value,
+    ],
+    [
+      "julianYear",
+      Rational.unsafeMake(31557600n),
+      Duration.julianYears(1).value,
+    ],
     [
       "kilometerPerHour",
-      Rational.make(5n, 18n),
+      Rational.unsafeMake(5n, 18n),
       Speed.kilometersPerHour(1).value,
     ],
-    ["milePerHour", Rational.make(1397n, 3125n), Speed.milesPerHour(1).value],
-    ["liter", Rational.make(1n, 1000n), Volume.liters(1).value],
+    [
+      "milePerHour",
+      Rational.unsafeMake(1397n, 3125n),
+      Speed.milesPerHour(1).value,
+    ],
+    ["liter", Rational.unsafeMake(1n, 1000n), Volume.liters(1).value],
     [
       "usLiquidGallon",
-      Rational.make(3785411784n, 10n ** 12n),
+      Rational.unsafeMake(3785411784n, 10n ** 12n),
       Volume.usLiquidGallons(1).value,
     ],
     [
       "usDryGallon",
-      Rational.make(440488377086n, 10n ** 14n),
+      Rational.unsafeMake(440488377086n, 10n ** 14n),
       Volume.usDryGallons(1).value,
     ],
     [
       "imperialGallon",
-      Rational.make(454609n, 10n ** 8n),
+      Rational.unsafeMake(454609n, 10n ** 8n),
       Volume.imperialGallons(1).value,
     ],
     [
       "fahrenheitDegree",
-      Rational.make(5n, 9n),
+      Rational.unsafeMake(5n, 9n),
       Temperature.fahrenheitDegrees(1).value,
     ],
-    ["thou", Rational.make(127n, 5000000n), Length.thou(1).value],
-    ["cssPixel", Rational.make(127n, 480000n), Length.cssPixels(1).value],
-    ["pica", Rational.make(127n, 30000n), Length.picas(1).value],
+    ["thou", Rational.unsafeMake(127n, 5000000n), Length.thou(1).value],
+    ["cssPixel", Rational.unsafeMake(127n, 480000n), Length.cssPixels(1).value],
+    ["pica", Rational.unsafeMake(127n, 30000n), Length.picas(1).value],
   ];
 
   for (const [label, exact, float] of cases) {
@@ -174,7 +190,7 @@ describe("representative module factors are bit-identical", () => {
 
   it("matches the celsius offset", () => {
     assertEquals(
-      Rational.unsafeToNumber(Rational.make(5463n, 20n)),
+      Rational.unsafeToNumber(Rational.unsafeMake(5463n, 20n)),
       Temperature.inKelvins(Temperature.degreesCelsius(0)),
     );
   });

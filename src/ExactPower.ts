@@ -36,7 +36,7 @@ export const inMegawatts = (p: ExactPower) =>
   ExactPrefix.toPrefixed("Mega", p.value);
 
 /** One metric horsepower is 735.49875 (exactly 588399/800) watts. */
-const wattsPerMetricHorsepower = Rational.make(73549875n, 100000n);
+const wattsPerMetricHorsepower = Rational.unsafeMake(73549875n, 100000n);
 
 export const metricHorsepower = (r: Rational.Rational) =>
   make(Rational.multiply(r, wattsPerMetricHorsepower));
@@ -48,7 +48,7 @@ export const inMetricHorsepower = (p: ExactPower) =>
  * One mechanical horsepower is 550 foot pounds of force per second — exactly
  * 37284993579113511/50000000000000 (745.69987158227022) watts.
  */
-const footPoundsPerSecondPerMechanicalHorsepower = Rational.make(550n);
+const footPoundsPerSecondPerMechanicalHorsepower = Rational.unsafeMake(550n);
 const wattsPerMechanicalHorsepower = Rational.multiply(
   footPoundsPerSecondPerMechanicalHorsepower,
   Rational.multiply(
@@ -64,7 +64,7 @@ export const inMechanicalHorsepower = (p: ExactPower) =>
   Rational.unsafeDivide(p.value, wattsPerMechanicalHorsepower);
 
 /** One electrical horsepower is 746 watts. */
-const wattsPerElectricalHorsepower = Rational.make(746n);
+const wattsPerElectricalHorsepower = Rational.unsafeMake(746n);
 
 export const electricalHorsepower = (r: Rational.Rational) =>
   make(Rational.multiply(r, wattsPerElectricalHorsepower));

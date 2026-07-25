@@ -9,6 +9,8 @@
  *
  * @module
  */
+import * as Record from "effect/Record";
+
 import type * as Prefix from "../Prefix.ts";
 import * as Rational from "../Rational.ts";
 
@@ -41,22 +43,12 @@ const base10Exponents: Record<Prefix.Prefix, number> = {
 
 const factorOf = (exponent: number): Rational.Rational =>
   exponent >= 0
-    ? Rational.make(10n ** BigInt(exponent))
-    : Rational.make(1n, 10n ** BigInt(-exponent));
+    ? Rational.unsafeMake(10n ** BigInt(exponent))
+    : Rational.unsafeMake(1n, 10n ** BigInt(-exponent));
 
-export const factors = Object.fromEntries(
-  Object.entries(base10Exponents).map(([prefix, exponent]) => [
-    prefix,
-    factorOf(exponent),
-  ]),
-) as Record<Prefix.Prefix, Rational.Rational>;
+export const factors = Record.map(base10Exponents, factorOf);
 
-const inverseFactors = Object.fromEntries(
-  Object.entries(factors).map(([prefix, factor]) => [
-    prefix,
-    Rational.unsafeReciprocal(factor),
-  ]),
-) as Record<Prefix.Prefix, Rational.Rational>;
+const inverseFactors = Record.map(factors, Rational.unsafeReciprocal);
 
 export const toBase = (
   prefix: Prefix.Prefix,

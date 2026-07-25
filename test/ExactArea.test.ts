@@ -22,28 +22,28 @@ describe("ExactArea", () => {
   ]);
 
   testExactAnchors(ExactArea.inSquareMeters, [
-    [ExactArea.squareMillimeters, Rational.make(1n, 10n ** 6n)],
-    [ExactArea.squareCentimeters, Rational.make(1n, 10n ** 4n)],
-    [ExactArea.hectares, Rational.make(10n ** 4n)],
-    [ExactArea.squareKilometers, Rational.make(10n ** 6n)],
-    [ExactArea.squareInches, Rational.make(16129n, 25000000n)],
-    [ExactArea.squareFeet, Rational.make(145161n, 1562500n)],
-    [ExactArea.squareYards, Rational.make(1306449n, 1562500n)],
+    [ExactArea.squareMillimeters, Rational.unsafeMake(1n, 10n ** 6n)],
+    [ExactArea.squareCentimeters, Rational.unsafeMake(1n, 10n ** 4n)],
+    [ExactArea.hectares, Rational.unsafeMake(10n ** 4n)],
+    [ExactArea.squareKilometers, Rational.unsafeMake(10n ** 6n)],
+    [ExactArea.squareInches, Rational.unsafeMake(16129n, 25000000n)],
+    [ExactArea.squareFeet, Rational.unsafeMake(145161n, 1562500n)],
+    [ExactArea.squareYards, Rational.unsafeMake(1306449n, 1562500n)],
     [
       ExactArea.acres,
       Rational.multiply(
-        Rational.make(4840n),
+        Rational.unsafeMake(4840n),
         Rational.multiply(
-          Rational.make(1143n, 1250n),
-          Rational.make(1143n, 1250n),
+          Rational.unsafeMake(1143n, 1250n),
+          Rational.unsafeMake(1143n, 1250n),
         ),
       ),
     ],
     [
       ExactArea.squareMiles,
       Rational.multiply(
-        Rational.make(201168n, 125n),
-        Rational.make(201168n, 125n),
+        Rational.unsafeMake(201168n, 125n),
+        Rational.unsafeMake(201168n, 125n),
       ),
     ],
   ]);
@@ -52,19 +52,19 @@ describe("ExactArea", () => {
     assertTrue(
       Equal.equals(
         ExactArea.inSquareInches(ExactArea.squareFeet(Rational.one)),
-        Rational.make(144n),
+        Rational.unsafeMake(144n),
       ),
     );
     assertTrue(
       Equal.equals(
         ExactArea.inSquareYards(ExactArea.acres(Rational.one)),
-        Rational.make(4840n),
+        Rational.unsafeMake(4840n),
       ),
     );
     assertTrue(
       Equal.equals(
         ExactArea.inAcres(ExactArea.squareMiles(Rational.one)),
-        Rational.make(640n),
+        Rational.unsafeMake(640n),
       ),
     );
   });

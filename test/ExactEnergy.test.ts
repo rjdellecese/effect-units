@@ -16,22 +16,22 @@ describe("ExactEnergy", () => {
   ]);
 
   testExactAnchors(ExactEnergy.inJoules, [
-    [ExactEnergy.kilojoules, Rational.make(1000n)],
-    [ExactEnergy.megajoules, Rational.make(1000000n)],
-    [ExactEnergy.kilowattHours, Rational.make(3600000n)],
+    [ExactEnergy.kilojoules, Rational.unsafeMake(1000n)],
+    [ExactEnergy.megajoules, Rational.unsafeMake(1000000n)],
+    [ExactEnergy.kilowattHours, Rational.unsafeMake(3600000n)],
   ]);
 
   it("relates units exactly", () => {
     assertTrue(
       Equal.equals(
         ExactEnergy.inKilojoules(ExactEnergy.kilowattHours(Rational.one)),
-        Rational.make(3600n),
+        Rational.unsafeMake(3600n),
       ),
     );
     assertTrue(
       Equal.equals(
         ExactEnergy.inMegajoules(ExactEnergy.kilowattHours(Rational.one)),
-        Rational.make(18n, 5n),
+        Rational.unsafeMake(18n, 5n),
       ),
     );
   });

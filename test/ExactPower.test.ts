@@ -21,25 +21,25 @@ describe("ExactPower", () => {
   ]);
 
   testExactAnchors(ExactPower.inWatts, [
-    [ExactPower.kilowatts, Rational.make(1000n)],
-    [ExactPower.megawatts, Rational.make(1000000n)],
-    [ExactPower.metricHorsepower, Rational.make(588399n, 800n)],
+    [ExactPower.kilowatts, Rational.unsafeMake(1000n)],
+    [ExactPower.megawatts, Rational.unsafeMake(1000000n)],
+    [ExactPower.metricHorsepower, Rational.unsafeMake(588399n, 800n)],
     [
       ExactPower.mechanicalHorsepower,
       Rational.multiplyAll([
-        Rational.make(550n),
-        Rational.make(45359237n, 100000000n),
-        Rational.make(196133n, 20000n),
-        Rational.make(381n, 1250n),
+        Rational.unsafeMake(550n),
+        Rational.unsafeMake(45359237n, 100000000n),
+        Rational.unsafeMake(196133n, 20000n),
+        Rational.unsafeMake(381n, 1250n),
       ]),
     ],
-    [ExactPower.electricalHorsepower, Rational.make(746n)],
+    [ExactPower.electricalHorsepower, Rational.unsafeMake(746n)],
   ]);
 
   it("is the unit of an exact energy-per-duration rate", () => {
     const rate = ExactQuantity.per(
       ExactEnergy.kilowattHours(Rational.one),
-      ExactQuantity.make("Seconds", Rational.make(3600n)),
+      ExactQuantity.make("Seconds", Rational.unsafeMake(3600n)),
     );
 
     assertTrue(Option.isSome(rate));

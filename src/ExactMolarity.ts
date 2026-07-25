@@ -25,7 +25,7 @@ export const molesPerCubicMeter = (r: Rational.Rational) => make(r);
 
 export const inMolesPerCubicMeter = (m: ExactMolarity) => m.value;
 
-const molesPerCubicMeterPerMolePerLiter = Rational.make(1000n);
+const molesPerCubicMeterPerMolePerLiter = Rational.unsafeMake(1000n);
 
 export const molesPerLiter = (r: Rational.Rational) =>
   make(Rational.multiply(r, molesPerCubicMeterPerMolePerLiter));

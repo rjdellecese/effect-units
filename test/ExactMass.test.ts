@@ -22,34 +22,34 @@ describe("ExactMass", () => {
   ]);
 
   testExactAnchors(ExactMass.inKilograms, [
-    [ExactMass.grams, Rational.make(1n, 1000n)],
-    [ExactMass.milligrams, Rational.make(1n, 10n ** 6n)],
-    [ExactMass.micrograms, Rational.make(1n, 10n ** 9n)],
-    [ExactMass.nanograms, Rational.make(1n, 10n ** 12n)],
-    [ExactMass.metricTons, Rational.make(1000n)],
-    [ExactMass.ounces, Rational.make(45359237n, 1600000000n)],
-    [ExactMass.pounds, Rational.make(45359237n, 100000000n)],
-    [ExactMass.longTons, Rational.make(317514659n, 312500n)],
-    [ExactMass.shortTons, Rational.make(45359237n, 50000n)],
+    [ExactMass.grams, Rational.unsafeMake(1n, 1000n)],
+    [ExactMass.milligrams, Rational.unsafeMake(1n, 10n ** 6n)],
+    [ExactMass.micrograms, Rational.unsafeMake(1n, 10n ** 9n)],
+    [ExactMass.nanograms, Rational.unsafeMake(1n, 10n ** 12n)],
+    [ExactMass.metricTons, Rational.unsafeMake(1000n)],
+    [ExactMass.ounces, Rational.unsafeMake(45359237n, 1600000000n)],
+    [ExactMass.pounds, Rational.unsafeMake(45359237n, 100000000n)],
+    [ExactMass.longTons, Rational.unsafeMake(317514659n, 312500n)],
+    [ExactMass.shortTons, Rational.unsafeMake(45359237n, 50000n)],
   ]);
 
   it("relates units exactly", () => {
     assertTrue(
       Equal.equals(
         ExactMass.inOunces(ExactMass.pounds(Rational.one)),
-        Rational.make(16n),
+        Rational.unsafeMake(16n),
       ),
     );
     assertTrue(
       Equal.equals(
         ExactMass.inPounds(ExactMass.longTons(Rational.one)),
-        Rational.make(2240n),
+        Rational.unsafeMake(2240n),
       ),
     );
     assertTrue(
       Equal.equals(
         ExactMass.inPounds(ExactMass.shortTons(Rational.one)),
-        Rational.make(2000n),
+        Rational.unsafeMake(2000n),
       ),
     );
   });

@@ -13,7 +13,7 @@ describe("ExactCurrent", () => {
   ]);
 
   testExactAnchors(ExactCurrent.inAmperes, [
-    [ExactCurrent.milliamperes, Rational.make(1n, 1000n)],
+    [ExactCurrent.milliamperes, Rational.unsafeMake(1n, 1000n)],
   ]);
 
   it("matches the float module bit-for-bit where its factors are leaves", () => {

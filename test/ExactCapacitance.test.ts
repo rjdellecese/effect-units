@@ -15,9 +15,9 @@ describe("ExactCapacitance", () => {
   ]);
 
   testExactAnchors(ExactCapacitance.inFarads, [
-    [ExactCapacitance.picofarads, Rational.make(1n, 10n ** 12n)],
-    [ExactCapacitance.nanofarads, Rational.make(1n, 10n ** 9n)],
-    [ExactCapacitance.microfarads, Rational.make(1n, 10n ** 6n)],
+    [ExactCapacitance.picofarads, Rational.unsafeMake(1n, 10n ** 12n)],
+    [ExactCapacitance.nanofarads, Rational.unsafeMake(1n, 10n ** 9n)],
+    [ExactCapacitance.microfarads, Rational.unsafeMake(1n, 10n ** 6n)],
   ]);
 
   it("matches the float module bit-for-bit where its factors are leaves", () => {

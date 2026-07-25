@@ -1,3 +1,4 @@
+import * as Array from "effect/Array";
 import * as BigDecimal from "effect/BigDecimal";
 import * as BigInt_ from "effect/BigInt";
 import * as Equal from "effect/Equal";
@@ -5,6 +6,7 @@ import * as Equivalence_ from "effect/Equivalence";
 import * as Function from "effect/Function";
 import * as Hash from "effect/Hash";
 import type * as Inspectable from "effect/Inspectable";
+import * as Match from "effect/Match";
 import * as Option from "effect/Option";
 import * as order from "effect/Order";
 import type * as Ordering from "effect/Ordering";
@@ -12,6 +14,7 @@ import * as ParseResult from "effect/ParseResult";
 import type * as Pipeable from "effect/Pipeable";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
+import * as String_ from "effect/String";
 
 import { ValueObjectProto } from "./internal/valueObject.ts";
 
@@ -63,21 +66,42 @@ const ofReduced = (numerator: bigint, denominator: bigint): Rational =>
   Object.assign(Object.create(Proto), { numerator, denominator });
 
 /**
- * Creates the rational `numerator / denominator`, reduced to lowest terms
- * with the sign carried by the numerator. Throws a `RangeError` on a zero
- * denominator — like `Unit.custom`, arguments are expected to be
- * developer-written values, so an invalid one is a defect. For division of
- * runtime values use {@link divide}, which returns an `Option`.
+ * Reduces a fraction to lowest terms with the sign carried by the
+ * numerator. Total on a non-zero denominator, which every caller
+ * establishes first — internal arithmetic derives denominators as products
+ * of positive denominators, so they are never zero.
  */
-export const make = (numerator: bigint, denominator: bigint = 1n): Rational => {
-  if (denominator === 0n) {
-    throw new RangeError("Rational.make: zero denominator");
-  }
+const reduce = (numerator: bigint, denominator: bigint): Rational => {
   const flip = denominator < 0n ? -1n : 1n;
   const n = flip * numerator;
   const d = flip * denominator;
   const g = BigInt_.gcd(n < 0n ? -n : n, d);
   return ofReduced(n / g, d / g);
+};
+
+/**
+ * Creates the rational `numerator / denominator`, reduced to lowest terms
+ * with the sign carried by the numerator. Returns `Option.none()` on a zero
+ * denominator; {@link unsafeMake} is the throwing counterpart for
+ * developer-written literals.
+ */
+export const make = (
+  numerator: bigint,
+  denominator: bigint = 1n,
+): Option.Option<Rational> =>
+  denominator === 0n
+    ? Option.none()
+    : Option.some(reduce(numerator, denominator));
+
+/** Throws a `RangeError` on a zero denominator. */
+export const unsafeMake = (
+  numerator: bigint,
+  denominator: bigint = 1n,
+): Rational => {
+  if (denominator === 0n) {
+    throw new RangeError("Rational.unsafeMake: zero denominator");
+  }
+  return reduce(numerator, denominator);
 };
 
 export const fromBigInt = (n: bigint): Rational => ofReduced(n, 1n);
@@ -145,7 +169,7 @@ export const sum: {
 } = Function.dual(
   2,
   (a: Rational, b: Rational): Rational =>
-    make(
+    reduce(
       a.numerator * b.denominator + b.numerator * a.denominator,
       a.denominator * b.denominator,
     ),
@@ -157,7 +181,7 @@ export const subtract: {
 } = Function.dual(
   2,
   (a: Rational, b: Rational): Rational =>
-    make(
+    reduce(
       a.numerator * b.denominator - b.numerator * a.denominator,
       a.denominator * b.denominator,
     ),
@@ -169,7 +193,7 @@ export const multiply: {
 } = Function.dual(
   2,
   (a: Rational, b: Rational): Rational =>
-    make(a.numerator * b.numerator, a.denominator * b.denominator),
+    reduce(a.numerator * b.numerator, a.denominator * b.denominator),
 );
 
 export const negate = (r: Rational): Rational =>
@@ -219,21 +243,11 @@ export const unsafeDivide: {
   (a: Rational, b: Rational): Rational => multiply(a, unsafeReciprocal(b)),
 );
 
-export const sumAll = (collection: Iterable<Rational>): Rational => {
-  let acc = zero;
-  for (const r of collection) {
-    acc = sum(acc, r);
-  }
-  return acc;
-};
+export const sumAll = (collection: Iterable<Rational>): Rational =>
+  Array.reduce(collection, zero, sum);
 
-export const multiplyAll = (collection: Iterable<Rational>): Rational => {
-  let acc = one;
-  for (const r of collection) {
-    acc = multiply(acc, r);
-  }
-  return acc;
-};
+export const multiplyAll = (collection: Iterable<Rational>): Rational =>
+  Array.reduce(collection, one, multiply);
 
 // Rounding
 
@@ -274,38 +288,27 @@ export const round: {
     const ceil = n < 0n ? towardZero : fromZero;
     const twiceRemainder = 2n * (remainder < 0n ? -remainder : remainder);
 
-    switch (mode) {
-      case "ceil":
-        return ceil;
-      case "floor":
-        return floor;
-      case "to-zero":
-        return towardZero;
-      case "from-zero":
-        return fromZero;
-      default: {
-        if (twiceRemainder < d) {
-          return towardZero;
-        }
-        if (twiceRemainder > d) {
-          return fromZero;
-        }
-        switch (mode) {
-          case "half-ceil":
-            return ceil;
-          case "half-floor":
-            return floor;
-          case "half-to-zero":
-            return towardZero;
-          case "half-from-zero":
-            return fromZero;
-          case "half-even":
-            return towardZero % 2n === 0n ? towardZero : fromZero;
-          case "half-odd":
-            return towardZero % 2n === 0n ? fromZero : towardZero;
-        }
-      }
-    }
+    /** Nearest, resolving an exact tie with `onTie`. */
+    const nearest = (onTie: bigint): bigint =>
+      twiceRemainder < d ? towardZero : twiceRemainder > d ? fromZero : onTie;
+
+    return Match.value(mode).pipe(
+      Match.when("ceil", () => ceil),
+      Match.when("floor", () => floor),
+      Match.when("to-zero", () => towardZero),
+      Match.when("from-zero", () => fromZero),
+      Match.when("half-ceil", () => nearest(ceil)),
+      Match.when("half-floor", () => nearest(floor)),
+      Match.when("half-to-zero", () => nearest(towardZero)),
+      Match.when("half-from-zero", () => nearest(fromZero)),
+      Match.when("half-even", () =>
+        nearest(towardZero % 2n === 0n ? towardZero : fromZero),
+      ),
+      Match.when("half-odd", () =>
+        nearest(towardZero % 2n === 0n ? fromZero : towardZero),
+      ),
+      Match.exhaustive,
+    );
   },
 );
 
@@ -315,19 +318,19 @@ export const round: {
  * The exact rational value of a finite double — every finite double is a
  * dyadic rational. Throws a `RangeError` on NaN and ±Infinity.
  */
+// Doubling a finite non-integral double is always exact (its magnitude is
+// below 2^53), so this recursion terminates with the exact scaled mantissa
+// — at most 1075 steps, for the smallest subnormal.
+const dyadic = (mantissa: number, denominator: bigint): Rational =>
+  Number.isInteger(mantissa)
+    ? reduce(BigInt(mantissa), denominator)
+    : dyadic(mantissa * 2, denominator << 1n);
+
 export const unsafeFromNumber = (n: number): Rational => {
   if (!Number.isFinite(n)) {
     throw new RangeError(`Rational.unsafeFromNumber: ${n}`);
   }
-  // Doubling a finite non-integral double is always exact (its magnitude is
-  // below 2^53), so this loop terminates with the exact scaled mantissa.
-  let mantissa = n;
-  let denominator = 1n;
-  while (!Number.isInteger(mantissa)) {
-    mantissa *= 2;
-    denominator <<= 1n;
-  }
-  return make(BigInt(mantissa), denominator);
+  return dyadic(n, 1n);
 };
 
 export const fromNumber = (n: number): Option.Option<Rational> =>
@@ -335,7 +338,9 @@ export const fromNumber = (n: number): Option.Option<Rational> =>
 
 const maxSafeInteger = 9007199254740991n;
 
-const bitLength = (n: bigint): number => n.toString(2).length;
+// No Effect helper covers a bigint's binary width, so this stays on the
+// built-in radix conversion.
+const bitLength = (n: bigint): number => String_.length(n.toString(2));
 
 /**
  * The correctly rounded (nearest, ties to even) double of a positive
@@ -387,13 +392,16 @@ const positiveToNumber = (a: bigint, b: bigint): number | undefined => {
   // Subnormal results keep fewer than 53 bits (the lowest kept bit is 2^-1074).
   const precision = Math.min(53, leadPosition + 1075);
   const drop = quotientBits - precision;
-  let mantissa = quotient >> BigInt(drop);
+  const truncated = quotient >> BigInt(drop);
   const roundBit = (quotient >> BigInt(drop - 1)) & 1n;
   const sticky =
     (quotient & ((1n << BigInt(drop - 1)) - 1n)) !== 0n || remainder !== 0n;
-  if (roundBit === 1n && (sticky || mantissa % 2n === 1n)) {
-    mantissa += 1n;
-  }
+  // Ties to even: round up on a set guard bit unless the remainder is
+  // exactly half and the kept mantissa is already even.
+  const mantissa =
+    roundBit === 1n && (sticky || truncated % 2n === 1n)
+      ? truncated + 1n
+      : truncated;
 
   // A carry out of the mantissa (to exactly 2^precision) raises the leading
   // bit by one, which can push a near-maximal value over the top.
@@ -435,8 +443,8 @@ export const unsafeToNumber = (r: Rational): number =>
 
 export const fromBigDecimal = (bd: BigDecimal.BigDecimal): Rational =>
   bd.scale >= 0
-    ? make(bd.value, 10n ** BigInt(bd.scale))
-    : make(bd.value * 10n ** BigInt(-bd.scale));
+    ? reduce(bd.value, 10n ** BigInt(bd.scale))
+    : fromBigInt(bd.value * 10n ** BigInt(-bd.scale));
 
 /**
  * Rounds to a `BigDecimal` at the given scale — exactly one rounding, made
@@ -466,8 +474,11 @@ export const toBigDecimal: {
   ): BigDecimal.BigDecimal => {
     const scaled =
       options.scale >= 0
-        ? make(self.numerator * 10n ** BigInt(options.scale), self.denominator)
-        : make(
+        ? reduce(
+            self.numerator * 10n ** BigInt(options.scale),
+            self.denominator,
+          )
+        : reduce(
             self.numerator,
             self.denominator * 10n ** BigInt(-options.scale),
           );
@@ -483,24 +494,25 @@ export const toBigDecimal: {
  * the denominator is a product of twos and fives, so the decimal expansion
  * terminates. `Option.none()` otherwise (e.g. 1/3).
  */
+/** Divides out every factor of `prime`, returning the rest and the count. */
+const factorOut = (
+  n: bigint,
+  prime: bigint,
+  count = 0,
+): readonly [rest: bigint, count: number] =>
+  n % prime === 0n ? factorOut(n / prime, prime, count + 1) : [n, count];
+
 export const toBigDecimalExact = (
   self: Rational,
 ): Option.Option<BigDecimal.BigDecimal> => {
-  let d = self.denominator;
-  let twos = 0;
-  while (d % 2n === 0n) {
-    d /= 2n;
-    twos += 1;
-  }
-  let fives = 0;
-  while (d % 5n === 0n) {
-    d /= 5n;
-    fives += 1;
-  }
-  if (d !== 1n) {
+  const [withoutTwos, twos] = factorOut(self.denominator, 2n);
+  const [rest, fives] = factorOut(withoutTwos, 5n);
+
+  if (rest !== 1n) {
     return Option.none();
   }
-  const scale = twos > fives ? twos : fives;
+
+  const scale = Math.max(twos, fives);
   return Option.some(
     BigDecimal.make(
       (self.numerator * 10n ** BigInt(scale)) / self.denominator,
@@ -527,15 +539,17 @@ const parsePattern = /^(-?\d+)(?:\/([1-9]\d*))?$/;
  * spelled out; non-canonical fractions like `"6/4"` reduce on the way in).
  * Returns `Option.none()` for anything else, including zero denominators.
  */
-export const fromString = (s: string): Option.Option<Rational> => {
-  const match = parsePattern.exec(s);
-  if (match === null || match[1] === undefined) {
-    return Option.none();
-  }
-  return Option.some(
-    make(BigInt(match[1]), match[2] === undefined ? 1n : BigInt(match[2])),
+export const fromString = (s: string): Option.Option<Rational> =>
+  String_.match(parsePattern)(s).pipe(
+    Option.flatMap((groups) =>
+      Option.map(Option.fromNullable(groups[1]), (numerator) =>
+        reduce(
+          BigInt(numerator),
+          groups[2] === undefined ? 1n : BigInt(groups[2]),
+        ),
+      ),
+    ),
   );
-};
 
 /** Throws a `RangeError` on input {@link fromString} would reject. */
 export const unsafeFromString = (s: string): Rational =>
@@ -550,7 +564,7 @@ export const RationalFromSelf = Schema.declare(isRational, {
   arbitrary: () => (fc) =>
     fc
       .tuple(fc.bigInt(), fc.bigInt({ min: 1n }))
-      .map(([numerator, denominator]) => make(numerator, denominator)),
+      .map(([numerator, denominator]) => unsafeMake(numerator, denominator)),
   equivalence: () => Equivalence,
 });
 

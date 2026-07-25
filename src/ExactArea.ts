@@ -95,7 +95,7 @@ export const inSquareYards = (a: ExactArea) =>
   Rational.unsafeDivide(a.value, squareMetersPerSquareYard);
 
 /** One acre is 4840 square yards. */
-const squareYardsPerAcre = Rational.make(4840n);
+const squareYardsPerAcre = Rational.unsafeMake(4840n);
 const squareMetersPerAcre = Rational.multiply(
   squareYardsPerAcre,
   squareMetersPerSquareYard,

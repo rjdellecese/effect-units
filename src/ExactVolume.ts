@@ -28,7 +28,7 @@ export const cubicMeters = (r: Rational.Rational) => make(r);
 
 export const inCubicMeters = (v: ExactVolume) => v.value;
 
-const cubicMetersPerLiter = Rational.make(1n, 1000n);
+const cubicMetersPerLiter = Rational.unsafeMake(1n, 1000n);
 
 export const liters = (r: Rational.Rational) =>
   make(Rational.multiply(r, cubicMetersPerLiter));
@@ -81,7 +81,10 @@ export const inCubicYards = (v: ExactVolume) =>
 
 // US liquid
 
-const cubicMetersPerUsLiquidGallon = Rational.make(3785411784n, 10n ** 12n);
+const cubicMetersPerUsLiquidGallon = Rational.unsafeMake(
+  3785411784n,
+  10n ** 12n,
+);
 
 export const usLiquidGallons = (r: Rational.Rational) =>
   make(Rational.multiply(r, cubicMetersPerUsLiquidGallon));
@@ -91,7 +94,7 @@ export const inUsLiquidGallons = (v: ExactVolume) =>
 
 const cubicMetersPerUsLiquidQuart = Rational.multiply(
   cubicMetersPerUsLiquidGallon,
-  Rational.make(1n, 4n),
+  Rational.unsafeMake(1n, 4n),
 );
 
 export const usLiquidQuarts = (r: Rational.Rational) =>
@@ -102,7 +105,7 @@ export const inUsLiquidQuarts = (v: ExactVolume) =>
 
 const cubicMetersPerUsLiquidPint = Rational.multiply(
   cubicMetersPerUsLiquidGallon,
-  Rational.make(1n, 8n),
+  Rational.unsafeMake(1n, 8n),
 );
 
 export const usLiquidPints = (r: Rational.Rational) =>
@@ -114,7 +117,7 @@ export const inUsLiquidPints = (v: ExactVolume) =>
 /** One US fluid ounce is 1/128 of a US liquid gallon. */
 const cubicMetersPerUsFluidOunce = Rational.multiply(
   cubicMetersPerUsLiquidGallon,
-  Rational.make(1n, 128n),
+  Rational.unsafeMake(1n, 128n),
 );
 
 export const usFluidOunces = (r: Rational.Rational) =>
@@ -125,7 +128,10 @@ export const inUsFluidOunces = (v: ExactVolume) =>
 
 // US dry
 
-const cubicMetersPerUsDryGallon = Rational.make(440488377086n, 10n ** 14n);
+const cubicMetersPerUsDryGallon = Rational.unsafeMake(
+  440488377086n,
+  10n ** 14n,
+);
 
 export const usDryGallons = (r: Rational.Rational) =>
   make(Rational.multiply(r, cubicMetersPerUsDryGallon));
@@ -135,7 +141,7 @@ export const inUsDryGallons = (v: ExactVolume) =>
 
 const cubicMetersPerUsDryQuart = Rational.multiply(
   cubicMetersPerUsDryGallon,
-  Rational.make(1n, 4n),
+  Rational.unsafeMake(1n, 4n),
 );
 
 export const usDryQuarts = (r: Rational.Rational) =>
@@ -146,7 +152,7 @@ export const inUsDryQuarts = (v: ExactVolume) =>
 
 const cubicMetersPerUsDryPint = Rational.multiply(
   cubicMetersPerUsDryGallon,
-  Rational.make(1n, 8n),
+  Rational.unsafeMake(1n, 8n),
 );
 
 export const usDryPints = (r: Rational.Rational) =>
@@ -157,7 +163,7 @@ export const inUsDryPints = (v: ExactVolume) =>
 
 // Imperial (UK)
 
-const cubicMetersPerImperialGallon = Rational.make(454609n, 10n ** 8n);
+const cubicMetersPerImperialGallon = Rational.unsafeMake(454609n, 10n ** 8n);
 
 export const imperialGallons = (r: Rational.Rational) =>
   make(Rational.multiply(r, cubicMetersPerImperialGallon));
@@ -167,7 +173,7 @@ export const inImperialGallons = (v: ExactVolume) =>
 
 const cubicMetersPerImperialQuart = Rational.multiply(
   cubicMetersPerImperialGallon,
-  Rational.make(1n, 4n),
+  Rational.unsafeMake(1n, 4n),
 );
 
 export const imperialQuarts = (r: Rational.Rational) =>
@@ -178,7 +184,7 @@ export const inImperialQuarts = (v: ExactVolume) =>
 
 const cubicMetersPerImperialPint = Rational.multiply(
   cubicMetersPerImperialGallon,
-  Rational.make(1n, 8n),
+  Rational.unsafeMake(1n, 8n),
 );
 
 export const imperialPints = (r: Rational.Rational) =>
@@ -190,7 +196,7 @@ export const inImperialPints = (v: ExactVolume) =>
 /** One imperial fluid ounce is 1/160 of an imperial gallon. */
 const cubicMetersPerImperialFluidOunce = Rational.multiply(
   cubicMetersPerImperialGallon,
-  Rational.make(1n, 160n),
+  Rational.unsafeMake(1n, 160n),
 );
 
 export const imperialFluidOunces = (r: Rational.Rational) =>

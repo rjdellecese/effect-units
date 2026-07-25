@@ -47,7 +47,7 @@ export const inHours = (d: ExactDuration) =>
   Rational.unsafeDivide(d.value, ExactConstants.secondsPerHour);
 
 const secondsPerDay = Rational.multiply(
-  Rational.make(24n),
+  Rational.unsafeMake(24n),
   ExactConstants.secondsPerHour,
 );
 
@@ -57,7 +57,10 @@ export const days = (r: Rational.Rational) =>
 export const inDays = (d: ExactDuration) =>
   Rational.unsafeDivide(d.value, secondsPerDay);
 
-const secondsPerWeek = Rational.multiply(Rational.make(7n), secondsPerDay);
+const secondsPerWeek = Rational.multiply(
+  Rational.unsafeMake(7n),
+  secondsPerDay,
+);
 
 export const weeks = (r: Rational.Rational) =>
   make(Rational.multiply(r, secondsPerWeek));
@@ -67,7 +70,7 @@ export const inWeeks = (d: ExactDuration) =>
 
 /** One Julian year is exactly 365.25 days. */
 const secondsPerJulianYear = Rational.multiply(
-  Rational.make(1461n, 4n),
+  Rational.unsafeMake(1461n, 4n),
   secondsPerDay,
 );
 
@@ -79,9 +82,9 @@ export const inJulianYears = (d: ExactDuration) =>
 
 // Interop
 
-const nanosecondsPerSecond = Rational.make(1_000_000_000n);
+const nanosecondsPerSecond = Rational.unsafeMake(1_000_000_000n);
 
-const millisecondsPerSecond = Rational.make(1000n);
+const millisecondsPerSecond = Rational.unsafeMake(1000n);
 
 /**
  * Converts an `effect/Duration` to an `ExactDuration` — lossless, since a
@@ -93,7 +96,7 @@ export const fromDuration = (
   duration: EffectDuration.Duration,
 ): Option.Option<ExactDuration> =>
   Option.map(EffectDuration.toNanos(duration), (nanos) =>
-    make(Rational.make(nanos, 1_000_000_000n)),
+    make(Rational.unsafeMake(nanos, 1_000_000_000n)),
   );
 
 /**
@@ -127,7 +130,7 @@ export const between = (
   end: DateTime.DateTime,
 ): ExactDuration =>
   make(
-    Rational.make(
+    Rational.unsafeMake(
       BigInt(DateTime.toEpochMillis(end) - DateTime.toEpochMillis(start)),
       1000n,
     ),

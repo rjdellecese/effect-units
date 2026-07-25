@@ -24,8 +24,8 @@ describe("ExactAcceleration", () => {
   ]);
 
   testExactAnchors(ExactAcceleration.inMetersPerSecondSquared, [
-    [ExactAcceleration.feetPerSecondSquared, Rational.make(381n, 1250n)],
-    [ExactAcceleration.gees, Rational.make(196133n, 20000n)],
+    [ExactAcceleration.feetPerSecondSquared, Rational.unsafeMake(381n, 1250n)],
+    [ExactAcceleration.gees, Rational.unsafeMake(196133n, 20000n)],
   ]);
 
   it("is the unit of an exact speed-per-duration rate", () => {

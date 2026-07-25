@@ -20,9 +20,9 @@ describe("ExactTorque", () => {
     [
       ExactTorque.poundFeet,
       Rational.multiplyAll([
-        Rational.make(45359237n, 100000000n),
-        Rational.make(196133n, 20000n),
-        Rational.make(381n, 1250n),
+        Rational.unsafeMake(45359237n, 100000000n),
+        Rational.unsafeMake(196133n, 20000n),
+        Rational.unsafeMake(381n, 1250n),
       ]),
     ],
   ]);

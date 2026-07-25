@@ -39,7 +39,7 @@ export const inMegajoules = (e: ExactEnergy) =>
  * One kilowatt hour is one kilowatt (1000 joules per second) for one hour —
  * exactly 3600000 joules.
  */
-const wattsPerKilowatt = Rational.make(1000n);
+const wattsPerKilowatt = Rational.unsafeMake(1000n);
 const joulesPerKilowattHour = Rational.multiply(
   wattsPerKilowatt,
   ExactConstants.secondsPerHour,
