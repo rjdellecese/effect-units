@@ -161,11 +161,14 @@ const Usd = Unit.custom("USD");
 const cents = (r: Rational.Rational) => ExactQuantity.make(Usd, r);
 
 const rate = ExactQuantity.unsafePer(
-  cents(Rational.make(200n)),
-  ExactLength.meters(Rational.make(3n)),
+  cents(Rational.unsafeMake(200n)),
+  ExactLength.meters(Rational.unsafeMake(3n)),
 ); // exactly 200/3 cents per meter
 
-const cost = ExactQuantity.at(rate, ExactLength.meters(Rational.make(3n)));
+const cost = ExactQuantity.at(
+  rate,
+  ExactLength.meters(Rational.unsafeMake(3n)),
+);
 // exactly 200 cents — Equal.equals, not isCloseTo
 ```
 

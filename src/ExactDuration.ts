@@ -86,6 +86,9 @@ const nanosecondsPerSecond = Rational.unsafeMake(1_000_000_000n);
 
 const millisecondsPerSecond = Rational.unsafeMake(1000n);
 
+/** The widest epoch millisecond a `Date`, and so a `DateTime`, can hold. */
+const maxEpochMillis = 8_640_000_000_000_000n;
+
 /**
  * Converts an `effect/Duration` to an `ExactDuration` — lossless, since a
  * whole number of nanoseconds is an exact rational number of seconds.
@@ -131,7 +134,11 @@ export const between = (
 ): ExactDuration =>
   make(
     Rational.unsafeMake(
-      BigInt(DateTime.toEpochMillis(end) - DateTime.toEpochMillis(start)),
+      // Each endpoint is a safe integer (|epochMillis| <= 8.64e15 < 2^53), so
+      // widening before subtracting is exact — subtracting first would round
+      // spans wider than 2^53 milliseconds.
+      BigInt(DateTime.toEpochMillis(end)) -
+        BigInt(DateTime.toEpochMillis(start)),
       1000n,
     ),
   );
@@ -151,10 +158,22 @@ export const addTo = (
     Rational.multiply(d.value, millisecondsPerSecond),
     options,
   );
+  // The offset stays a bigint through the addition and the range check:
+  // narrowing it first would re-round offsets beyond 2^53 milliseconds after
+  // the explicit rounding above, and building an out-of-range `DateTime`
+  // throws for zoned inputs rather than yielding a NaN we could detect.
+  const epochMillis = BigInt(DateTime.toEpochMillis(dateTime)) + millis;
 
-  const result = DateTime.add(dateTime, { millis: Number(millis) });
+  if (epochMillis > maxEpochMillis || epochMillis < -maxEpochMillis) {
+    return Option.none();
+  }
 
-  return Number.isNaN(DateTime.toEpochMillis(result))
-    ? Option.none()
-    : Option.some(result);
+  // In range, so this narrowing is exact.
+  const shifted = DateTime.unsafeMake(Number(epochMillis));
+
+  return Option.some(
+    DateTime.isZoned(dateTime)
+      ? DateTime.setZone(shifted, dateTime.zone)
+      : shifted,
+  );
 };

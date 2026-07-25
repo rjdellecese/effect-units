@@ -136,6 +136,20 @@ describe("ExactDuration", () => {
       );
     });
 
+    it("between stays exact across spans wider than 2^53 milliseconds", () => {
+      // Subtracting the endpoints as doubles first would round this span up
+      // to a whole number of seconds.
+      const start = DateTime.unsafeMake(-8_640_000_000_000_000);
+      const end = DateTime.unsafeMake(8_639_999_999_999_999);
+
+      assertTrue(
+        Equal.equals(
+          ExactDuration.inSeconds(ExactDuration.between(start, end)),
+          Rational.unsafeMake(17_279_999_999_999_999n, 1000n),
+        ),
+      );
+    });
+
     it("addTo adds to a DateTime, rounding to milliseconds", () => {
       const start = DateTime.unsafeMake(0);
 
@@ -186,6 +200,79 @@ describe("ExactDuration", () => {
             ExactDuration.days(Rational.unsafeMake(10n ** 12n)),
           ),
         ),
+      );
+      // The boundary itself is representable; one millisecond past it is not.
+      assertTrue(
+        Option.isSome(
+          ExactDuration.addTo(
+            start,
+            ExactDuration.milliseconds(
+              Rational.unsafeMake(8_640_000_000_000_000n),
+            ),
+          ),
+        ),
+      );
+      assertTrue(
+        Option.isNone(
+          ExactDuration.addTo(
+            start,
+            ExactDuration.milliseconds(
+              Rational.unsafeMake(8_640_000_000_000_001n),
+            ),
+          ),
+        ),
+      );
+    });
+
+    it("addTo is none, not a throw, for out-of-range zoned results", () => {
+      // A named zone resolves through Intl, which throws on an out-of-range
+      // instant rather than yielding a NaN epoch a guard could inspect
+      // afterwards — so the range check has to come before construction.
+      const zoned = DateTime.setZone(
+        DateTime.unsafeMake(0),
+        DateTime.zoneUnsafeMakeNamed("America/New_York"),
+      );
+
+      assertTrue(
+        Option.isNone(
+          ExactDuration.addTo(
+            zoned,
+            ExactDuration.days(Rational.unsafeMake(10n ** 12n)),
+          ),
+        ),
+      );
+    });
+
+    it("addTo preserves the time zone of its input", () => {
+      const zone = DateTime.zoneUnsafeMakeNamed("America/New_York");
+      const zoned = DateTime.setZone(DateTime.unsafeMake(0), zone);
+      const shifted = Option.getOrThrow(
+        ExactDuration.addTo(
+          zoned,
+          ExactDuration.seconds(Rational.unsafeMake(90n)),
+        ),
+      );
+
+      assertTrue(DateTime.isZoned(shifted));
+      assertEquals(DateTime.toEpochMillis(shifted), 90_000);
+    });
+
+    it("addTo does not re-round offsets beyond 2^53 milliseconds", () => {
+      // The offset exceeds Number.MAX_SAFE_INTEGER, so narrowing it before
+      // the addition would land one millisecond short of the exact result.
+      const start = DateTime.unsafeMake(-8_640_000_000_000_000);
+      const offset = 10_000_000_000_000_001n;
+
+      assertEquals(
+        DateTime.toEpochMillis(
+          Option.getOrThrow(
+            ExactDuration.addTo(
+              start,
+              ExactDuration.milliseconds(Rational.unsafeMake(offset)),
+            ),
+          ),
+        ),
+        Number(-8_640_000_000_000_000n + offset),
       );
     });
   });
