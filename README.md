@@ -23,7 +23,7 @@ pnpm add github:rjdellecese/effect-units#main
 | Module                       | Role                                                                                                           |
 | ---------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | `effect-units/Quantity`      | Typed quantity values with arithmetic and unit algebra (`times`, `squared`, `cubed`, `per`, `at`, `over`, ...) |
-| `effect-units/ExactQuantity` | The exact counterpart of `Quantity`: rational-valued, same algebra, division returns `Option`                  |
+| `effect-units/QuantityExact` | The exact counterpart of `Quantity`: rational-valued, same algebra, division returns `Option`                  |
 | `effect-units/Rational`      | Arbitrary-precision rationals (reduced bigint fractions) in the `effect/BigDecimal` idiom                      |
 | `effect-units/Unit`          | Unit trees: base units (built-in or custom) composed with `Product` and `Rate`                                 |
 | `effect-units/Prefix`        | SI prefixes                                                                                                    |
@@ -67,13 +67,13 @@ pnpm add github:rjdellecese/effect-units#main
 ### Exact units
 
 Every unit module above whose conversion factors are exact rationals has an
-exact twin named with an `Exact` prefix (`effect-units/ExactLength`,
-`effect-units/ExactSpeed`, `effect-units/ExactTemperature`, ...), taking and
+exact twin named with an `Exact` suffix (`effect-units/LengthExact`,
+`effect-units/SpeedExact`, `effect-units/TemperatureExact`, ...), taking and
 returning `Rational` values with lossless conversions. The rule for what has
 a twin: **if a conversion factor involves π, it stays float-only.** That
 excludes `Angle`, `AngularSpeed`, `AngularAcceleration`, and `SolidAngle`
-entirely, `parsecs` within `ExactLength`, and `footLamberts` within
-`ExactLuminance` — everything else converts exactly (an exact US liquid
+entirely, `parsecs` within `LengthExact`, and `footLamberts` within
+`LuminanceExact` — everything else converts exactly (an exact US liquid
 gallon is _exactly_ 231 cubic inches; 212 °F is _exactly_ 100 °C).
 
 ## Example
@@ -140,34 +140,34 @@ raise the dinero `scale` to keep sub-minor-unit precision), and reject
 amounts beyond the safe-integer range (e.g. from dinero's bigint
 calculator) at the boundary rather than letting them degrade silently. See
 `test/CustomUnits.test.ts` for a boundary that does both — or use
-`ExactQuantity` for money instead, where none of these caveats apply (see
+`QuantityExact` for money instead, where none of these caveats apply (see
 below).
 
 ## Exact quantities
 
-`ExactQuantity` is the exact interpreter of the same unit algebra: the
+`QuantityExact` is the exact interpreter of the same unit algebra: the
 value is a `Rational` (an arbitrary-precision reduced fraction of bigints),
 so sums, products, and — crucially — rates lose nothing. `$2 per 3 meters`
 _is_ 200/3 cents per meter, and applying that rate to 3 meters recovers
 exactly $2:
 
 ```ts
-import * as ExactLength from "effect-units/ExactLength";
-import * as ExactQuantity from "effect-units/ExactQuantity";
+import * as LengthExact from "effect-units/LengthExact";
+import * as QuantityExact from "effect-units/QuantityExact";
 import * as Rational from "effect-units/Rational";
 import * as Unit from "effect-units/Unit";
 
 const Usd = Unit.custom("USD");
-const cents = (r: Rational.Rational) => ExactQuantity.make(Usd, r);
+const cents = (r: Rational.Rational) => QuantityExact.make(Usd, r);
 
-const rate = ExactQuantity.unsafePer(
+const rate = QuantityExact.unsafePer(
   cents(Rational.unsafeMake(200n)),
-  ExactLength.meters(Rational.unsafeMake(3n)),
+  LengthExact.meters(Rational.unsafeMake(3n)),
 ); // exactly 200/3 cents per meter
 
-const cost = ExactQuantity.at(
+const cost = QuantityExact.at(
   rate,
-  ExactLength.meters(Rational.unsafeMake(3n)),
+  LengthExact.meters(Rational.unsafeMake(3n)),
 );
 // exactly 200 cents — Equal.equals, not isCloseTo
 ```
@@ -182,14 +182,14 @@ quantities are safe `HashMap` keys with no NaN or -0 caveats.
 
 Rounding happens only at explicitly parameterized boundaries:
 
-- `ExactQuantity.fromQuantity` (float → exact) is **lossless** — every
+- `QuantityExact.fromQuantity` (float → exact) is **lossless** — every
   finite double is a dyadic rational; NaN/±Infinity give `Option.none()`.
-- `ExactQuantity.toQuantity` (exact → float) is **one correct rounding**.
+- `QuantityExact.toQuantity` (exact → float) is **one correct rounding**.
 - `Rational.toBigDecimal({ scale, mode })` and `Rational.round({ mode })`
   name their rounding at the call site, using `effect/BigDecimal`'s
   `RoundingMode` vocabulary — the right way out to a money library like
-  dinero.js (see `test/ExactCustomUnits.test.ts`).
-- `ExactDuration` converts to and from `effect/Duration` exactly
+  dinero.js (see `test/CustomUnitsExact.test.ts`).
+- `DurationExact` converts to and from `effect/Duration` exactly
   (nanosecond bigints are rationals) and rounds explicitly for
   millisecond-resolution `DateTime`.
 
@@ -198,20 +198,20 @@ string (`"200/3"`, `"3"`) — exact on the wire, no width ceiling. The cost
 of exactness is that values grow: every operation reduces by gcd, but sums
 over unrelated denominators genuinely accumulate size, and rational
 arithmetic is slower than floats. Use `Quantity` for measurement and
-simulation; use `ExactQuantity` where a lost cent (or a lost nanosecond)
+simulation; use `QuantityExact` where a lost cent (or a lost nanosecond)
 is a bug.
 
 ## Numbers, precision, and equality
 
 The library is two-track: `Quantity` values are plain 64-bit floats (as in
-`elm-units`) with measurement semantics, and `ExactQuantity` values are
+`elm-units`) with measurement semantics, and `QuantityExact` values are
 arbitrary-precision rationals with accounting/algebraic semantics. The two
 tracks agree at every conversion factor: each float factor is the correctly
 rounded float of its exact defining rational (asserted bit-for-bit against
 the exact modules in the test suite), and no float module imports any
 bigint code. What remains float-only is _arithmetic on runtime values_ —
 e.g. the float `Temperature.degreesFahrenheit` rounds per operation as any
-float affine map must, where `ExactTemperature` is exact.
+float affine map must, where `TemperatureExact` is exact.
 
 On the float track, arithmetic follows IEEE 754 semantics: division by
 zero yields ±Infinity, invalid operations yield NaN, and every operation
