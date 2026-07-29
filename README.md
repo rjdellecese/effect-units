@@ -2,7 +2,7 @@
 
 Typed quantities and unit conversions for [Effect](https://effect.website), ported from Elm's [`ianmackenzie/elm-units`](https://package.elm-lang.org/packages/ianmackenzie/elm-units/latest/).
 
-Store, pass around, convert between, compare, and do arithmetic on lengths, durations, speeds, temperatures, pixels, money, and dozens of other kinds of quantity—with the type system checking your units and doing your dimensional analysis at every step.
+Store, pass around, convert between, compare, and do arithmetic on lengths, durations, speeds, temperatures, pixels, money, and dozens of other kinds of quantity—with the type system checking your units and your dimensional analysis at every step.
 
 ## Highlights
 
@@ -25,7 +25,7 @@ Quantity.sum(marathon, Length.kilometers(1)); // fine: both are lengths
 marathon.pipe(Quantity.sum(record)); // ✗ compile error: meters + seconds
 ```
 
-### The type system does your dimensional analysis
+### The type system checks your dimensional analysis
 
 `times`, `squared`, `per`, `at`, and friends compose units into products and rates, and the result types follow along. Divide a length by a duration and you have a speed; apply that speed to a duration and you're back to a length:
 
