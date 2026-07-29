@@ -12,7 +12,8 @@ export const Candelas: Candelas = Unit.rate(
 export type LuminousIntensity = Quantity.Quantity<Candelas>;
 
 export const LuminousIntensity = Quantity.Quantity(Candelas);
-export const LuminousIntensityFromSelf = Quantity.QuantityFromSelf(Candelas);
+export const LuminousIntensityFromStruct =
+  Quantity.QuantityFromStruct(Candelas);
 
 const make = (value: number): LuminousIntensity =>
   Quantity.make(Candelas, value);

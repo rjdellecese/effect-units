@@ -7,7 +7,7 @@ import * as Rational from "./Rational.ts";
 export type LengthExact = QuantityExact.QuantityExact<Length.Meters>;
 
 export const LengthExact = QuantityExact.QuantityExact(Length.Meters);
-export const LengthExactFromSelf = QuantityExact.QuantityExactFromSelf(
+export const LengthExactFromStruct = QuantityExact.QuantityExactFromStruct(
   Length.Meters,
 );
 

@@ -8,7 +8,7 @@ export const Kilograms: Kilograms = "Kilograms";
 export type Mass = Quantity.Quantity<Kilograms>;
 
 export const Mass = Quantity.Quantity(Kilograms);
-export const MassFromSelf = Quantity.QuantityFromSelf(Kilograms);
+export const MassFromStruct = Quantity.QuantityFromStruct(Kilograms);
 
 const make = (value: number): Mass => Quantity.make(Kilograms, value);
 

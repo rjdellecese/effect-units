@@ -14,7 +14,7 @@ export const MetersPerSecond: MetersPerSecond = Unit.rate(
 export type Speed = Quantity.Quantity<MetersPerSecond>;
 
 export const Speed = Quantity.Quantity(MetersPerSecond);
-export const SpeedFromSelf = Quantity.QuantityFromSelf(MetersPerSecond);
+export const SpeedFromStruct = Quantity.QuantityFromStruct(MetersPerSecond);
 
 const make = (value: number): Speed => Quantity.make(MetersPerSecond, value);
 

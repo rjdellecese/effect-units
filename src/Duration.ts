@@ -12,7 +12,7 @@ export const Seconds: Seconds = "Seconds";
 export type Duration = Quantity.Quantity<Seconds>;
 
 export const Duration = Quantity.Quantity(Seconds);
-export const DurationFromSelf = Quantity.QuantityFromSelf(Seconds);
+export const DurationFromStruct = Quantity.QuantityFromStruct(Seconds);
 
 const make = (value: number): Duration => Quantity.make(Seconds, value);
 
@@ -99,13 +99,13 @@ export const addTo = (
   dateTime: DateTime.DateTime,
   duration: Duration,
 ): Option.Option<DateTime.DateTime> => {
-  const millis = Math.round(inMilliseconds(duration));
+  const wholeMilliseconds = Math.round(inMilliseconds(duration));
 
-  if (!Number.isFinite(millis)) {
+  if (!Number.isFinite(wholeMilliseconds)) {
     return Option.none();
   }
 
-  const result = DateTime.add(dateTime, { milliseconds: millis });
+  const result = DateTime.add(dateTime, { milliseconds: wholeMilliseconds });
 
   return Number.isNaN(DateTime.toEpochMillis(result))
     ? Option.none()

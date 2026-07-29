@@ -16,7 +16,8 @@ export const MolesPerCubicMeter: MolesPerCubicMeter = Unit.rate(
 export type Molarity = Quantity.Quantity<MolesPerCubicMeter>;
 
 export const Molarity = Quantity.Quantity(MolesPerCubicMeter);
-export const MolarityFromSelf = Quantity.QuantityFromSelf(MolesPerCubicMeter);
+export const MolarityFromStruct =
+  Quantity.QuantityFromStruct(MolesPerCubicMeter);
 
 const make = (value: number): Molarity =>
   Quantity.make(MolesPerCubicMeter, value);

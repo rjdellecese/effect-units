@@ -10,7 +10,7 @@ export const CubicMeters: CubicMeters = Unit.cubed(Length.Meters);
 export type Volume = Quantity.Quantity<CubicMeters>;
 
 export const Volume = Quantity.Quantity(CubicMeters);
-export const VolumeFromSelf = Quantity.QuantityFromSelf(CubicMeters);
+export const VolumeFromStruct = Quantity.QuantityFromStruct(CubicMeters);
 
 const make = (value: number): Volume => Quantity.make(CubicMeters, value);
 

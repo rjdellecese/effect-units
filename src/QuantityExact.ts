@@ -16,7 +16,12 @@ import * as Unit from "./Unit.ts";
 export const TypeId = Symbol.for("effect-units/QuantityExact");
 export type TypeId = typeof TypeId;
 
-export const QuantityExactFromSelf = <const U extends Unit.Unit>(unit: U) =>
+/**
+ * The identity schema: a `QuantityExact` on both sides, decoded from
+ * itself. {@link QuantityExactFromStruct} is the codec that reads and
+ * writes the `{ unit, value }` wire format.
+ */
+export const QuantityExact = <const U extends Unit.Unit>(unit: U) =>
   Schema.declare(hasUnit(unit));
 
 /**
@@ -24,13 +29,13 @@ export const QuantityExactFromSelf = <const U extends Unit.Unit>(unit: U) =>
  * rational encoding (`"3/2"`, `"-3/2"`, `"3"`)—exact on the wire, with no
  * width or precision ceiling.
  */
-export const QuantityExact = <const U extends Unit.Unit>(unit: U) =>
+export const QuantityExactFromStruct = <const U extends Unit.Unit>(unit: U) =>
   Schema.Struct({
     unit: Schema.Literal(Unit.encode(unit)),
-    value: Rational.Rational,
+    value: Rational.RationalFromString,
   }).pipe(
     Schema.decodeTo(
-      QuantityExactFromSelf(unit),
+      QuantityExact(unit),
       SchemaTransformation.transform({
         decode: ({ value }) => make(unit, value),
         encode: ({ value }) => ({ unit: Unit.encode(unit), value }),
@@ -117,7 +122,7 @@ export const equalsWithin: {
     b: QuantityExact<Unit.Unit>,
     tolerance: QuantityExact<Unit.Unit>,
   ): boolean =>
-    Rational.lessThanOrEqualTo(
+    Rational.isLessThanOrEqualTo(
       Rational.abs(Rational.subtract(a.value, b.value)),
       Rational.abs(tolerance.value),
     ),
@@ -491,40 +496,40 @@ export const over_Unsafe: {
 // Rationals are totally ordered, so the ordering predicates are total —
 // there is no NaN and no partial branch.
 
-export const lessThan: {
+export const isLessThan: {
   <U extends Unit.Unit>(b: QuantityExact<U>): (a: QuantityExact<U>) => boolean;
   <U extends Unit.Unit>(a: QuantityExact<U>, b: QuantityExact<U>): boolean;
 } = Function.dual(
   2,
   (a: QuantityExact<Unit.Unit>, b: QuantityExact<Unit.Unit>): boolean =>
-    Rational.lessThan(a.value, b.value),
+    Rational.isLessThan(a.value, b.value),
 );
 
-export const lessThanOrEqualTo: {
+export const isLessThanOrEqualTo: {
   <U extends Unit.Unit>(b: QuantityExact<U>): (a: QuantityExact<U>) => boolean;
   <U extends Unit.Unit>(a: QuantityExact<U>, b: QuantityExact<U>): boolean;
 } = Function.dual(
   2,
   (a: QuantityExact<Unit.Unit>, b: QuantityExact<Unit.Unit>): boolean =>
-    Rational.lessThanOrEqualTo(a.value, b.value),
+    Rational.isLessThanOrEqualTo(a.value, b.value),
 );
 
-export const greaterThan: {
+export const isGreaterThan: {
   <U extends Unit.Unit>(b: QuantityExact<U>): (a: QuantityExact<U>) => boolean;
   <U extends Unit.Unit>(a: QuantityExact<U>, b: QuantityExact<U>): boolean;
 } = Function.dual(
   2,
   (a: QuantityExact<Unit.Unit>, b: QuantityExact<Unit.Unit>): boolean =>
-    Rational.greaterThan(a.value, b.value),
+    Rational.isGreaterThan(a.value, b.value),
 );
 
-export const greaterThanOrEqualTo: {
+export const isGreaterThanOrEqualTo: {
   <U extends Unit.Unit>(b: QuantityExact<U>): (a: QuantityExact<U>) => boolean;
   <U extends Unit.Unit>(a: QuantityExact<U>, b: QuantityExact<U>): boolean;
 } = Function.dual(
   2,
   (a: QuantityExact<Unit.Unit>, b: QuantityExact<Unit.Unit>): boolean =>
-    Rational.greaterThanOrEqualTo(a.value, b.value),
+    Rational.isGreaterThanOrEqualTo(a.value, b.value),
 );
 
 export const min: {
@@ -540,7 +545,8 @@ export const min: {
   (
     a: QuantityExact<Unit.Unit>,
     b: QuantityExact<Unit.Unit>,
-  ): QuantityExact<Unit.Unit> => (Rational.lessThan(b.value, a.value) ? b : a),
+  ): QuantityExact<Unit.Unit> =>
+    Rational.isLessThan(b.value, a.value) ? b : a,
 );
 
 export const max: {
@@ -557,7 +563,7 @@ export const max: {
     a: QuantityExact<Unit.Unit>,
     b: QuantityExact<Unit.Unit>,
   ): QuantityExact<Unit.Unit> =>
-    Rational.greaterThan(b.value, a.value) ? b : a,
+    Rational.isGreaterThan(b.value, a.value) ? b : a,
 );
 
 // Interop

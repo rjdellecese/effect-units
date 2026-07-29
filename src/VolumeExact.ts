@@ -7,7 +7,7 @@ import * as Volume from "./Volume.ts";
 export type VolumeExact = QuantityExact.QuantityExact<Volume.CubicMeters>;
 
 export const VolumeExact = QuantityExact.QuantityExact(Volume.CubicMeters);
-export const VolumeExactFromSelf = QuantityExact.QuantityExactFromSelf(
+export const VolumeExactFromStruct = QuantityExact.QuantityExactFromStruct(
   Volume.CubicMeters,
 );
 

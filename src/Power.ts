@@ -11,7 +11,7 @@ export const Watts: Watts = Unit.rate(Energy.Joules, Duration.Seconds);
 export type Power = Quantity.Quantity<Watts>;
 
 export const Power = Quantity.Quantity(Watts);
-export const PowerFromSelf = Quantity.QuantityFromSelf(Watts);
+export const PowerFromStruct = Quantity.QuantityFromStruct(Watts);
 
 const make = (value: number): Power => Quantity.make(Watts, value);
 

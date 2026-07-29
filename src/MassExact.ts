@@ -7,7 +7,7 @@ import * as Rational from "./Rational.ts";
 export type MassExact = QuantityExact.QuantityExact<Mass.Kilograms>;
 
 export const MassExact = QuantityExact.QuantityExact(Mass.Kilograms);
-export const MassExactFromSelf = QuantityExact.QuantityExactFromSelf(
+export const MassExactFromStruct = QuantityExact.QuantityExactFromStruct(
   Mass.Kilograms,
 );
 

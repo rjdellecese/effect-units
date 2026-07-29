@@ -5,7 +5,7 @@ import * as Voltage from "./Voltage.ts";
 export type VoltageExact = QuantityExact.QuantityExact<Voltage.Volts>;
 
 export const VoltageExact = QuantityExact.QuantityExact(Voltage.Volts);
-export const VoltageExactFromSelf = QuantityExact.QuantityExactFromSelf(
+export const VoltageExactFromStruct = QuantityExact.QuantityExactFromStruct(
   Voltage.Volts,
 );
 

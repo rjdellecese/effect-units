@@ -8,7 +8,7 @@ export const Meters: Meters = "Meters";
 export type Length = Quantity.Quantity<Meters>;
 
 export const Length = Quantity.Quantity(Meters);
-export const LengthFromSelf = Quantity.QuantityFromSelf(Meters);
+export const LengthFromStruct = Quantity.QuantityFromStruct(Meters);
 
 const make = (value: number): Length => Quantity.make(Meters, value);
 

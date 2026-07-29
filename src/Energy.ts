@@ -11,7 +11,7 @@ export const Joules: Joules = Unit.product(Force.Newtons, Length.Meters);
 export type Energy = Quantity.Quantity<Joules>;
 
 export const Energy = Quantity.Quantity(Joules);
-export const EnergyFromSelf = Quantity.QuantityFromSelf(Joules);
+export const EnergyFromStruct = Quantity.QuantityFromStruct(Joules);
 
 const make = (value: number): Energy => Quantity.make(Joules, value);
 

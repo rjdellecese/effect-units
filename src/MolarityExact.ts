@@ -9,7 +9,7 @@ export type MolarityExact =
 export const MolarityExact = QuantityExact.QuantityExact(
   Molarity.MolesPerCubicMeter,
 );
-export const MolarityExactFromSelf = QuantityExact.QuantityExactFromSelf(
+export const MolarityExactFromStruct = QuantityExact.QuantityExactFromStruct(
   Molarity.MolesPerCubicMeter,
 );
 

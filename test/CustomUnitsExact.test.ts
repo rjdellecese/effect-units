@@ -27,7 +27,7 @@ type Usd = Unit.Custom<"USD">;
 const Usd: Usd = Unit.custom("USD");
 
 type Money = QuantityExact.QuantityExact<Usd>;
-const Money = QuantityExact.QuantityExact(Usd);
+const Money = QuantityExact.QuantityExactFromStruct(Usd);
 
 const make = (value: Rational.Rational): Money =>
   QuantityExact.make(Usd, value);

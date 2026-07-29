@@ -7,7 +7,7 @@ import * as Rational from "./Rational.ts";
 export type ForceExact = QuantityExact.QuantityExact<Force.Newtons>;
 
 export const ForceExact = QuantityExact.QuantityExact(Force.Newtons);
-export const ForceExactFromSelf = QuantityExact.QuantityExactFromSelf(
+export const ForceExactFromStruct = QuantityExact.QuantityExactFromStruct(
   Force.Newtons,
 );
 

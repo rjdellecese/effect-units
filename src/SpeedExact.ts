@@ -6,7 +6,7 @@ import * as Speed from "./Speed.ts";
 export type SpeedExact = QuantityExact.QuantityExact<Speed.MetersPerSecond>;
 
 export const SpeedExact = QuantityExact.QuantityExact(Speed.MetersPerSecond);
-export const SpeedExactFromSelf = QuantityExact.QuantityExactFromSelf(
+export const SpeedExactFromStruct = QuantityExact.QuantityExactFromStruct(
   Speed.MetersPerSecond,
 );
 

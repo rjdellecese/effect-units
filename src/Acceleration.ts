@@ -16,7 +16,7 @@ export const MetersPerSecondSquared: MetersPerSecondSquared = Unit.rate(
 export type Acceleration = Quantity.Quantity<MetersPerSecondSquared>;
 
 export const Acceleration = Quantity.Quantity(MetersPerSecondSquared);
-export const AccelerationFromSelf = Quantity.QuantityFromSelf(
+export const AccelerationFromStruct = Quantity.QuantityFromStruct(
   MetersPerSecondSquared,
 );
 

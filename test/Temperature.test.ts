@@ -85,8 +85,8 @@ describe("Temperature", () => {
     const warm = Temperature.degreesCelsius(20);
     const hot = Temperature.degreesCelsius(100);
 
-    assertTrue(Temperature.lessThan(cold, warm));
-    assertTrue(Temperature.greaterThan(hot, warm));
+    assertTrue(Temperature.isLessThan(cold, warm));
+    assertTrue(Temperature.isGreaterThan(hot, warm));
     assertTrue(Temperature.equals(Temperature.min(cold, warm), cold));
     assertTrue(Temperature.equals(Temperature.max(cold, warm), warm));
     assertTrue(
@@ -101,8 +101,8 @@ describe("Temperature", () => {
     FastCheck.assert(
       FastCheck.property(double, (n) => {
         const temperature = Temperature.kelvins(n);
-        const decoded = Schema.decodeSync(Temperature.Temperature)(
-          Schema.encodeSync(Temperature.Temperature)(temperature),
+        const decoded = Schema.decodeSync(Temperature.TemperatureFromStruct)(
+          Schema.encodeSync(Temperature.TemperatureFromStruct)(temperature),
         );
 
         assertTrue(Equal.equals(decoded, temperature));
@@ -112,7 +112,9 @@ describe("Temperature", () => {
 
   it("carries a unit discriminator in the wire format", () => {
     deepStrictEqual(
-      Schema.encodeSync(Temperature.Temperature)(Temperature.kelvins(293.15)),
+      Schema.encodeSync(Temperature.TemperatureFromStruct)(
+        Temperature.kelvins(293.15),
+      ),
       { unit: "Kelvins", value: 293.15 },
     );
   });

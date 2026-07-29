@@ -7,7 +7,7 @@ export const Moles: Moles = "Moles";
 export type SubstanceAmount = Quantity.Quantity<Moles>;
 
 export const SubstanceAmount = Quantity.Quantity(Moles);
-export const SubstanceAmountFromSelf = Quantity.QuantityFromSelf(Moles);
+export const SubstanceAmountFromStruct = Quantity.QuantityFromStruct(Moles);
 
 const make = (value: number): SubstanceAmount => Quantity.make(Moles, value);
 

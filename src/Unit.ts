@@ -254,13 +254,17 @@ export const decode = (input: string): Option.Option<Unit> =>
     ),
   );
 
-export const UnitFromSelf = Schema.declare(isUnit, {
-  identifier: "UnitFromSelf",
+/**
+ * The identity schema: a `Unit` on both sides, decoded from itself.
+ * {@link UnitFromString} is the codec for the canonical string encoding.
+ */
+export const Unit = Schema.declare(isUnit, {
+  identifier: "Unit",
   description: "a unit tree",
 });
 
-export const Unit = Schema.String.pipe(
-  Schema.decodeTo(UnitFromSelf, {
+export const UnitFromString = Schema.String.pipe(
+  Schema.decodeTo(Unit, {
     decode: SchemaGetter.transformOrFail((input: string) =>
       Option.match(decode(input), {
         onNone: () =>
@@ -274,4 +278,4 @@ export const Unit = Schema.String.pipe(
     ),
     encode: SchemaGetter.transform(encode),
   }),
-).annotate({ identifier: "Unit" });
+).annotate({ identifier: "UnitFromString" });

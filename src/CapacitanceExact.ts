@@ -6,7 +6,7 @@ import * as Rational from "./Rational.ts";
 export type CapacitanceExact = QuantityExact.QuantityExact<Capacitance.Farads>;
 
 export const CapacitanceExact = QuantityExact.QuantityExact(Capacitance.Farads);
-export const CapacitanceExactFromSelf = QuantityExact.QuantityExactFromSelf(
+export const CapacitanceExactFromStruct = QuantityExact.QuantityExactFromStruct(
   Capacitance.Farads,
 );
 

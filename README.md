@@ -67,12 +67,12 @@ See [Custom units](#custom-units) for the full pattern, including a lossless bou
 
 ### Effect-native, wire-ready
 
-Quantities are Effect value objects: `Equal` and `Hash` (safe `HashMap` keys), `Pipeable`, with dual data-first/data-last functions throughout. Every quantity module exports a `Schema` with a stable, self-describing wire format—one that rejects NaN and ±Infinity at the boundary instead of letting JSON silently turn them into `null`:
+Quantities are Effect value objects: `Equal` and `Hash` (safe `HashMap` keys), `Pipeable`, with dual data-first/data-last functions throughout. Every quantity module exports two schemas, following the Effect v4 naming convention: `Speed` is the identity schema (a `Speed` on both sides), and `SpeedFromStruct` is the codec for a stable, self-describing wire format—one that rejects NaN and ±Infinity at the boundary instead of letting JSON silently turn them into `null`:
 
 ```ts
 import * as Schema from "effect/Schema";
 
-Schema.encodeSync(Speed.Speed)(speed);
+Schema.encodeSync(Speed.SpeedFromStruct)(speed);
 // { unit: "(Meters/Seconds)", value: 1.34112 }
 ```
 
@@ -98,14 +98,10 @@ Nearly every unit module has an exact twin (`LengthExact`, `SpeedExact`, `Durati
 ## Install
 
 ```bash
-pnpm add effect-units effect
+pnpm add effect-units effect@beta
 ```
 
-`effect` is a peer dependency. This release targets Effect v4, which is still in beta:
-
-```bash
-pnpm add effect@beta
-```
+`effect` is a peer dependency. This release targets Effect v4, which is still in beta—hence the `@beta` tag.
 
 ## Modules
 
@@ -172,7 +168,8 @@ type Usd = Unit.Custom<"USD">;
 const Usd: Usd = Unit.custom("USD");
 
 type Money = Quantity.Quantity<Usd>;
-const Money = Quantity.Quantity(Usd); // Schema, wire format { unit: "[USD]", value: n }
+const Money = Quantity.Quantity(Usd); // identity schema
+const MoneyFromStruct = Quantity.QuantityFromStruct(Usd); // wire format { unit: "[USD]", value: n }
 
 // Store minor units (cents), so money libraries like dinero.js—which
 // represent amounts as integer minor units—convert losslessly at the
@@ -238,6 +235,6 @@ Equality is two-tier:
 - `Equal.equals`/`Quantity.equals` is **exact**—identical value (NaN equals itself; -0 is normalized to 0) and structurally equal units. This is identity, suitable for `HashMap` keys, not for comparing computed measurements.
 - `Quantity.equalsWithin(a, b, tolerance)` is the domain-level comparison—the tolerance is itself a quantity in the same units, e.g. `Quantity.equalsWithin(a, b, Length.millimeters(1))`. Identical values—including two equal infinities—are equal within any tolerance; NaN is never equal to anything.
 
-The ordering predicates (`lessThan`, `greaterThan`, …) follow IEEE NaN semantics: any comparison involving NaN is false. `min` and `max` propagate NaN deterministically, like `Math.min`/`Math.max`.
+The ordering predicates (`isLessThan`, `isGreaterThan`, …) follow IEEE NaN semantics: any comparison involving NaN is false. `min` and `max` propagate NaN deterministically, like `Math.min`/`Math.max`.
 
 While in-memory arithmetic produces NaN and ±Infinity freely, the wire format does not admit them: schemas reject non-finite values at encode (where JSON would silently turn them into `null`) and at decode.

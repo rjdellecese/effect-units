@@ -17,7 +17,12 @@ import * as Unit from "./Unit.ts";
 export const TypeId = Symbol.for("effect-units/Quantity");
 export type TypeId = typeof TypeId;
 
-export const QuantityFromSelf = <const U extends Unit.Unit>(unit: U) =>
+/**
+ * The identity schema: a `Quantity` on both sides, decoded from itself.
+ * {@link QuantityFromStruct} is the codec that reads and writes the
+ * `{ unit, value }` wire format.
+ */
+export const Quantity = <const U extends Unit.Unit>(unit: U) =>
   Schema.declare(hasUnit(unit));
 
 /**
@@ -26,13 +31,13 @@ export const QuantityFromSelf = <const U extends Unit.Unit>(unit: U) =>
  * encode rather than corrupting silently through JSON (where they would
  * become `null`).
  */
-export const Quantity = <const U extends Unit.Unit>(unit: U) =>
+export const QuantityFromStruct = <const U extends Unit.Unit>(unit: U) =>
   Schema.Struct({
     unit: Schema.Literal(Unit.encode(unit)),
     value: Schema.Finite,
   }).pipe(
     Schema.decodeTo(
-      QuantityFromSelf(unit),
+      Quantity(unit),
       SchemaTransformation.transform({
         decode: ({ value }) => make(unit, value),
         encode: ({ value }) => ({ unit: Unit.encode(unit), value }),
@@ -345,7 +350,7 @@ export const over_: {
 // involving NaN is false. min and max propagate NaN deterministically, like
 // Math.min/Math.max.
 
-export const lessThan: {
+export const isLessThan: {
   <U extends Unit.Unit>(b: Quantity<U>): (a: Quantity<U>) => boolean;
   <U extends Unit.Unit>(a: Quantity<U>, b: Quantity<U>): boolean;
 } = Function.dual(
@@ -354,7 +359,7 @@ export const lessThan: {
     a.value < b.value,
 );
 
-export const lessThanOrEqualTo: {
+export const isLessThanOrEqualTo: {
   <U extends Unit.Unit>(b: Quantity<U>): (a: Quantity<U>) => boolean;
   <U extends Unit.Unit>(a: Quantity<U>, b: Quantity<U>): boolean;
 } = Function.dual(
@@ -363,7 +368,7 @@ export const lessThanOrEqualTo: {
     a.value <= b.value,
 );
 
-export const greaterThan: {
+export const isGreaterThan: {
   <U extends Unit.Unit>(b: Quantity<U>): (a: Quantity<U>) => boolean;
   <U extends Unit.Unit>(a: Quantity<U>, b: Quantity<U>): boolean;
 } = Function.dual(
@@ -372,7 +377,7 @@ export const greaterThan: {
     a.value > b.value,
 );
 
-export const greaterThanOrEqualTo: {
+export const isGreaterThanOrEqualTo: {
   <U extends Unit.Unit>(b: Quantity<U>): (a: Quantity<U>) => boolean;
   <U extends Unit.Unit>(a: Quantity<U>, b: Quantity<U>): boolean;
 } = Function.dual(

@@ -8,8 +8,8 @@ import * as Rational from "./Rational.ts";
 export type PixelsExact = QuantityExact.QuantityExact<"Pixels">;
 
 export const PixelsExact = QuantityExact.QuantityExact("Pixels");
-export const PixelsExactFromSelf =
-  QuantityExact.QuantityExactFromSelf("Pixels");
+export const PixelsExactFromStruct =
+  QuantityExact.QuantityExactFromStruct("Pixels");
 
 export const zero = QuantityExact.make("Pixels", Rational.zero);
 

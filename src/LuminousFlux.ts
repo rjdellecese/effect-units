@@ -6,7 +6,7 @@ export const Lumens: Lumens = "Lumens";
 export type LuminousFlux = Quantity.Quantity<Lumens>;
 
 export const LuminousFlux = Quantity.Quantity(Lumens);
-export const LuminousFluxFromSelf = Quantity.QuantityFromSelf(Lumens);
+export const LuminousFluxFromStruct = Quantity.QuantityFromStruct(Lumens);
 
 const make = (value: number): LuminousFlux => Quantity.make(Lumens, value);
 

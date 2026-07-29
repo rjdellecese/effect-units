@@ -87,22 +87,28 @@ describe("Unit", () => {
   });
 
   it("roundtrips through the schema", () => {
-    const encoded = Schema.encodeSync(Unit.Unit)(newtons);
+    const encoded = Schema.encodeSync(Unit.UnitFromString)(newtons);
 
     assertEquals(encoded, "(Kilograms*((Meters/Seconds)/Seconds))");
-    assertTrue(Equal.equals(Schema.decodeSync(Unit.Unit)(encoded), newtons));
+    assertTrue(
+      Equal.equals(Schema.decodeSync(Unit.UnitFromString)(encoded), newtons),
+    );
   });
 
   it("the schema rejects non-canonical strings", () => {
     assertTrue(
-      Result.isFailure(Schema.decodeResult(Unit.Unit)("(Meters/Seconds")),
+      Result.isFailure(
+        Schema.decodeResult(Unit.UnitFromString)("(Meters/Seconds"),
+      ),
     );
   });
 
   it("the schema rejects deeply nested input without overflowing the stack", () => {
     assertTrue(
       Result.isFailure(
-        Schema.decodeResult(Unit.Unit)("(".repeat(100_000) + "Meters"),
+        Schema.decodeResult(Unit.UnitFromString)(
+          "(".repeat(100_000) + "Meters",
+        ),
       ),
     );
   });
@@ -140,20 +146,21 @@ describe("Unit", () => {
 
     it("roundtrip through the schema", () => {
       const usdPerMeter = Unit.rate(Unit.custom("USD"), "Meters");
-      const encoded = Schema.encodeSync(Unit.Unit)(usdPerMeter);
+      const encoded = Schema.encodeSync(Unit.UnitFromString)(usdPerMeter);
 
       assertEquals(encoded, "([USD]/Meters)");
       assertTrue(
-        Equal.equals(Schema.decodeSync(Unit.Unit)(encoded), usdPerMeter),
+        Equal.equals(
+          Schema.decodeSync(Unit.UnitFromString)(encoded),
+          usdPerMeter,
+        ),
       );
     });
 
-    it("UnitFromSelf validates the id", () => {
-      assertTrue(Schema.is(Unit.UnitFromSelf)({ _tag: "Custom", id: "USD" }));
-      assertFalse(
-        Schema.is(Unit.UnitFromSelf)({ _tag: "Custom", id: "not valid!" }),
-      );
-      assertFalse(Schema.is(Unit.UnitFromSelf)({ _tag: "Custom", id: 1 }));
+    it("Unit validates the id", () => {
+      assertTrue(Schema.is(Unit.Unit)({ _tag: "Custom", id: "USD" }));
+      assertFalse(Schema.is(Unit.Unit)({ _tag: "Custom", id: "not valid!" }));
+      assertFalse(Schema.is(Unit.Unit)({ _tag: "Custom", id: 1 }));
     });
 
     it("custom throws on invalid ids", () => {

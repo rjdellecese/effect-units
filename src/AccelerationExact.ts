@@ -9,9 +9,8 @@ export type AccelerationExact =
 export const AccelerationExact = QuantityExact.QuantityExact(
   Acceleration.MetersPerSecondSquared,
 );
-export const AccelerationExactFromSelf = QuantityExact.QuantityExactFromSelf(
-  Acceleration.MetersPerSecondSquared,
-);
+export const AccelerationExactFromStruct =
+  QuantityExact.QuantityExactFromStruct(Acceleration.MetersPerSecondSquared);
 
 const make = (value: Rational.Rational): AccelerationExact =>
   QuantityExact.make(Acceleration.MetersPerSecondSquared, value);

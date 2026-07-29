@@ -13,7 +13,8 @@ export const RadiansPerSecond: RadiansPerSecond = Unit.rate(
 export type AngularSpeed = Quantity.Quantity<RadiansPerSecond>;
 
 export const AngularSpeed = Quantity.Quantity(RadiansPerSecond);
-export const AngularSpeedFromSelf = Quantity.QuantityFromSelf(RadiansPerSecond);
+export const AngularSpeedFromStruct =
+  Quantity.QuantityFromStruct(RadiansPerSecond);
 
 const make = (value: number): AngularSpeed =>
   Quantity.make(RadiansPerSecond, value);

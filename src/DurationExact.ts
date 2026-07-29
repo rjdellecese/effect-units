@@ -12,7 +12,7 @@ import * as Rational from "./Rational.ts";
 export type DurationExact = QuantityExact.QuantityExact<Duration.Seconds>;
 
 export const DurationExact = QuantityExact.QuantityExact(Duration.Seconds);
-export const DurationExactFromSelf = QuantityExact.QuantityExactFromSelf(
+export const DurationExactFromStruct = QuantityExact.QuantityExactFromStruct(
   Duration.Seconds,
 );
 

@@ -7,7 +7,7 @@ import * as Rational from "./Rational.ts";
 export type PowerExact = QuantityExact.QuantityExact<Power.Watts>;
 
 export const PowerExact = QuantityExact.QuantityExact(Power.Watts);
-export const PowerExactFromSelf = QuantityExact.QuantityExactFromSelf(
+export const PowerExactFromStruct = QuantityExact.QuantityExactFromStruct(
   Power.Watts,
 );
 

@@ -7,7 +7,7 @@ import * as Rational from "./Rational.ts";
 export type AreaExact = QuantityExact.QuantityExact<Area.SquareMeters>;
 
 export const AreaExact = QuantityExact.QuantityExact(Area.SquareMeters);
-export const AreaExactFromSelf = QuantityExact.QuantityExactFromSelf(
+export const AreaExactFromStruct = QuantityExact.QuantityExactFromStruct(
   Area.SquareMeters,
 );
 

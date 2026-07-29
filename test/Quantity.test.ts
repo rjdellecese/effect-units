@@ -206,7 +206,7 @@ describe("schema", () => {
 
   it("encodes and decodes a rate quantity, freezing the wire format", () => {
     const MetersPerSecond = Unit.rate(Length.Meters, "Seconds");
-    const Speed = Quantity.Quantity(MetersPerSecond);
+    const Speed = Quantity.QuantityFromStruct(MetersPerSecond);
 
     const quantity = Quantity.make(MetersPerSecond, 1);
     const encoded = Schema.encodeSync(Speed)(quantity);
@@ -219,7 +219,7 @@ describe("schema", () => {
     // In-memory arithmetic produces Infinity/NaN by design, but JSON would
     // silently turn them into null—so encoding must fail loudly instead.
     const MetersPerSecond = Unit.rate(Length.Meters, "Seconds");
-    const Speed = Quantity.Quantity(MetersPerSecond);
+    const Speed = Quantity.QuantityFromStruct(MetersPerSecond);
     const infinite = Quantity.per(
       Length.meters(1),
       Quantity.make("Seconds", 0),
@@ -311,10 +311,10 @@ describe("comparison", () => {
     const short = Length.meters(1);
     const long = Length.meters(2);
 
-    assertTrue(Quantity.lessThan(short, long));
-    assertTrue(Quantity.lessThanOrEqualTo(short, short));
-    assertTrue(Quantity.greaterThan(long, short));
-    assertTrue(Quantity.greaterThanOrEqualTo(long, long));
+    assertTrue(Quantity.isLessThan(short, long));
+    assertTrue(Quantity.isLessThanOrEqualTo(short, short));
+    assertTrue(Quantity.isGreaterThan(long, short));
+    assertTrue(Quantity.isGreaterThanOrEqualTo(long, long));
     assertTrue(Equal.equals(Quantity.min(short, long), short));
     assertTrue(Equal.equals(Quantity.max(short, long), long));
   });
@@ -322,9 +322,9 @@ describe("comparison", () => {
   it("comparisons involving NaN are false", () => {
     const nan = Quantity.make("Meters", NaN);
 
-    assertFalse(Quantity.lessThan(nan, Length.meters(1)));
-    assertFalse(Quantity.greaterThan(nan, Length.meters(1)));
-    assertFalse(Quantity.lessThanOrEqualTo(nan, nan));
+    assertFalse(Quantity.isLessThan(nan, Length.meters(1)));
+    assertFalse(Quantity.isGreaterThan(nan, Length.meters(1)));
+    assertFalse(Quantity.isLessThanOrEqualTo(nan, nan));
   });
 
   it("min and max propagate NaN regardless of argument order", () => {

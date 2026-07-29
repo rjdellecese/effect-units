@@ -6,7 +6,7 @@ import * as Torque from "./Torque.ts";
 export type TorqueExact = QuantityExact.QuantityExact<Torque.NewtonMeters>;
 
 export const TorqueExact = QuantityExact.QuantityExact(Torque.NewtonMeters);
-export const TorqueExactFromSelf = QuantityExact.QuantityExactFromSelf(
+export const TorqueExactFromStruct = QuantityExact.QuantityExactFromStruct(
   Torque.NewtonMeters,
 );
 

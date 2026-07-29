@@ -213,10 +213,10 @@ describe("equality and comparison", () => {
     const short = meters(Rational.makeUnsafe(1n, 3n));
     const long = meters(Rational.makeUnsafe(1n, 2n));
 
-    assertTrue(QuantityExact.lessThan(short, long));
-    assertTrue(QuantityExact.lessThanOrEqualTo(short, short));
-    assertTrue(QuantityExact.greaterThan(long, short));
-    assertTrue(QuantityExact.greaterThanOrEqualTo(long, long));
+    assertTrue(QuantityExact.isLessThan(short, long));
+    assertTrue(QuantityExact.isLessThanOrEqualTo(short, short));
+    assertTrue(QuantityExact.isGreaterThan(long, short));
+    assertTrue(QuantityExact.isGreaterThanOrEqualTo(long, long));
     assertTrue(Equal.equals(QuantityExact.min(short, long), short));
     assertTrue(Equal.equals(QuantityExact.max(short, long), long));
   });
@@ -225,7 +225,7 @@ describe("equality and comparison", () => {
     FastCheck.assert(
       FastCheck.property(double, double, (x, y) => {
         assertEquals(
-          QuantityExact.lessThan(
+          QuantityExact.isLessThan(
             meters(Rational.fromNumberUnsafe(x)),
             meters(Rational.fromNumberUnsafe(y)),
           ),
@@ -286,7 +286,7 @@ describe("interop with the float module", () => {
 });
 
 describe("schema", () => {
-  const Meters = QuantityExact.QuantityExact("Meters");
+  const Meters = QuantityExact.QuantityExactFromStruct("Meters");
 
   it("roundtrips, freezing the wire format", () => {
     const q = meters(Rational.makeUnsafe(3n, 2n));
@@ -318,14 +318,14 @@ describe("schema", () => {
     );
   });
 
-  it("QuantityExactFromSelf rejects float quantities", () => {
+  it("QuantityExactFromStruct rejects float quantities", () => {
     assertFalse(
-      Schema.is(QuantityExact.QuantityExactFromSelf("Meters"))(
+      Schema.is(QuantityExact.QuantityExactFromStruct("Meters"))(
         Quantity.make("Meters", 1),
       ),
     );
     assertTrue(
-      Schema.is(QuantityExact.QuantityExactFromSelf("Meters"))(
+      Schema.is(QuantityExact.QuantityExactFromStruct("Meters"))(
         meters(Rational.one),
       ),
     );

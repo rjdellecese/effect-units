@@ -10,7 +10,7 @@ export type DensityExact =
 export const DensityExact = QuantityExact.QuantityExact(
   Density.KilogramsPerCubicMeter,
 );
-export const DensityExactFromSelf = QuantityExact.QuantityExactFromSelf(
+export const DensityExactFromStruct = QuantityExact.QuantityExactFromStruct(
   Density.KilogramsPerCubicMeter,
 );
 

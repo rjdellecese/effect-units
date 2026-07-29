@@ -84,8 +84,8 @@ describe("TemperatureExact", () => {
     const warm = TemperatureExact.degreesCelsius(Rational.makeUnsafe(20n));
     const hot = TemperatureExact.degreesCelsius(Rational.makeUnsafe(100n));
 
-    assertTrue(TemperatureExact.lessThan(cold, warm));
-    assertTrue(TemperatureExact.greaterThan(hot, warm));
+    assertTrue(TemperatureExact.isLessThan(cold, warm));
+    assertTrue(TemperatureExact.isGreaterThan(hot, warm));
     assertTrue(TemperatureExact.equals(TemperatureExact.min(cold, warm), cold));
     assertTrue(TemperatureExact.equals(TemperatureExact.max(cold, warm), warm));
     assertTrue(
@@ -100,8 +100,12 @@ describe("TemperatureExact", () => {
     FastCheck.assert(
       FastCheck.property(rational, (r) => {
         const temperature = TemperatureExact.kelvins(r);
-        const decoded = Schema.decodeSync(TemperatureExact.TemperatureExact)(
-          Schema.encodeSync(TemperatureExact.TemperatureExact)(temperature),
+        const decoded = Schema.decodeSync(
+          TemperatureExact.TemperatureExactFromStruct,
+        )(
+          Schema.encodeSync(TemperatureExact.TemperatureExactFromStruct)(
+            temperature,
+          ),
         );
 
         assertTrue(Equal.equals(decoded, temperature));
@@ -111,7 +115,7 @@ describe("TemperatureExact", () => {
 
   it("carries a unit discriminator in the wire format", () => {
     deepStrictEqual(
-      Schema.encodeSync(TemperatureExact.TemperatureExact)(
+      Schema.encodeSync(TemperatureExact.TemperatureExactFromStruct)(
         TemperatureExact.degreesCelsius(Rational.zero),
       ),
       { unit: "Kelvins", value: "5463/20" },

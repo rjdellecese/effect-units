@@ -228,10 +228,10 @@ describe("order", () => {
     const half = Rational.makeUnsafe(1n, 2n);
     const third = Rational.makeUnsafe(1n, 3n);
 
-    assertTrue(Rational.lessThan(third, half));
-    assertTrue(Rational.lessThanOrEqualTo(half, half));
-    assertTrue(Rational.greaterThan(half, third));
-    assertTrue(Rational.greaterThanOrEqualTo(third, third));
+    assertTrue(Rational.isLessThan(third, half));
+    assertTrue(Rational.isLessThanOrEqualTo(half, half));
+    assertTrue(Rational.isGreaterThan(half, third));
+    assertTrue(Rational.isGreaterThanOrEqualTo(third, third));
     assertTrue(Equal.equals(Rational.min(half, third), third));
     assertTrue(Equal.equals(Rational.max(half, third), half));
     assertTrue(
@@ -241,7 +241,7 @@ describe("order", () => {
       ),
     );
     assertTrue(
-      Rational.between(third, { minimum: Rational.zero, maximum: half }),
+      Rational.isBetween(third, { minimum: Rational.zero, maximum: half }),
     );
   });
 });
@@ -585,24 +585,31 @@ describe("schema", () => {
   it("roundtrips through the string schema", () => {
     FastCheck.assert(
       FastCheck.property(rational, (r) => {
-        const encoded = Schema.encodeSync(Rational.Rational)(r);
+        const encoded = Schema.encodeSync(Rational.RationalFromString)(r);
 
         assertEquals(encoded, Rational.format(r));
         assertTrue(
-          Equal.equals(Schema.decodeSync(Rational.Rational)(encoded), r),
+          Equal.equals(
+            Schema.decodeSync(Rational.RationalFromString)(encoded),
+            r,
+          ),
         );
       }),
     );
   });
 
   it("rejects malformed strings", () => {
-    assertTrue(Result.isFailure(Schema.decodeResult(Rational.Rational)("3/0")));
-    assertTrue(Result.isFailure(Schema.decodeResult(Rational.Rational)("1.5")));
+    assertTrue(
+      Result.isFailure(Schema.decodeResult(Rational.RationalFromString)("3/0")),
+    );
+    assertTrue(
+      Result.isFailure(Schema.decodeResult(Rational.RationalFromString)("1.5")),
+    );
   });
 
-  it("RationalFromSelf validates by guard", () => {
-    assertTrue(Schema.is(Rational.RationalFromSelf)(Rational.one));
-    assertFalse(Schema.is(Rational.RationalFromSelf)(1));
+  it("Rational validates by guard", () => {
+    assertTrue(Schema.is(Rational.Rational)(Rational.one));
+    assertFalse(Schema.is(Rational.Rational)(1));
   });
 });
 

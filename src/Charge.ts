@@ -8,7 +8,7 @@ export const Coulombs: Coulombs = "Coulombs";
 export type Charge = Quantity.Quantity<Coulombs>;
 
 export const Charge = Quantity.Quantity(Coulombs);
-export const ChargeFromSelf = Quantity.QuantityFromSelf(Coulombs);
+export const ChargeFromStruct = Quantity.QuantityFromStruct(Coulombs);
 
 const make = (value: number): Charge => Quantity.make(Coulombs, value);
 

@@ -16,7 +16,7 @@ import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
 import * as SchemaIssue from "effect/SchemaIssue";
-import * as String_ from "effect/String";
+import * as String from "effect/String";
 
 import { ValueObjectProto } from "./internal/valueObject.ts";
 
@@ -54,8 +54,8 @@ const Proto = {
   toJSON(this: Rational) {
     return {
       _id: "Rational",
-      numerator: String(this.numerator),
-      denominator: String(this.denominator),
+      numerator: globalThis.String(this.numerator),
+      denominator: globalThis.String(this.denominator),
     };
   },
 } as const;
@@ -144,13 +144,13 @@ export const Order: order.Order<Rational> = order.make((a, b) => {
   return left < right ? -1 : left > right ? 1 : 0;
 });
 
-export const lessThan = order.isLessThan(Order);
+export const isLessThan = order.isLessThan(Order);
 
-export const lessThanOrEqualTo = order.isLessThanOrEqualTo(Order);
+export const isLessThanOrEqualTo = order.isLessThanOrEqualTo(Order);
 
-export const greaterThan = order.isGreaterThan(Order);
+export const isGreaterThan = order.isGreaterThan(Order);
 
-export const greaterThanOrEqualTo = order.isGreaterThanOrEqualTo(Order);
+export const isGreaterThanOrEqualTo = order.isGreaterThanOrEqualTo(Order);
 
 export const min = order.min(Order);
 
@@ -158,7 +158,7 @@ export const max = order.max(Order);
 
 export const clamp = order.clamp(Order);
 
-export const between = order.isBetween(Order);
+export const isBetween = order.isBetween(Order);
 
 // Arithmetic
 
@@ -339,7 +339,7 @@ const maxSafeInteger = 9007199254740991n;
 
 // No Effect helper covers a bigint's binary width, so this stays on the
 // built-in radix conversion.
-const bitLength = (n: bigint): number => String_.length(n.toString(2));
+const bitLength = (n: bigint): number => String.length(n.toString(2));
 
 /**
  * The correctly rounded (nearest, ties to even) double of a positive
@@ -528,7 +528,7 @@ export const toBigDecimalExact = (
  */
 export const format = (r: Rational): string =>
   r.denominator === 1n
-    ? String(r.numerator)
+    ? globalThis.String(r.numerator)
     : `${r.numerator}/${r.denominator}`;
 
 const parsePattern = /^(-?\d+)(?:\/([1-9]\d*))?$/;
@@ -539,7 +539,7 @@ const parsePattern = /^(-?\d+)(?:\/([1-9]\d*))?$/;
  * Returns `Option.none()` for anything else, including zero denominators.
  */
 export const fromString = (s: string): Option.Option<Rational> =>
-  String_.match(parsePattern)(s).pipe(
+  String.match(parsePattern)(s).pipe(
     Option.flatMap((groups) =>
       Option.map(Option.fromUndefinedOr(groups[1]), (numerator) =>
         reduce(
@@ -557,8 +557,13 @@ export const fromStringUnsafe = (s: string): Rational =>
     () => new RangeError(`Rational.fromStringUnsafe: ${JSON.stringify(s)}`),
   );
 
-export const RationalFromSelf = Schema.declare(isRational, {
-  identifier: "RationalFromSelf",
+/**
+ * The identity schema: a `Rational` on both sides, decoded from itself.
+ * {@link RationalFromString} is the codec for the canonical string
+ * encoding.
+ */
+export const Rational = Schema.declare(isRational, {
+  identifier: "Rational",
   toFormatter: () => format,
   toArbitrary: () => (fc) =>
     fc
@@ -567,11 +572,11 @@ export const RationalFromSelf = Schema.declare(isRational, {
   toEquivalence: () => Equivalence,
 });
 
-export const Rational = Schema.String.annotate({
+export const RationalFromString = Schema.String.annotate({
   description: "a string to be decoded into a Rational",
 })
   .pipe(
-    Schema.decodeTo(RationalFromSelf, {
+    Schema.decodeTo(Rational, {
       decode: SchemaGetter.transformOrFail((s: string) =>
         Option.match(fromString(s), {
           onNone: () =>
@@ -586,4 +591,4 @@ export const Rational = Schema.String.annotate({
       encode: SchemaGetter.transform(format),
     }),
   )
-  .annotate({ identifier: "Rational" });
+  .annotate({ identifier: "RationalFromString" });

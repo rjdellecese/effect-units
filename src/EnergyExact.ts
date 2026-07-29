@@ -7,7 +7,7 @@ import * as Rational from "./Rational.ts";
 export type EnergyExact = QuantityExact.QuantityExact<Energy.Joules>;
 
 export const EnergyExact = QuantityExact.QuantityExact(Energy.Joules);
-export const EnergyExactFromSelf = QuantityExact.QuantityExactFromSelf(
+export const EnergyExactFromStruct = QuantityExact.QuantityExactFromStruct(
   Energy.Joules,
 );
 

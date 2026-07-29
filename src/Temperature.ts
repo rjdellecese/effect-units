@@ -2,7 +2,7 @@ import * as Equal from "effect/Equal";
 import * as Function from "effect/Function";
 import * as Hash from "effect/Hash";
 import type * as Inspectable from "effect/Inspectable";
-import * as Number_ from "effect/Number";
+import * as Number from "effect/Number";
 import * as order from "effect/Order";
 import type * as Pipeable from "effect/Pipeable";
 import * as Predicate from "effect/Predicate";
@@ -54,8 +54,13 @@ const make = (value: number): Temperature =>
 export const equals = (a: Temperature, b: Temperature): boolean =>
   valueEquals(a.value, b.value);
 
-export const TemperatureFromSelf = Schema.declare(isTemperature, {
-  identifier: "TemperatureFromSelf",
+/**
+ * The identity schema: a `Temperature` on both sides, decoded from itself.
+ * {@link TemperatureFromStruct} is the codec for the `{ unit, value }`
+ * wire format.
+ */
+export const Temperature = Schema.declare(isTemperature, {
+  identifier: "Temperature",
   description: "an absolute temperature",
 });
 
@@ -65,12 +70,12 @@ export const TemperatureFromSelf = Schema.declare(isTemperature, {
  * convention of `Quantity` schemas. As with quantities, only finite values
  * are admitted.
  */
-export const Temperature = Schema.Struct({
+export const TemperatureFromStruct = Schema.Struct({
   unit: Schema.Literal("Kelvins"),
   value: Schema.Finite,
 }).pipe(
   Schema.decodeTo(
-    TemperatureFromSelf,
+    Temperature,
     SchemaTransformation.transform({
       decode: ({ value }) => make(value),
       encode: ({ value }) => ({ unit: "Kelvins" as const, value }),
@@ -119,7 +124,7 @@ export const inDegreesFahrenheit = (t: Temperature) =>
 export type Delta = Quantity.Quantity<"CelsiusDegrees">;
 
 export const Delta = Quantity.Quantity("CelsiusDegrees");
-export const DeltaFromSelf = Quantity.QuantityFromSelf("CelsiusDegrees");
+export const DeltaFromStruct = Quantity.QuantityFromStruct("CelsiusDegrees");
 
 export const celsiusDegrees = (n: number): Delta =>
   Quantity.make("CelsiusDegrees", n);
@@ -153,17 +158,17 @@ export const minus: {
 // Comparison
 
 export const Order: order.Order<Temperature> = order.mapInput(
-  Number_.Order,
+  Number.Order,
   (t: Temperature) => t.value,
 );
 
-export const lessThan = order.isLessThan(Order);
+export const isLessThan = order.isLessThan(Order);
 
-export const lessThanOrEqualTo = order.isLessThanOrEqualTo(Order);
+export const isLessThanOrEqualTo = order.isLessThanOrEqualTo(Order);
 
-export const greaterThan = order.isGreaterThan(Order);
+export const isGreaterThan = order.isGreaterThan(Order);
 
-export const greaterThanOrEqualTo = order.isGreaterThanOrEqualTo(Order);
+export const isGreaterThanOrEqualTo = order.isGreaterThanOrEqualTo(Order);
 
 export const min: {
   (b: Temperature): (a: Temperature) => Temperature;

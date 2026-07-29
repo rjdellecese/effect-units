@@ -10,7 +10,7 @@ export const SquareMeters: SquareMeters = Unit.squared(Length.Meters);
 export type Area = Quantity.Quantity<SquareMeters>;
 
 export const Area = Quantity.Quantity(SquareMeters);
-export const AreaFromSelf = Quantity.QuantityFromSelf(SquareMeters);
+export const AreaFromStruct = Quantity.QuantityFromStruct(SquareMeters);
 
 const make = (value: number): Area => Quantity.make(SquareMeters, value);
 

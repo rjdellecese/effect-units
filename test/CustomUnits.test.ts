@@ -23,7 +23,7 @@ type Usd = Unit.Custom<"USD">;
 const Usd: Usd = Unit.custom("USD");
 
 type Money = Quantity.Quantity<Usd>;
-const Money = Quantity.Quantity(Usd);
+const Money = Quantity.QuantityFromStruct(Usd);
 
 const make = (value: number): Money => Quantity.make(Usd, value);
 

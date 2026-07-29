@@ -7,7 +7,7 @@ import * as Rational from "./Rational.ts";
 export type PressureExact = QuantityExact.QuantityExact<Pressure.Pascals>;
 
 export const PressureExact = QuantityExact.QuantityExact(Pressure.Pascals);
-export const PressureExactFromSelf = QuantityExact.QuantityExactFromSelf(
+export const PressureExactFromStruct = QuantityExact.QuantityExactFromStruct(
   Pressure.Pascals,
 );
 

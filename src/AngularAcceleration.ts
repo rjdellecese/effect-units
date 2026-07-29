@@ -15,7 +15,7 @@ export const RadiansPerSecondSquared: RadiansPerSecondSquared = Unit.rate(
 export type AngularAcceleration = Quantity.Quantity<RadiansPerSecondSquared>;
 
 export const AngularAcceleration = Quantity.Quantity(RadiansPerSecondSquared);
-export const AngularAccelerationFromSelf = Quantity.QuantityFromSelf(
+export const AngularAccelerationFromStruct = Quantity.QuantityFromStruct(
   RadiansPerSecondSquared,
 );
 

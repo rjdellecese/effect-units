@@ -7,7 +7,7 @@ import * as Rational from "./Rational.ts";
 export type ChargeExact = QuantityExact.QuantityExact<Charge.Coulombs>;
 
 export const ChargeExact = QuantityExact.QuantityExact(Charge.Coulombs);
-export const ChargeExactFromSelf = QuantityExact.QuantityExactFromSelf(
+export const ChargeExactFromStruct = QuantityExact.QuantityExactFromStruct(
   Charge.Coulombs,
 );
 
