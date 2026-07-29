@@ -2,7 +2,7 @@
 
 effect-units is a single-package TypeScript library providing typed quantities and unit conversions for Effect (requires Node >= 22, pnpm). It targets Effect v4, which is still in beta: `effect` is pinned exactly in devDependencies and declared as `^4.0.0-beta.102` in peerDependencies, and `@effect/vitest` is unified-versioned with it, so the two move together.
 
-`pnpm-workspace.yaml` disables pnpm's strict dependency-build check. `effect@4` depends on `msgpackr`, whose optional native accelerator (`msgpackr-extract`) has a build script; the JS fallback is fully functional and this package never exercises msgpack, so the build is deliberately skipped rather than adding a native toolchain step to every install.
+`pnpm-workspace.yaml` exists only to answer pnpm 11's build-script prompt: `effect@4` depends on `msgpackr`, whose optional native accelerator (`msgpackr-extract`) has a build script. `allowBuilds: { msgpackr-extract: false }` declines it—the JS fallback is fully functional and this package never exercises msgpack, so the build is deliberately skipped rather than adding a native toolchain step to every install. Note `allowBuilds` is the current mechanism; the older `onlyBuiltDependencies`/`ignoredBuiltDependencies` keys do not satisfy pnpm 11's check, and pnpm rewrites the file with an `allowBuilds` placeholder until it is set.
 
 ## Build System
 

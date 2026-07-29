@@ -1,9 +1,2 @@
-# effect@4 pulls in msgpackr, whose optional native accelerator
-# (msgpackr-extract) has a build script. The JS fallback is fully
-# functional and this package never exercises msgpack, so the build is
-# deliberately not run; pnpm 11 errors on unbuilt deps unless told not to.
-strictDepBuilds: false
-ignoredBuiltDependencies:
-  - msgpackr-extract
 allowBuilds:
-  msgpackr-extract: set this to true or false
+  msgpackr-extract: false
