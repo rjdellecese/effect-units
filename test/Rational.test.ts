@@ -611,6 +611,48 @@ describe("schema", () => {
     assertTrue(Schema.is(Rational.Rational)(Rational.one));
     assertFalse(Schema.is(Rational.Rational)(1));
   });
+
+  // The identity schema carries the string encoding as a `toCodecJson`
+  // annotation. Without it a declaration falls back to `Json` and throws on
+  // any non-JSON value, so the nesting test below is a regression test.
+
+  it("derives the canonical string encoding through toCodecJson", () => {
+    const r = Rational.makeUnsafe(3n, 2n);
+
+    deepStrictEqual(
+      Schema.encodeSync(Schema.toCodecJson(Rational.Rational))(r),
+      Schema.encodeSync(Rational.RationalFromString)(r),
+    );
+    deepStrictEqual(
+      Schema.encodeSync(Schema.toCodecJson(Rational.Rational))(r),
+      "3/2",
+    );
+  });
+
+  it("serializes when nested inside a caller's own schema", () => {
+    const Ratio = Schema.Struct({
+      label: Schema.String,
+      value: Rational.Rational,
+    });
+    const codec = Schema.toCodecJson(Ratio);
+    const ratio = { label: "half", value: Rational.makeUnsafe(1n, 2n) };
+
+    const encoded = Schema.encodeSync(codec)(ratio);
+
+    deepStrictEqual(encoded, { label: "half", value: "1/2" });
+
+    // Survives an actual JSON round trip, not just structural equality.
+    const decoded = Schema.decodeUnknownSync(codec)(
+      JSON.parse(JSON.stringify(encoded)),
+    );
+
+    assertTrue(Equal.equals(decoded.value, ratio.value));
+    assertTrue(
+      Result.isFailure(
+        Schema.decodeUnknownResult(codec)({ label: "bad", value: "3/0" }),
+      ),
+    );
+  });
 });
 
 describe("inspection", () => {

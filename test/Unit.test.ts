@@ -113,6 +113,48 @@ describe("Unit", () => {
     );
   });
 
+  // The identity schema carries the string encoding as a `toCodecJson`
+  // annotation. Without it a declaration falls back to `Json` and throws on
+  // any non-JSON value, so the nesting test below is a regression test.
+
+  it("derives the canonical string encoding through toCodecJson", () => {
+    const metersPerSecond = Unit.rate("Meters", "Seconds");
+
+    assertEquals(
+      Schema.encodeSync(Schema.toCodecJson(Unit.Unit))(metersPerSecond),
+      Schema.encodeSync(Unit.UnitFromString)(metersPerSecond),
+    );
+    assertEquals(
+      Schema.encodeSync(Schema.toCodecJson(Unit.Unit))(metersPerSecond),
+      "(Meters/Seconds)",
+    );
+  });
+
+  it("serializes when nested inside a caller's own schema", () => {
+    const Reading = Schema.Struct({ label: Schema.String, unit: Unit.Unit });
+    const codec = Schema.toCodecJson(Reading);
+    const reading = { label: "speed", unit: Unit.rate("Meters", "Seconds") };
+
+    const encoded = Schema.encodeSync(codec)(reading);
+
+    assertEquals(encoded, { label: "speed", unit: "(Meters/Seconds)" });
+
+    // Survives an actual JSON round trip, not just structural equality.
+    const decoded = Schema.decodeUnknownSync(codec)(
+      JSON.parse(JSON.stringify(encoded)),
+    );
+
+    assertTrue(Equal.equals(decoded.unit, reading.unit));
+    assertTrue(
+      Result.isFailure(
+        Schema.decodeUnknownResult(codec)({
+          label: "bad",
+          unit: "(Meters/Seconds",
+        }),
+      ),
+    );
+  });
+
   describe("custom units", () => {
     it("support Equal and Hash", () => {
       assertTrue(Equal.equals(Unit.custom("USD"), Unit.custom("USD")));

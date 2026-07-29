@@ -119,6 +119,44 @@ describe("Temperature", () => {
     );
   });
 
+  // The identity schema carries the wire format as a `toCodecJson`
+  // annotation. Without it a declaration falls back to `Json` and throws on
+  // any non-JSON value, so the nesting test below is a regression test.
+
+  it("derives the same wire format through toCodecJson", () => {
+    const temperature = Temperature.kelvins(293.15);
+
+    deepStrictEqual(
+      Schema.encodeSync(Schema.toCodecJson(Temperature.Temperature))(
+        temperature,
+      ),
+      Schema.encodeSync(Temperature.TemperatureFromStruct)(temperature),
+    );
+  });
+
+  it("serializes when nested inside a caller's own schema", () => {
+    const Reading = Schema.Struct({
+      city: Schema.String,
+      temperature: Temperature.Temperature,
+    });
+    const codec = Schema.toCodecJson(Reading);
+    const reading = { city: "Oslo", temperature: Temperature.kelvins(293.15) };
+
+    const encoded = Schema.encodeSync(codec)(reading);
+
+    deepStrictEqual(encoded, {
+      city: "Oslo",
+      temperature: { unit: "Kelvins", value: 293.15 },
+    });
+
+    // Survives an actual JSON round trip, not just structural equality.
+    const decoded = Schema.decodeUnknownSync(codec)(
+      JSON.parse(JSON.stringify(encoded)),
+    );
+
+    assertTrue(Equal.equals(decoded.temperature, reading.temperature));
+  });
+
   it("absolute zero is zero kelvins", () => {
     assertEquals(Temperature.inKelvins(Temperature.absoluteZero), 0);
   });

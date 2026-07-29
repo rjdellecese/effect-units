@@ -122,6 +122,51 @@ describe("TemperatureExact", () => {
     );
   });
 
+  // The identity schema carries the wire format as a `toCodecJson`
+  // annotation. Without it a declaration falls back to `Json` and throws on
+  // any non-JSON value, so the nesting test below is a regression test. Note
+  // the nested `Rational` lowers to its string form on its own—the struct
+  // never names `Rational.RationalFromString`.
+
+  it("derives the same wire format through toCodecJson", () => {
+    const temperature = TemperatureExact.degreesCelsius(Rational.zero);
+
+    deepStrictEqual(
+      Schema.encodeSync(Schema.toCodecJson(TemperatureExact.TemperatureExact))(
+        temperature,
+      ),
+      Schema.encodeSync(TemperatureExact.TemperatureExactFromStruct)(
+        temperature,
+      ),
+    );
+  });
+
+  it("serializes when nested inside a caller's own schema", () => {
+    const Reading = Schema.Struct({
+      city: Schema.String,
+      temperature: TemperatureExact.TemperatureExact,
+    });
+    const codec = Schema.toCodecJson(Reading);
+    const reading = {
+      city: "Oslo",
+      temperature: TemperatureExact.degreesCelsius(Rational.zero),
+    };
+
+    const encoded = Schema.encodeSync(codec)(reading);
+
+    deepStrictEqual(encoded, {
+      city: "Oslo",
+      temperature: { unit: "Kelvins", value: "5463/20" },
+    });
+
+    // Survives an actual JSON round trip, not just structural equality.
+    const decoded = Schema.decodeUnknownSync(codec)(
+      JSON.parse(JSON.stringify(encoded)),
+    );
+
+    assertTrue(Equal.equals(decoded.temperature, reading.temperature));
+  });
+
   it("absolute zero is zero kelvins", () => {
     assertTrue(
       Equal.equals(

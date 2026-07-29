@@ -330,6 +330,70 @@ describe("schema", () => {
       ),
     );
   });
+
+  // The identity schema carries the wire format as a `toCodecJson`
+  // annotation. Without it a declaration falls back to `Json` and throws on
+  // any non-JSON value, so the nesting test below is a regression test. Note
+  // the nested `Rational` lowers to its string form on its own—the struct
+  // never names `Rational.RationalFromString`.
+
+  it("derives the same wire format through toCodecJson", () => {
+    const q = meters(Rational.makeUnsafe(3n, 2n));
+
+    deepStrictEqual(
+      Schema.encodeSync(
+        Schema.toCodecJson(QuantityExact.QuantityExact("Meters")),
+      )(q),
+      Schema.encodeSync(Meters)(q),
+    );
+  });
+
+  it("serializes when nested inside a caller's own schema", () => {
+    const Budget = Schema.Struct({
+      name: Schema.String,
+      amount: QuantityExact.QuantityExact("Meters"),
+    });
+    const codec = Schema.toCodecJson(Budget);
+    const budget = {
+      name: "cable",
+      amount: meters(Rational.makeUnsafe(3n, 2n)),
+    };
+
+    const encoded = Schema.encodeSync(codec)(budget);
+
+    deepStrictEqual(encoded, {
+      name: "cable",
+      amount: { unit: "Meters", value: "3/2" },
+    });
+
+    // Survives an actual JSON round trip, not just structural equality.
+    const decoded = Schema.decodeUnknownSync(codec)(
+      JSON.parse(JSON.stringify(encoded)),
+    );
+
+    assertTrue(Equal.equals(decoded.amount, budget.amount));
+  });
+
+  it("propagates rejections out of nested values", () => {
+    const codec = Schema.toCodecJson(
+      Schema.Struct({ amount: QuantityExact.QuantityExact("Meters") }),
+    );
+
+    assertTrue(
+      Result.isFailure(
+        Schema.decodeUnknownResult(codec)({
+          amount: { unit: "Meters", value: "3/0" },
+        }),
+      ),
+    );
+    assertTrue(
+      Result.isFailure(
+        Schema.decodeUnknownResult(codec)({
+          amount: { unit: "Seconds", value: "1" },
+        }),
+      ),
+    );
+  });
 });
 
 describe("inspection", () => {

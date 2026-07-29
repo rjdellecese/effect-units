@@ -195,8 +195,8 @@ describe("schema", () => {
     FastCheck.assert(
       FastCheck.property(double, (n) => {
         const quantity = Length.meters(n);
-        const encoded = Schema.encodeSync(Length.Length)(quantity);
-        const decoded = Schema.decodeSync(Length.Length)(encoded);
+        const encoded = Schema.encodeSync(Length.LengthFromStruct)(quantity);
+        const decoded = Schema.decodeSync(Length.LengthFromStruct)(encoded);
 
         assertEquals(encoded.unit, "Meters");
         assertTrue(Equal.equals(decoded, quantity));
@@ -233,6 +233,53 @@ describe("schema", () => {
           value: null,
         }),
       ),
+    );
+  });
+
+  // The identity schema carries the wire format as a `toCodecJson`
+  // annotation. Without it a declaration falls back to `Json` and throws on
+  // any non-JSON value, so the nesting test below is a regression test.
+
+  it("derives the same wire format through toCodecJson", () => {
+    const quantity = Length.meters(5);
+
+    deepStrictEqual(
+      Schema.encodeSync(Schema.toCodecJson(Length.Length))(quantity),
+      Schema.encodeSync(Length.LengthFromStruct)(quantity),
+    );
+  });
+
+  it("serializes when nested inside a caller's own schema", () => {
+    const Trip = Schema.Struct({
+      name: Schema.String,
+      distance: Length.Length,
+    });
+    const codec = Schema.toCodecJson(Trip);
+    const trip = { name: "commute", distance: Length.meters(5) };
+
+    const encoded = Schema.encodeSync(codec)(trip);
+
+    deepStrictEqual(encoded, {
+      name: "commute",
+      distance: { unit: "Meters", value: 5 },
+    });
+
+    // Survives an actual JSON round trip, not just structural equality.
+    const decoded = Schema.decodeUnknownSync(codec)(
+      JSON.parse(JSON.stringify(encoded)),
+    );
+
+    assertTrue(Equal.equals(decoded.distance, trip.distance));
+  });
+
+  it("rejects non-finite values through toCodecJson too", () => {
+    const codec = Schema.toCodecJson(Length.Length);
+
+    assertTrue(
+      Result.isFailure(Schema.encodeResult(codec)(Length.meters(Infinity))),
+    );
+    assertTrue(
+      Result.isFailure(Schema.encodeResult(codec)(Length.meters(NaN))),
     );
   });
 });
