@@ -57,7 +57,7 @@ import * as Dimensionless from "effect-units/Dimensionless";
 const shrinkage = Dimensionless.percent(10); // Quantity<"Unitless">
 Dimensionless.inBasisPoints(shrinkage); // 1000
 
-const shrunk = Quantity.timesUnitless(
+const shrunk = Quantity.times(
   Length.meters(200),
   Dimensionless.complement(shrinkage),
 );
@@ -241,7 +241,7 @@ Dimensionless.inPercent(Dimensionless.complement(rate)); // 97.5
 
 Constructors and extractors pair up as everywhere else in the library—`fraction`, `percent`, `perMille`, `basisPoints`, `partsPerMillion`, `partsPerBillion`—alongside `zero`, `one`, and `complement` (the rest of the whole).
 
-The unit algebra is deliberately structural: it never cancels, so `Quantity.per` on two lengths gives a `Rate<Meters, Meters>` and `Quantity.times` by a factor gives a `Product<Meters, Unitless>`—neither is the pure number you meant. Three operations bridge the two worlds instead:
+`Unitless` is the identity of the unit algebra, so the ordinary arithmetic already knows what to do with it: `times`, `over`, `over_`, `squared`, and `cubed` fold a dimensionless operand away instead of composing with it, and never produce a `Product` with a `Unitless` factor. Only the way _in_ needs its own operation—`ratio`, which divides two quantities in the same units and gives you the pure number rather than the `Rate<Meters, Meters>` that `per` would build:
 
 ```ts
 import * as Length from "effect-units/Length";
@@ -251,16 +251,19 @@ import * as Quantity from "effect-units/Quantity";
 const progress = Quantity.ratio(Length.meters(30), Length.kilometers(1));
 Dimensionless.inPercent(progress); // 3
 
-// timesUnitless and overUnitless scale without leaving the units
-const remaining = Quantity.timesUnitless(
+// times and over scale without leaving the units
+const remaining = Quantity.times(
   Length.kilometers(1),
   Dimensionless.complement(progress),
 ); // a Length — 970 meters
 
-Quantity.overUnitless(remaining, Dimensionless.percent(50)); // a Length — 1940 meters
+Quantity.over(remaining, Dimensionless.percent(50)); // a Length — 1940 meters
+Quantity.times(Length.meters(2), Length.meters(3)); // still an Area — nothing folded away
 ```
 
-Because the result is a quantity rather than a number, it keeps everything quantities have: `Equal`/`Hash`, the comparison combinators, and the `{ unit: "Unitless", value }` wire format. Two dimensionless factors compose with `timesUnitless` as well, since the scaled quantity's units are whatever it started with—`Unitless` included.
+Either argument may be the dimensionless one, and two dimensionless factors compose into a third, since the result's units are whatever the scaled quantity started with—`Unitless` included. Because that result is a quantity rather than a number, it keeps everything quantities have: `Equal`/`Hash`, the comparison combinators, and the `{ unit: "Unitless", value }` wire format.
+
+The one place to be careful is a quantity whose static unit has widened to `Unit.Unit`: the compiler can no longer tell whether it is dimensionless, so it offers the `Product` result while the runtime still folds. Keep units precise and the two agree. (A `Unit.custom("Unitless")` is a different unit entirely—a custom leaf, encoded `"[Unitless]"`—and is never folded away.)
 
 `DimensionlessExact` is the exact twin. Every scale here is a power of ten, so `percent` is exactly 1/100, and a third of a whole stays 1/3 instead of 0.3333333333333333—which matters as soon as a percentage is applied to money (see [Exact quantities](#exact-quantities) below).
 

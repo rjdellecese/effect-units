@@ -1,10 +1,13 @@
+/**
+ * The exact twin of `Dimensionless`. Every scale here is a power of ten, so
+ * the conversions are exact both ways—`percent(one)` is exactly 1/100, and a
+ * third of a whole is exactly 1/3 rather than 0.3333333333333333.
+ *
+ * @module
+ */
 import * as Dimensionless from "./Dimensionless.ts";
 import * as QuantityExact from "./QuantityExact.ts";
 import * as Rational from "./Rational.ts";
-
-// The exact twin of `Dimensionless`. Every scale here is a power of ten, so
-// the conversions are exact both ways—`percent(one)` is exactly 1/100, and a
-// third of a whole is exactly 1/3 rather than 0.3333333333333333.
 
 export type DimensionlessExact =
   QuantityExact.QuantityExact<Dimensionless.Unitless>;
@@ -23,7 +26,7 @@ const make = (value: Rational.Rational): DimensionlessExact =>
 
 export const zero = make(Rational.zero);
 
-/** A factor of one: the identity for `QuantityExact.timesUnitless`, and 100%. */
+/** A factor of one: the identity for `QuantityExact.times`, and 100%. */
 export const one = make(Rational.one);
 
 export const fraction = (r: Rational.Rational) => make(r);

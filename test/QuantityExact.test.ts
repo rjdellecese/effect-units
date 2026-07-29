@@ -84,6 +84,27 @@ describe("arithmetic", () => {
     );
   });
 
+  it("the unsafe over forms peel the same factors as their Option twins", () => {
+    FastCheck.assert(
+      FastCheck.property(nonZeroRational, nonZeroRational, (a, b) => {
+        const product = QuantityExact.times(meters(a), kilograms(b));
+
+        assertTrue(
+          Equal.equals(
+            QuantityExact.overUnsafe(product, kilograms(b)),
+            meters(a),
+          ),
+        );
+        assertTrue(
+          Equal.equals(
+            QuantityExact.over_Unsafe(product, meters(a)),
+            kilograms(b),
+          ),
+        );
+      }),
+    );
+  });
+
   it("squared and cubed compose units and values", () => {
     FastCheck.assert(
       FastCheck.property(rational, (a) => {
@@ -184,6 +205,7 @@ describe("rates", () => {
 describe("dimensionless", () => {
   const third = Rational.makeUnsafe(1n, 3n);
   const three = Rational.makeUnsafe(3n);
+  const ten = Rational.makeUnsafe(10n);
 
   it("ratio collapses same-unit division to Unitless exactly", () => {
     FastCheck.assert(
@@ -205,48 +227,63 @@ describe("dimensionless", () => {
     );
   });
 
-  it("timesUnitless and overUnitless are exact inverses", () => {
+  it("times and over are exact inverses through a dimensionless factor", () => {
     FastCheck.assert(
       FastCheck.property(rational, nonZeroRational, (n, f) => {
         const factor = DimensionlessExact.fraction(f);
-        const scaled = QuantityExact.timesUnitless(meters(n), factor);
-        const recovered = QuantityExact.overUnitless(scaled, factor);
+        const scaled: QuantityExact.QuantityExact<"Meters"> =
+          QuantityExact.times(meters(n), factor);
+        const recovered = QuantityExact.over(scaled, factor);
 
         assertTrue(Option.isSome(recovered));
         assertTrue(Equal.equals(Option.getOrThrow(recovered), meters(n)));
+        assertTrue(
+          Equal.equals(QuantityExact.over_(scaled, factor), recovered),
+        );
+
+        // Either argument may be the dimensionless one.
+        const flipped: QuantityExact.QuantityExact<"Meters"> =
+          QuantityExact.times(factor, meters(n));
+        assertTrue(Equal.equals(flipped, scaled));
       }),
     );
   });
 
   it("scales by a third with nothing lost", () => {
-    // The float track cannot do this: 3 * (1/3) is 1 only because the two
-    // roundings happen to cancel, and 10 * (1/3) * 3 is not 10.
+    // The float track cannot do this: 10 * (1/3) * 3 is not 10.
     const factor = DimensionlessExact.fraction(third);
 
     assertTrue(
       Equal.equals(
-        QuantityExact.timesUnitless(
-          meters(Rational.makeUnsafe(10n)),
-          factor,
-        ).pipe(QuantityExact.overUnitless(factor)),
-        Option.some(meters(Rational.makeUnsafe(10n))),
+        QuantityExact.times(meters(ten), factor).pipe(
+          QuantityExact.over(factor),
+        ),
+        Option.some(meters(ten)),
       ),
     );
+  });
+
+  it("squared and cubed leave a dimensionless quantity dimensionless", () => {
+    const factor = DimensionlessExact.fraction(third);
+    const squared: DimensionlessExact.DimensionlessExact =
+      QuantityExact.squared(factor);
+    const cubed: DimensionlessExact.DimensionlessExact =
+      QuantityExact.cubed(factor);
+
+    assertTrue(Rational.equals(squared.value, Rational.makeUnsafe(1n, 9n)));
+    assertTrue(Rational.equals(cubed.value, Rational.makeUnsafe(1n, 27n)));
   });
 
   it("division by zero is None, and the unsafe forms throw", () => {
     const one = meters(Rational.one);
 
     assertTrue(Option.isNone(QuantityExact.ratio(one, meters(Rational.zero))));
-    assertTrue(
-      Option.isNone(QuantityExact.overUnitless(one, DimensionlessExact.zero)),
-    );
+    assertTrue(Option.isNone(QuantityExact.over(one, DimensionlessExact.zero)));
     assertTrue(Option.isSome(QuantityExact.ratio(one, one)));
 
     throws(() => QuantityExact.ratioUnsafe(one, meters(Rational.zero)));
-    throws(() =>
-      QuantityExact.overUnitlessUnsafe(one, DimensionlessExact.zero),
-    );
+    throws(() => QuantityExact.overUnsafe(one, DimensionlessExact.zero));
+    throws(() => QuantityExact.over_Unsafe(one, DimensionlessExact.zero));
   });
 });
 

@@ -83,6 +83,23 @@ const hasUnit =
   (u: unknown): u is Quantity<U> =>
     isQuantity(u) && Unit.equals(u.unit, unit);
 
+/**
+ * `Unitless` is the identity of the unit algebra, so `times`, `over`,
+ * `over_`, `squared`, and `cubed` fold a dimensionless operand away rather
+ * than composing with it: the algebra never produces a `Product` with a
+ * `Unitless` factor. Each of those carries an overload for the dimensionless
+ * case ahead of its general one, so the static type follows the runtime.
+ *
+ * The exception is a quantity whose static unit has already widened to
+ * `Unit.Unit`: the compiler can no longer tell whether it is dimensionless
+ * and offers the general (`Product`) overload, while the runtime still
+ * applies the identity. Keep units precise and the two agree.
+ *
+ * A `Unit.custom("Unitless")` is a different unit entirely—a custom leaf,
+ * encoded `"[Unitless]"`—and is not folded away.
+ */
+const isUnitless = (unit: Unit.Unit): unit is "Unitless" => unit === "Unitless";
+
 const Proto = {
   ...ValueObjectProto,
   [TypeId]: TypeId,
@@ -198,31 +215,71 @@ export const subtract: {
     make(a.unit, a.value - b.value),
 );
 
+/**
+ * Multiplies two quantities, composing their units into a `Product`:
+ * `times(length, length)` is an area.
+ *
+ * `Unitless` is the identity, so multiplying by a dimensionless quantity
+ * scales instead of composing—`times(length, Dimensionless.percent(90))` is
+ * nine tenths of that length, still a `Length`. Either argument may be the
+ * dimensionless one.
+ */
 export const times: {
+  (
+    factor: Quantity<"Unitless">,
+  ): <U extends Unit.Unit>(a: Quantity<U>) => Quantity<U>;
   <U2 extends Unit.Unit>(
     b: Quantity<U2>,
   ): <U1 extends Unit.Unit>(a: Quantity<U1>) => Quantity<Unit.Product<U1, U2>>;
+  <U extends Unit.Unit>(
+    a: Quantity<U>,
+    factor: Quantity<"Unitless">,
+  ): Quantity<U>;
+  <U extends Unit.Unit>(
+    factor: Quantity<"Unitless">,
+    a: Quantity<U>,
+  ): Quantity<U>;
   <U1 extends Unit.Unit, U2 extends Unit.Unit>(
     a: Quantity<U1>,
     b: Quantity<U2>,
   ): Quantity<Unit.Product<U1, U2>>;
 } = Function.dual(
   2,
-  (
-    a: Quantity<Unit.Unit>,
-    b: Quantity<Unit.Unit>,
-  ): Quantity<Unit.Product<Unit.Unit, Unit.Unit>> =>
-    make(Unit.product(a.unit, b.unit), a.value * b.value),
+  (a: Quantity<Unit.Unit>, b: Quantity<Unit.Unit>): Quantity<Unit.Unit> =>
+    isUnitless(a.unit)
+      ? make(b.unit, a.value * b.value)
+      : isUnitless(b.unit)
+        ? make(a.unit, a.value * b.value)
+        : make(Unit.product(a.unit, b.unit), a.value * b.value),
 );
 
-export const squared = <U extends Unit.Unit>(
-  a: Quantity<U>,
-): Quantity<Unit.Squared<U>> => make(Unit.squared(a.unit), a.value * a.value);
+// squared and cubed are `times` specialized to one argument, so they honor
+// the same identity. Their implementations are cast to the overloaded type:
+// a single implementation signature can never be assignable to an overload
+// set, which is why `times` and `over` need no cast (`Function.dual` carries
+// the annotation) and these two do.
 
-export const cubed = <U extends Unit.Unit>(
-  a: Quantity<U>,
-): Quantity<Unit.Cubed<U>> =>
-  make(Unit.cubed(a.unit), a.value * a.value * a.value);
+const squaredImpl = (a: Quantity<Unit.Unit>): Quantity<Unit.Unit> =>
+  isUnitless(a.unit)
+    ? make(a.unit, a.value * a.value)
+    : make(Unit.squared(a.unit), a.value * a.value);
+
+/** Squaring a dimensionless quantity leaves it dimensionless. */
+export const squared = squaredImpl as {
+  (a: Quantity<"Unitless">): Quantity<"Unitless">;
+  <U extends Unit.Unit>(a: Quantity<U>): Quantity<Unit.Squared<U>>;
+};
+
+const cubedImpl = (a: Quantity<Unit.Unit>): Quantity<Unit.Unit> =>
+  isUnitless(a.unit)
+    ? make(a.unit, a.value * a.value * a.value)
+    : make(Unit.cubed(a.unit), a.value * a.value * a.value);
+
+/** Cubing a dimensionless quantity leaves it dimensionless. */
+export const cubed = cubedImpl as {
+  (a: Quantity<"Unitless">): Quantity<"Unitless">;
+  <U extends Unit.Unit>(a: Quantity<U>): Quantity<Unit.Cubed<U>>;
+};
 
 /**
  * Divides one quantity by another, producing a rate: `per(dependent,
@@ -320,64 +377,93 @@ export const for_: {
 
 /**
  * Divides a product quantity by its right factor: `over(area, length)` is a
- * length. Division by zero yields ±Infinity (or NaN for 0/0).
+ * length.
+ *
+ * Dividing by a dimensionless quantity scales instead, staying in the units
+ * it started in—the inverse of {@link times} in both cases. Division by zero
+ * yields ±Infinity (or NaN for 0/0).
  */
 export const over: {
+  (
+    factor: Quantity<"Unitless">,
+  ): <U extends Unit.Unit>(a: Quantity<U>) => Quantity<U>;
   <U2 extends Unit.Unit>(
     b: Quantity<U2>,
   ): <U1 extends Unit.Unit>(
     product: Quantity<Unit.Product<U1, U2>>,
   ) => Quantity<U1>;
+  <U extends Unit.Unit>(
+    a: Quantity<U>,
+    factor: Quantity<"Unitless">,
+  ): Quantity<U>;
   <U1 extends Unit.Unit, U2 extends Unit.Unit>(
     product: Quantity<Unit.Product<U1, U2>>,
     b: Quantity<U2>,
   ): Quantity<U1>;
 } = Function.dual(
   2,
-  (
-    product: Quantity<Unit.Product<Unit.Unit, Unit.Unit>>,
-    b: Quantity<Unit.Unit>,
-  ): Quantity<Unit.Unit> => make(product.unit.left, product.value / b.value),
+  (a: Quantity<Unit.Unit>, b: Quantity<Unit.Unit>): Quantity<Unit.Unit> =>
+    isUnitless(b.unit)
+      ? make(a.unit, a.value / b.value)
+      : make(
+          (a.unit as Unit.Product<Unit.Unit, Unit.Unit>).left,
+          a.value / b.value,
+        ),
 );
 
 /**
  * Divides a product quantity by its left factor: `over_(area, length)` is a
- * length. Division by zero yields ±Infinity (or NaN for 0/0).
+ * length.
+ *
+ * A dimensionless divisor scales, exactly as it does in {@link over}—for a
+ * pure number there is no left or right factor to choose between. Division
+ * by zero yields ±Infinity (or NaN for 0/0).
  */
 export const over_: {
+  (
+    factor: Quantity<"Unitless">,
+  ): <U extends Unit.Unit>(a: Quantity<U>) => Quantity<U>;
   <U1 extends Unit.Unit>(
     b: Quantity<U1>,
   ): <U2 extends Unit.Unit>(
     product: Quantity<Unit.Product<U1, U2>>,
   ) => Quantity<U2>;
+  <U extends Unit.Unit>(
+    a: Quantity<U>,
+    factor: Quantity<"Unitless">,
+  ): Quantity<U>;
   <U1 extends Unit.Unit, U2 extends Unit.Unit>(
     product: Quantity<Unit.Product<U1, U2>>,
     b: Quantity<U1>,
   ): Quantity<U2>;
 } = Function.dual(
   2,
-  (
-    product: Quantity<Unit.Product<Unit.Unit, Unit.Unit>>,
-    b: Quantity<Unit.Unit>,
-  ): Quantity<Unit.Unit> => make(product.unit.right, product.value / b.value),
+  (a: Quantity<Unit.Unit>, b: Quantity<Unit.Unit>): Quantity<Unit.Unit> =>
+    isUnitless(b.unit)
+      ? make(a.unit, a.value / b.value)
+      : make(
+          (a.unit as Unit.Product<Unit.Unit, Unit.Unit>).right,
+          a.value / b.value,
+        ),
 );
 
 // Dimensionless quantities
 //
-// The unit algebra is structural—it never cancels—so dividing two quantities
-// in the same units gives a `Rate<U, U>`, and scaling a quantity by a ratio
-// with `times` grows a `Product`. These three operations are the
-// dimensionless bridge: `ratio` collapses same-unit division to `Unitless`,
-// and `timesUnitless`/`overUnitless` apply a dimensionless factor without
-// leaving the units they scale. See the `Dimensionless` module for the
-// constructors (`fraction`, `percent`, …) that read and write `Unitless`
-// values; it is not imported here, since the dependency runs the other way.
+// `times`, `over`, `over_`, `squared`, and `cubed` already fold `Unitless`
+// away as the identity, so a dimensionless factor needs no separate
+// operation. What is left is the way in: `ratio`, which divides two
+// quantities in the same units and returns the pure number rather than the
+// `Rate<U, U>` that `per` would build.
+//
+// See the `Dimensionless` module for the constructors (`fraction`,
+// `percent`, …) that read and write `Unitless` values; it is not imported
+// here, since the dependency runs the other way.
 
 /**
  * Divides two quantities in the same units, producing a dimensionless
  * quantity—`ratio(marathon, kilometer)` is a factor of 42.1648128, and the
- * units it was measured in are gone. Division by zero yields ±Infinity (or
- * NaN for 0/0).
+ * units it was measured in are gone. Contrast {@link per}, which keeps them
+ * as a rate. Division by zero yields ±Infinity (or NaN for 0/0).
  *
  * Read the result with `Dimensionless.inFraction` or `inPercent`.
  */
@@ -390,45 +476,6 @@ export const ratio: {
   2,
   (a: Quantity<Unit.Unit>, b: Quantity<Unit.Unit>): Quantity<"Unitless"> =>
     make("Unitless", a.value / b.value),
-);
-
-/**
- * Scales a quantity by a dimensionless factor, staying in its units:
- * `timesUnitless(length, Dimensionless.percent(90))` is nine tenths of that
- * length. Contrast {@link times}, which would form a `Product` with the
- * factor's unit.
- */
-export const timesUnitless: {
-  (
-    factor: Quantity<"Unitless">,
-  ): <U extends Unit.Unit>(a: Quantity<U>) => Quantity<U>;
-  <U extends Unit.Unit>(
-    a: Quantity<U>,
-    factor: Quantity<"Unitless">,
-  ): Quantity<U>;
-} = Function.dual(
-  2,
-  (a: Quantity<Unit.Unit>, factor: Quantity<"Unitless">): Quantity<Unit.Unit> =>
-    make(a.unit, a.value * factor.value),
-);
-
-/**
- * Divides a quantity by a dimensionless factor, staying in its units—the
- * inverse of {@link timesUnitless}. Division by zero yields ±Infinity (or
- * NaN for 0/0).
- */
-export const overUnitless: {
-  (
-    factor: Quantity<"Unitless">,
-  ): <U extends Unit.Unit>(a: Quantity<U>) => Quantity<U>;
-  <U extends Unit.Unit>(
-    a: Quantity<U>,
-    factor: Quantity<"Unitless">,
-  ): Quantity<U>;
-} = Function.dual(
-  2,
-  (a: Quantity<Unit.Unit>, factor: Quantity<"Unitless">): Quantity<Unit.Unit> =>
-    make(a.unit, a.value / factor.value),
 );
 
 // Comparison

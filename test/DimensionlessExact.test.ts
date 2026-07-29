@@ -74,7 +74,7 @@ describe("DimensionlessExact", () => {
       LengthExact.meters(Rational.makeUnsafe(3n)),
     );
     const whole = LengthExact.meters(Rational.makeUnsafe(3n));
-    const part = QuantityExact.timesUnitless(whole, third);
+    const part = QuantityExact.times(whole, third);
 
     assertTrue(Equal.equals(part, LengthExact.meters(Rational.one)));
     assertTrue(

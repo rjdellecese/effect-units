@@ -74,7 +74,7 @@ describe("Dimensionless", () => {
   // and out of dimensioned quantities without ever becoming a bare number.
   describe("with the Quantity bridge", () => {
     it("applies a percentage to a dimensioned quantity", () => {
-      const discounted = Quantity.timesUnitless(
+      const discounted = Quantity.times(
         Length.meters(200),
         Dimensionless.complement(Dimensionless.percent(10)),
       );

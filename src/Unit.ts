@@ -15,9 +15,11 @@ import * as String from "effect/String";
  * `Rate` composition of these.
  *
  * `Unitless` is the dimensionless leaf—the SI unit one, which `Dimensionless`
- * is built on. It is an ordinary leaf like the rest: the algebra never
- * cancels it, so `Quantity.ratio`, `timesUnitless`, and `overUnitless` are
- * the operations that put quantities into and out of it.
+ * is built on. It is an ordinary leaf here: this module composes unit trees
+ * and never cancels anything, so `Unit.product("Meters", "Unitless")` is a
+ * perfectly good (if pointless) tree. It is the quantity operations that
+ * treat it as the identity—`Quantity.times`, `over`, `over_`, `squared`, and
+ * `cubed` fold it away, and `Quantity.ratio` is the way into it.
  */
 export const BaseUnit = Schema.Literals([
   "Meters",

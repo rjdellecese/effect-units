@@ -221,24 +221,29 @@ describe("dimensionless", () => {
     );
   });
 
-  it("timesUnitless scales without leaving the units", () => {
-    // Compile-time inference check: scaling a Length stays a Length, where
-    // `times` would give a Quantity<Product<"Meters", "Unitless">>.
-    const scaled: Quantity.Quantity<Length.Meters> = Quantity.timesUnitless(
+  it("times by a dimensionless factor scales, in either argument order", () => {
+    // Compile-time inference check: the dimensionless overload keeps the
+    // Length, where the general one would give Product<"Meters", "Unitless">.
+    const scaled: Quantity.Quantity<Length.Meters> = Quantity.times(
       Length.meters(200),
       Dimensionless.percent(90),
+    );
+    const flipped: Quantity.Quantity<Length.Meters> = Quantity.times(
+      Dimensionless.percent(90),
+      Length.meters(200),
     );
 
     assertTrue(Unit.equals(scaled.unit, Length.Meters));
     assertTrue(isCloseTo(scaled.value, 180));
+    assertTrue(Equal.equals(flipped, scaled));
   });
 
-  it("timesUnitless by one is the identity", () => {
+  it("times by one is the identity", () => {
     FastCheck.assert(
       FastCheck.property(double, (n) => {
         assertTrue(
           Equal.equals(
-            Quantity.timesUnitless(Length.meters(n), Dimensionless.one),
+            Quantity.times(Length.meters(n), Dimensionless.one),
             Length.meters(n),
           ),
         );
@@ -246,24 +251,86 @@ describe("dimensionless", () => {
     );
   });
 
-  it("overUnitless inverts timesUnitless", () => {
+  it("times composes two dimensionless factors into one", () => {
+    const half: Dimensionless.Dimensionless = Quantity.times(
+      Dimensionless.percent(50),
+      Dimensionless.percent(50),
+    );
+
+    assertTrue(isCloseTo(Dimensionless.inPercent(half), 25));
+  });
+
+  it("squared and cubed leave a dimensionless quantity dimensionless", () => {
+    const squared: Dimensionless.Dimensionless = Quantity.squared(
+      Dimensionless.percent(50),
+    );
+    const cubed: Dimensionless.Dimensionless = Quantity.cubed(
+      Dimensionless.percent(50),
+    );
+
+    assertTrue(isCloseTo(Dimensionless.inPercent(squared), 25));
+    assertTrue(isCloseTo(Dimensionless.inPercent(cubed), 12.5));
+
+    // The dimensioned path is untouched.
+    const area: Quantity.Quantity<Unit.Squared<Length.Meters>> =
+      Quantity.squared(Length.meters(3));
+    assertTrue(Unit.equals(area.unit, Unit.squared(Length.Meters)));
+  });
+
+  it("over and over_ divide by a dimensionless factor without peeling", () => {
     FastCheck.assert(
       FastCheck.property(double, nonZeroDouble, (n, f) => {
         const factor = Dimensionless.fraction(f);
-        const scaled = Quantity.timesUnitless(Length.meters(n), factor);
+        const scaled = Quantity.times(Length.meters(n), factor);
+        const divided: Quantity.Quantity<Length.Meters> = Quantity.over(
+          scaled,
+          factor,
+        );
 
-        assertTrue(isCloseTo(Quantity.overUnitless(scaled, factor).value, n));
+        assertTrue(isCloseTo(divided.value, n));
+        // For a pure number there is no left or right factor to choose
+        // between, so over_ does the same thing.
+        assertTrue(Equal.equals(Quantity.over_(scaled, factor), divided));
       }),
     );
   });
 
-  it("composes two dimensionless factors", () => {
-    const half = Dimensionless.percent(50);
+  it("does not fold a custom unit that happens to be named Unitless", () => {
+    // Custom leaves are distinct from base units with the same name, so this
+    // one composes into a Product like any other.
+    const fake = Quantity.make(Unit.custom("Unitless"), 2);
+    const product = Quantity.times(Length.meters(3), fake);
 
     assertTrue(
-      isCloseTo(
-        Dimensionless.inPercent(Quantity.timesUnitless(half, half)),
-        25,
+      Unit.equals(
+        product.unit,
+        Unit.product(Length.Meters, Unit.custom("Unitless")),
+      ),
+    );
+    assertEquals(product.value, 6);
+  });
+
+  it("keeps the general overloads reducible in generic code", () => {
+    // The dimensionless overloads must not push callers into a deferred
+    // conditional type: code generic in its units still gets a plain
+    // Product back, and code generic over a scaled quantity keeps its unit.
+    const scale = <U extends Unit.Unit>(
+      a: Quantity.Quantity<U>,
+      factor: Dimensionless.Dimensionless,
+    ): Quantity.Quantity<U> => Quantity.times(a, factor);
+
+    const compose = <U1 extends Unit.Unit, U2 extends Unit.Unit>(
+      a: Quantity.Quantity<U1>,
+      b: Quantity.Quantity<U2>,
+    ): Quantity.Quantity<Unit.Product<U1, U2>> => Quantity.times(a, b);
+
+    assertTrue(
+      isCloseTo(scale(Length.meters(4), Dimensionless.percent(50)).value, 2),
+    );
+    assertTrue(
+      Unit.equals(
+        compose(Length.meters(2), Mass.kilograms(3)).unit,
+        Unit.product(Length.Meters, "Kilograms"),
       ),
     );
   });
@@ -274,14 +341,20 @@ describe("dimensionless", () => {
 
     assertTrue(
       Equal.equals(
-        length.pipe(Quantity.timesUnitless(factor)),
-        Quantity.timesUnitless(length, factor),
+        length.pipe(Quantity.times(factor)),
+        Quantity.times(length, factor),
       ),
     );
     assertTrue(
       Equal.equals(
-        length.pipe(Quantity.overUnitless(factor)),
-        Quantity.overUnitless(length, factor),
+        length.pipe(Quantity.over(factor)),
+        Quantity.over(length, factor),
+      ),
+    );
+    assertTrue(
+      Equal.equals(
+        length.pipe(Quantity.over_(factor)),
+        Quantity.over_(length, factor),
       ),
     );
     assertTrue(
