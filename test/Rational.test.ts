@@ -8,9 +8,9 @@ import {
 } from "@effect/vitest/utils";
 import * as BigDecimal from "effect/BigDecimal";
 import * as BigInt_ from "effect/BigInt";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import * as Equal from "effect/Equal";
-import * as FastCheck from "effect/FastCheck";
+import * as FastCheck from "effect/testing/FastCheck";
 import * as Hash from "effect/Hash";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
@@ -21,7 +21,7 @@ const bigIntArb = FastCheck.bigInt({ min: -(2n ** 64n), max: 2n ** 64n });
 const positiveBigIntArb = FastCheck.bigInt({ min: 1n, max: 2n ** 32n });
 
 const rational = FastCheck.tuple(bigIntArb, positiveBigIntArb).map(([n, d]) =>
-  Rational.unsafeMake(n, d),
+  Rational.makeUnsafe(n, d),
 );
 
 const nonZeroRational = rational.filter((r) => !Rational.isZero(r));
@@ -35,7 +35,7 @@ describe("make", () => {
   it("reduces and normalizes the sign", () => {
     FastCheck.assert(
       FastCheck.property(bigIntArb, positiveBigIntArb, (n, d) => {
-        const r = Rational.unsafeMake(n, d);
+        const r = Rational.makeUnsafe(n, d);
 
         assertTrue(r.denominator > 0n);
         assertEquals(
@@ -51,38 +51,38 @@ describe("make", () => {
 
   it("equates equivalent fractions", () => {
     assertTrue(
-      Equal.equals(Rational.unsafeMake(2n, 4n), Rational.unsafeMake(1n, 2n)),
+      Equal.equals(Rational.makeUnsafe(2n, 4n), Rational.makeUnsafe(1n, 2n)),
     );
     assertTrue(
-      Equal.equals(Rational.unsafeMake(1n, -2n), Rational.unsafeMake(-1n, 2n)),
+      Equal.equals(Rational.makeUnsafe(1n, -2n), Rational.makeUnsafe(-1n, 2n)),
     );
-    assertTrue(Equal.equals(Rational.unsafeMake(0n, 7n), Rational.zero));
+    assertTrue(Equal.equals(Rational.makeUnsafe(0n, 7n), Rational.zero));
     assertEquals(
-      Hash.hash(Rational.unsafeMake(2n, 4n)),
-      Hash.hash(Rational.unsafeMake(1n, 2n)),
+      Hash.hash(Rational.makeUnsafe(2n, 4n)),
+      Hash.hash(Rational.makeUnsafe(1n, 2n)),
     );
   });
 
   it("defaults the denominator to one", () => {
     assertTrue(
-      Equal.equals(Rational.unsafeMake(3n), Rational.unsafeMake(3n, 1n)),
+      Equal.equals(Rational.makeUnsafe(3n), Rational.makeUnsafe(3n, 1n)),
     );
   });
 
-  it("make is None on a zero denominator, unsafeMake throws", () => {
+  it("make is None on a zero denominator, makeUnsafe throws", () => {
     assertTrue(Option.isNone(Rational.make(1n, 0n)));
     assertTrue(Option.isNone(Rational.make(0n, 0n)));
-    throws(() => Rational.unsafeMake(1n, 0n));
-    throws(() => Rational.unsafeMake(0n, 0n));
+    throws(() => Rational.makeUnsafe(1n, 0n));
+    throws(() => Rational.makeUnsafe(0n, 0n));
   });
 
-  it("make agrees with unsafeMake on every valid denominator", () => {
+  it("make agrees with makeUnsafe on every valid denominator", () => {
     FastCheck.assert(
       FastCheck.property(bigIntArb, positiveBigIntArb, (n, d) => {
         assertTrue(
           Equal.equals(
             Option.getOrThrow(Rational.make(n, d)),
-            Rational.unsafeMake(n, d),
+            Rational.makeUnsafe(n, d),
           ),
         );
       }),
@@ -90,7 +90,7 @@ describe("make", () => {
     assertTrue(
       Equal.equals(
         Option.getOrThrow(Rational.make(3n)),
-        Rational.unsafeMake(3n),
+        Rational.makeUnsafe(3n),
       ),
     );
   });
@@ -137,7 +137,7 @@ describe("field laws", () => {
       FastCheck.property(nonZeroRational, (a) => {
         assertTrue(
           Equal.equals(
-            Rational.multiply(a, Rational.unsafeReciprocal(a)),
+            Rational.multiply(a, Rational.reciprocalUnsafe(a)),
             Rational.one,
           ),
         );
@@ -172,19 +172,19 @@ describe("field laws", () => {
     assertTrue(
       Equal.equals(
         Rational.sumAll([
-          Rational.unsafeMake(1n, 2n),
-          Rational.unsafeMake(1n, 3n),
+          Rational.makeUnsafe(1n, 2n),
+          Rational.makeUnsafe(1n, 3n),
         ]),
-        Rational.unsafeMake(5n, 6n),
+        Rational.makeUnsafe(5n, 6n),
       ),
     );
     assertTrue(
       Equal.equals(
         Rational.multiplyAll([
-          Rational.unsafeMake(2n, 3n),
-          Rational.unsafeMake(3n, 4n),
+          Rational.makeUnsafe(2n, 3n),
+          Rational.makeUnsafe(3n, 4n),
         ]),
-        Rational.unsafeMake(1n, 2n),
+        Rational.makeUnsafe(1n, 2n),
       ),
     );
   });
@@ -207,8 +207,8 @@ describe("division", () => {
   });
 
   it("unsafe forms throw on zero", () => {
-    throws(() => Rational.unsafeDivide(Rational.one, Rational.zero));
-    throws(() => Rational.unsafeReciprocal(Rational.zero));
+    throws(() => Rational.divideUnsafe(Rational.one, Rational.zero));
+    throws(() => Rational.reciprocalUnsafe(Rational.zero));
   });
 });
 
@@ -225,13 +225,13 @@ describe("order", () => {
   });
 
   it("derives comparisons, min, max, clamp, and between", () => {
-    const half = Rational.unsafeMake(1n, 2n);
-    const third = Rational.unsafeMake(1n, 3n);
+    const half = Rational.makeUnsafe(1n, 2n);
+    const third = Rational.makeUnsafe(1n, 3n);
 
-    assertTrue(Rational.lessThan(third, half));
-    assertTrue(Rational.lessThanOrEqualTo(half, half));
-    assertTrue(Rational.greaterThan(half, third));
-    assertTrue(Rational.greaterThanOrEqualTo(third, third));
+    assertTrue(Rational.isLessThan(third, half));
+    assertTrue(Rational.isLessThanOrEqualTo(half, half));
+    assertTrue(Rational.isGreaterThan(half, third));
+    assertTrue(Rational.isGreaterThanOrEqualTo(third, third));
     assertTrue(Equal.equals(Rational.min(half, third), third));
     assertTrue(Equal.equals(Rational.max(half, third), half));
     assertTrue(
@@ -241,7 +241,7 @@ describe("order", () => {
       ),
     );
     assertTrue(
-      Rational.between(third, { minimum: Rational.zero, maximum: half }),
+      Rational.isBetween(third, { minimum: Rational.zero, maximum: half }),
     );
   });
 });
@@ -249,9 +249,9 @@ describe("order", () => {
 describe("guards", () => {
   it("classifies values", () => {
     assertTrue(Rational.isZero(Rational.zero));
-    assertTrue(Rational.isInteger(Rational.unsafeMake(6n, 3n)));
-    assertFalse(Rational.isInteger(Rational.unsafeMake(1n, 2n)));
-    assertTrue(Rational.isNegative(Rational.unsafeMake(1n, -2n)));
+    assertTrue(Rational.isInteger(Rational.makeUnsafe(6n, 3n)));
+    assertFalse(Rational.isInteger(Rational.makeUnsafe(1n, 2n)));
+    assertTrue(Rational.isNegative(Rational.makeUnsafe(1n, -2n)));
     assertTrue(Rational.isPositive(Rational.one));
     assertTrue(Rational.isRational(Rational.one));
     assertFalse(Rational.isRational(1));
@@ -263,7 +263,7 @@ describe("number conversions", () => {
     FastCheck.assert(
       FastCheck.property(fullRangeDouble, (x) => {
         assertEquals(
-          Rational.unsafeToNumber(Rational.unsafeFromNumber(x)),
+          Rational.toNumberUnsafe(Rational.fromNumberUnsafe(x)),
           x === 0 ? 0 : x,
         );
       }),
@@ -273,99 +273,99 @@ describe("number conversions", () => {
   it("fromNumber produces known dyadic expansions", () => {
     assertTrue(
       Equal.equals(
-        Rational.unsafeFromNumber(0.1),
-        Rational.unsafeMake(3602879701896397n, 2n ** 55n),
+        Rational.fromNumberUnsafe(0.1),
+        Rational.makeUnsafe(3602879701896397n, 2n ** 55n),
       ),
     );
     assertTrue(
       Equal.equals(
-        Rational.unsafeFromNumber(Number.MIN_VALUE),
-        Rational.unsafeMake(1n, 2n ** 1074n),
+        Rational.fromNumberUnsafe(Number.MIN_VALUE),
+        Rational.makeUnsafe(1n, 2n ** 1074n),
       ),
     );
     assertTrue(
       Equal.equals(
-        Rational.unsafeFromNumber(Number.MAX_VALUE),
-        Rational.unsafeMake(BigInt(Number.MAX_VALUE)),
+        Rational.fromNumberUnsafe(Number.MAX_VALUE),
+        Rational.makeUnsafe(BigInt(Number.MAX_VALUE)),
       ),
     );
-    assertTrue(Equal.equals(Rational.unsafeFromNumber(-0), Rational.zero));
+    assertTrue(Equal.equals(Rational.fromNumberUnsafe(-0), Rational.zero));
     assertTrue(Option.isNone(Rational.fromNumber(Number.NaN)));
     assertTrue(Option.isNone(Rational.fromNumber(Infinity)));
-    throws(() => Rational.unsafeFromNumber(Infinity));
+    throws(() => Rational.fromNumberUnsafe(Infinity));
   });
 
   it("toNumber rounds correctly on the fast path", () => {
-    assertEquals(Rational.unsafeToNumber(Rational.unsafeMake(1n, 3n)), 1 / 3);
-    assertEquals(Rational.unsafeToNumber(Rational.unsafeMake(-2n, 3n)), -2 / 3);
+    assertEquals(Rational.toNumberUnsafe(Rational.makeUnsafe(1n, 3n)), 1 / 3);
+    assertEquals(Rational.toNumberUnsafe(Rational.makeUnsafe(-2n, 3n)), -2 / 3);
     assertEquals(
-      Rational.unsafeToNumber(Rational.unsafeMake(127n, 5000n)),
+      Rational.toNumberUnsafe(Rational.makeUnsafe(127n, 5000n)),
       0.0254,
     );
-    assertEquals(Rational.unsafeToNumber(Rational.zero), 0);
+    assertEquals(Rational.toNumberUnsafe(Rational.zero), 0);
   });
 
   it("toNumber rounds correctly with huge operands", () => {
     // ≈ 1/3 with irreducible 600-bit terms: far inside 1/3's rounding
     // interval, so it must land on the same double.
     assertEquals(
-      Rational.unsafeToNumber(
-        Rational.unsafeMake(2n ** 600n + 1n, 3n * 2n ** 600n),
+      Rational.toNumberUnsafe(
+        Rational.makeUnsafe(2n ** 600n + 1n, 3n * 2n ** 600n),
       ),
       1 / 3,
     );
     // Naive Number(2^53 + 1) rounds the denominator first and yields 2^-53;
     // the correctly rounded quotient is one ulp below.
     assertEquals(
-      Rational.unsafeToNumber(Rational.unsafeMake(1n, 2n ** 53n + 1n)),
+      Rational.toNumberUnsafe(Rational.makeUnsafe(1n, 2n ** 53n + 1n)),
       2 ** -53 - 2 ** -106,
     );
     assertEquals(
-      Rational.unsafeToNumber(Rational.unsafeMake(2n ** 1000n, 3n)),
+      Rational.toNumberUnsafe(Rational.makeUnsafe(2n ** 1000n, 3n)),
       2 ** 1000 / 3,
     );
   });
 
   it("toNumber handles overflow explicitly", () => {
     assertTrue(
-      Option.isNone(Rational.toNumber(Rational.unsafeMake(2n ** 1024n))),
+      Option.isNone(Rational.toNumber(Rational.makeUnsafe(2n ** 1024n))),
     );
     // The midpoint between MAX_VALUE and 2^1024 ties to even, which carries
     // into overflow.
     assertTrue(
       Option.isNone(
-        Rational.toNumber(Rational.unsafeMake(2n ** 1024n - 2n ** 970n)),
+        Rational.toNumber(Rational.makeUnsafe(2n ** 1024n - 2n ** 970n)),
       ),
     );
     assertEquals(
-      Rational.toNumber(Rational.unsafeMake(2n ** 1024n - 2n ** 970n - 1n)),
+      Rational.toNumber(Rational.makeUnsafe(2n ** 1024n - 2n ** 970n - 1n)),
       Option.some(Number.MAX_VALUE),
     );
     assertEquals(
-      Rational.toNumber(Rational.unsafeMake(-(2n ** 1024n) + 2n ** 970n + 1n)),
+      Rational.toNumber(Rational.makeUnsafe(-(2n ** 1024n) + 2n ** 970n + 1n)),
       Option.some(-Number.MAX_VALUE),
     );
-    throws(() => Rational.unsafeToNumber(Rational.unsafeMake(2n ** 1024n)));
+    throws(() => Rational.toNumberUnsafe(Rational.makeUnsafe(2n ** 1024n)));
   });
 
   it("toNumber handles subnormals and underflow", () => {
     assertEquals(
-      Rational.unsafeToNumber(Rational.unsafeMake(1n, 2n ** 1074n)),
+      Rational.toNumberUnsafe(Rational.makeUnsafe(1n, 2n ** 1074n)),
       Number.MIN_VALUE,
     );
     // Exactly the midpoint between 0 and MIN_VALUE: ties to even (zero).
     assertEquals(
-      Rational.unsafeToNumber(Rational.unsafeMake(1n, 2n ** 1075n)),
+      Rational.toNumberUnsafe(Rational.makeUnsafe(1n, 2n ** 1075n)),
       0,
     );
     // Just above the midpoint.
     assertEquals(
-      Rational.unsafeToNumber(Rational.unsafeMake(3n, 2n ** 1076n)),
+      Rational.toNumberUnsafe(Rational.makeUnsafe(3n, 2n ** 1076n)),
       Number.MIN_VALUE,
     );
     // Below the midpoint.
     assertEquals(
-      Rational.unsafeToNumber(Rational.unsafeMake(1n, 2n ** 1076n)),
+      Rational.toNumberUnsafe(Rational.makeUnsafe(1n, 2n ** 1076n)),
       0,
     );
   });
@@ -471,7 +471,7 @@ describe("round", () => {
     it(`rounds with mode ${mode}`, () => {
       for (const [input, expected] of expectations) {
         assertEquals(
-          Rational.round(Rational.unsafeFromString(input), { mode }),
+          Rational.round(Rational.fromStringUnsafe(input), { mode }),
           expected,
         );
       }
@@ -479,9 +479,9 @@ describe("round", () => {
   }
 
   it("defaults to half-from-zero and passes integers through", () => {
-    assertEquals(Rational.round(Rational.unsafeFromString("29/2")), 15n);
-    assertEquals(Rational.round(Rational.unsafeFromString("-29/2")), -15n);
-    assertEquals(Rational.round(Rational.unsafeMake(7n)), 7n);
+    assertEquals(Rational.round(Rational.fromStringUnsafe("29/2")), 15n);
+    assertEquals(Rational.round(Rational.fromStringUnsafe("-29/2")), -15n);
+    assertEquals(Rational.round(Rational.makeUnsafe(7n)), 7n);
   });
 });
 
@@ -504,36 +504,36 @@ describe("BigDecimal interop", () => {
 
   it("toBigDecimalExact is None for non-terminating expansions", () => {
     assertTrue(
-      Option.isNone(Rational.toBigDecimalExact(Rational.unsafeMake(1n, 3n))),
+      Option.isNone(Rational.toBigDecimalExact(Rational.makeUnsafe(1n, 3n))),
     );
     assertTrue(
-      Option.isNone(Rational.toBigDecimalExact(Rational.unsafeMake(1n, 6n))),
+      Option.isNone(Rational.toBigDecimalExact(Rational.makeUnsafe(1n, 6n))),
     );
     assertTrue(
-      Option.isSome(Rational.toBigDecimalExact(Rational.unsafeMake(1n, 40n))),
+      Option.isSome(Rational.toBigDecimalExact(Rational.makeUnsafe(1n, 40n))),
     );
   });
 
   it("toBigDecimal rounds exactly once at the requested scale", () => {
     assertTrue(
       BigDecimal.equals(
-        Rational.toBigDecimal(Rational.unsafeMake(200n, 3n), {
+        Rational.toBigDecimal(Rational.makeUnsafe(200n, 3n), {
           scale: 0,
           mode: "half-even",
         }),
-        BigDecimal.unsafeFromString("67"),
+        BigDecimal.fromStringUnsafe("67"),
       ),
     );
     assertTrue(
       BigDecimal.equals(
-        Rational.toBigDecimal(Rational.unsafeMake(200n, 3n), { scale: 2 }),
-        BigDecimal.unsafeFromString("66.67"),
+        Rational.toBigDecimal(Rational.makeUnsafe(200n, 3n), { scale: 2 }),
+        BigDecimal.fromStringUnsafe("66.67"),
       ),
     );
     assertTrue(
       BigDecimal.equals(
-        Rational.toBigDecimal(Rational.unsafeMake(9n, 2n), { scale: 1 }),
-        BigDecimal.unsafeFromString("4.5"),
+        Rational.toBigDecimal(Rational.makeUnsafe(9n, 2n), { scale: 1 }),
+        BigDecimal.fromStringUnsafe("4.5"),
       ),
     );
   });
@@ -552,16 +552,16 @@ describe("format and fromString", () => {
   });
 
   it("formats integers without a denominator", () => {
-    assertEquals(Rational.format(Rational.unsafeMake(3n)), "3");
-    assertEquals(Rational.format(Rational.unsafeMake(-3n, 2n)), "-3/2");
-    assertEquals(Rational.format(Rational.unsafeMake(6n, 4n)), "3/2");
+    assertEquals(Rational.format(Rational.makeUnsafe(3n)), "3");
+    assertEquals(Rational.format(Rational.makeUnsafe(-3n, 2n)), "-3/2");
+    assertEquals(Rational.format(Rational.makeUnsafe(6n, 4n)), "3/2");
   });
 
   it("reduces non-canonical input and rejects malformed input", () => {
     assertTrue(
       Equal.equals(
-        Rational.unsafeFromString("6/4"),
-        Rational.unsafeMake(3n, 2n),
+        Rational.fromStringUnsafe("6/4"),
+        Rational.makeUnsafe(3n, 2n),
       ),
     );
     for (const input of [
@@ -577,7 +577,7 @@ describe("format and fromString", () => {
     ]) {
       assertTrue(Option.isNone(Rational.fromString(input)));
     }
-    throws(() => Rational.unsafeFromString("3/0"));
+    throws(() => Rational.fromStringUnsafe("3/0"));
   });
 });
 
@@ -585,30 +585,79 @@ describe("schema", () => {
   it("roundtrips through the string schema", () => {
     FastCheck.assert(
       FastCheck.property(rational, (r) => {
-        const encoded = Schema.encodeSync(Rational.Rational)(r);
+        const encoded = Schema.encodeSync(Rational.RationalFromString)(r);
 
         assertEquals(encoded, Rational.format(r));
         assertTrue(
-          Equal.equals(Schema.decodeSync(Rational.Rational)(encoded), r),
+          Equal.equals(
+            Schema.decodeSync(Rational.RationalFromString)(encoded),
+            r,
+          ),
         );
       }),
     );
   });
 
   it("rejects malformed strings", () => {
-    assertTrue(Either.isLeft(Schema.decodeEither(Rational.Rational)("3/0")));
-    assertTrue(Either.isLeft(Schema.decodeEither(Rational.Rational)("1.5")));
+    assertTrue(
+      Result.isFailure(Schema.decodeResult(Rational.RationalFromString)("3/0")),
+    );
+    assertTrue(
+      Result.isFailure(Schema.decodeResult(Rational.RationalFromString)("1.5")),
+    );
   });
 
-  it("RationalFromSelf validates by guard", () => {
-    assertTrue(Schema.is(Rational.RationalFromSelf)(Rational.one));
-    assertFalse(Schema.is(Rational.RationalFromSelf)(1));
+  it("Rational validates by guard", () => {
+    assertTrue(Schema.is(Rational.Rational)(Rational.one));
+    assertFalse(Schema.is(Rational.Rational)(1));
+  });
+
+  // The identity schema carries the string encoding as a `toCodecJson`
+  // annotation. Without it a declaration falls back to `Json` and throws on
+  // any non-JSON value, so the nesting test below is a regression test.
+
+  it("derives the canonical string encoding through toCodecJson", () => {
+    const r = Rational.makeUnsafe(3n, 2n);
+
+    deepStrictEqual(
+      Schema.encodeSync(Schema.toCodecJson(Rational.Rational))(r),
+      Schema.encodeSync(Rational.RationalFromString)(r),
+    );
+    deepStrictEqual(
+      Schema.encodeSync(Schema.toCodecJson(Rational.Rational))(r),
+      "3/2",
+    );
+  });
+
+  it("serializes when nested inside a caller's own schema", () => {
+    const Ratio = Schema.Struct({
+      label: Schema.String,
+      value: Rational.Rational,
+    });
+    const codec = Schema.toCodecJson(Ratio);
+    const ratio = { label: "half", value: Rational.makeUnsafe(1n, 2n) };
+
+    const encoded = Schema.encodeSync(codec)(ratio);
+
+    deepStrictEqual(encoded, { label: "half", value: "1/2" });
+
+    // Survives an actual JSON round trip, not just structural equality.
+    const decoded = Schema.decodeUnknownSync(codec)(
+      JSON.parse(JSON.stringify(encoded)),
+    );
+
+    assertTrue(Equal.equals(decoded.value, ratio.value));
+    assertTrue(
+      Result.isFailure(
+        Schema.decodeUnknownResult(codec)({ label: "bad", value: "3/0" }),
+      ),
+    );
   });
 });
 
 describe("inspection", () => {
   it("formats via Inspectable", () => {
-    deepStrictEqual(Rational.unsafeMake(3n, 2n).toJSON(), {
+    deepStrictEqual(Rational.makeUnsafe(3n, 2n).toJSON(), {
       _id: "Rational",
       numerator: "3",
       denominator: "2",
@@ -619,7 +668,7 @@ describe("inspection", () => {
 describe("type-level", () => {
   it("infers Option shapes for partial operations", () => {
     // Compile-time inference checks.
-    const r: Rational.Rational = Rational.unsafeMake(1n, 2n);
+    const r: Rational.Rational = Rational.makeUnsafe(1n, 2n);
     const quotient: Option.Option<Rational.Rational> = Rational.divide(
       r,
       Rational.one,

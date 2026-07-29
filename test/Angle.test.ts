@@ -1,6 +1,6 @@
 import { describe, it } from "@effect/vitest";
 import { assertEquals, assertTrue } from "@effect/vitest/utils";
-import * as FastCheck from "effect/FastCheck";
+import * as FastCheck from "effect/testing/FastCheck";
 
 import * as Angle from "../src/Angle.ts";
 import { isCloseTo, testAnchors, testRoundtrips } from "./testUtils.ts";

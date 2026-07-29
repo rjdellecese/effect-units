@@ -67,14 +67,28 @@ See [Custom units](#custom-units) for the full pattern, including a lossless bou
 
 ### Effect-native, wire-ready
 
-Quantities are Effect value objects: `Equal` and `Hash` (safe `HashMap` keys), `Pipeable`, with dual data-first/data-last functions throughout. Every quantity module exports a `Schema` with a stable, self-describing wire format—one that rejects NaN and ±Infinity at the boundary instead of letting JSON silently turn them into `null`:
+Quantities are Effect value objects: `Equal` and `Hash` (safe `HashMap` keys), `Pipeable`, with dual data-first/data-last functions throughout. Every quantity module exports two schemas, following the Effect v4 naming convention: `Speed` is the identity schema (a `Speed` on both sides), and `SpeedFromStruct` is the codec for a stable, self-describing wire format—one that rejects NaN and ±Infinity at the boundary instead of letting JSON silently turn them into `null`:
 
 ```ts
 import * as Schema from "effect/Schema";
 
-Schema.encodeSync(Speed.Speed)(speed);
+Schema.encodeSync(Speed.SpeedFromStruct)(speed);
 // { unit: "(Meters/Seconds)", value: 1.34112 }
 ```
+
+That wire format is also each type's canonical JSON representation, so quantities serialize correctly when they're nested inside a schema of your own—no wrapper codec to remember:
+
+```ts
+const Trip = Schema.Struct({ name: Schema.String, distance: Length.Length });
+
+Schema.encodeSync(Schema.toCodecJson(Trip))({
+  name: "commute",
+  distance: Length.meters(5),
+});
+// { name: "commute", distance: { unit: "Meters", value: 5 } }
+```
+
+Reach for `XFromStruct` when you want the precise `{ unit, value }` encoded type; reach for `Schema.toCodecJson` when the quantity is part of a larger structure (its encoded type is `Json`).
 
 `Duration` interoperates with `effect/Duration` and `effect/DateTime`, and `Rational` follows the `effect/BigDecimal` idiom.
 
@@ -98,8 +112,10 @@ Nearly every unit module has an exact twin (`LengthExact`, `SpeedExact`, `Durati
 ## Install
 
 ```bash
-pnpm add effect-units
+pnpm add effect-units effect@beta
 ```
+
+`effect` is a peer dependency. This release targets Effect v4, which is still in beta—hence the `@beta` tag.
 
 ## Modules
 
@@ -166,7 +182,8 @@ type Usd = Unit.Custom<"USD">;
 const Usd: Usd = Unit.custom("USD");
 
 type Money = Quantity.Quantity<Usd>;
-const Money = Quantity.Quantity(Usd); // Schema, wire format { unit: "[USD]", value: n }
+const Money = Quantity.Quantity(Usd); // identity schema
+const MoneyFromStruct = Quantity.QuantityFromStruct(Usd); // wire format { unit: "[USD]", value: n }
 
 // Store minor units (cents), so money libraries like dinero.js—which
 // represent amounts as integer minor units—convert losslessly at the
@@ -198,19 +215,19 @@ import * as Unit from "effect-units/Unit";
 const Usd = Unit.custom("USD");
 const cents = (r: Rational.Rational) => QuantityExact.make(Usd, r);
 
-const rate = QuantityExact.unsafePer(
-  cents(Rational.unsafeMake(200n)),
-  LengthExact.meters(Rational.unsafeMake(3n)),
+const rate = QuantityExact.perUnsafe(
+  cents(Rational.makeUnsafe(200n)),
+  LengthExact.meters(Rational.makeUnsafe(3n)),
 ); // exactly 200/3 cents per meter
 
 const cost = QuantityExact.at(
   rate,
-  LengthExact.meters(Rational.unsafeMake(3n)),
+  LengthExact.meters(Rational.makeUnsafe(3n)),
 );
 // exactly 200 cents—Equal.equals, not isCloseTo
 ```
 
-Because ℚ has no infinities or NaN, partiality lives in the types instead of sentinel values: `per`, `at_`, `over`, `over_`, `divide`, and `Rational.reciprocal` return `Option` (`Option.none()` exactly when the divisor is zero), each with an `unsafe*` twin that throws. Everything else—`sum`, `subtract`, `multiply`, `times`, `squared`, `cubed`, `at`, `for_`, comparisons—is total and exact. `equals` is decidable, and quantities are safe `HashMap` keys with no NaN or -0 caveats.
+Because ℚ has no infinities or NaN, partiality lives in the types instead of sentinel values: `per`, `at_`, `over`, `over_`, `divide`, and `Rational.reciprocal` return `Option` (`Option.none()` exactly when the divisor is zero), each with a `*Unsafe` twin that throws. Everything else—`sum`, `subtract`, `multiply`, `times`, `squared`, `cubed`, `at`, `for_`, comparisons—is total and exact. `equals` is decidable, and quantities are safe `HashMap` keys with no NaN or -0 caveats.
 
 Rounding happens only at explicitly parameterized boundaries:
 
@@ -232,6 +249,6 @@ Equality is two-tier:
 - `Equal.equals`/`Quantity.equals` is **exact**—identical value (NaN equals itself; -0 is normalized to 0) and structurally equal units. This is identity, suitable for `HashMap` keys, not for comparing computed measurements.
 - `Quantity.equalsWithin(a, b, tolerance)` is the domain-level comparison—the tolerance is itself a quantity in the same units, e.g. `Quantity.equalsWithin(a, b, Length.millimeters(1))`. Identical values—including two equal infinities—are equal within any tolerance; NaN is never equal to anything.
 
-The ordering predicates (`lessThan`, `greaterThan`, …) follow IEEE NaN semantics: any comparison involving NaN is false. `min` and `max` propagate NaN deterministically, like `Math.min`/`Math.max`.
+The ordering predicates (`isLessThan`, `isGreaterThan`, …) follow IEEE NaN semantics: any comparison involving NaN is false. `min` and `max` propagate NaN deterministically, like `Math.min`/`Math.max`.
 
 While in-memory arithmetic produces NaN and ±Infinity freely, the wire format does not admit them: schemas reject non-finite values at encode (where JSON would silently turn them into `null`) and at decode.

@@ -17,7 +17,7 @@ export const Newtons: Newtons = Unit.product(
 export type Force = Quantity.Quantity<Newtons>;
 
 export const Force = Quantity.Quantity(Newtons);
-export const ForceFromSelf = Quantity.QuantityFromSelf(Newtons);
+export const ForceFromStruct = Quantity.QuantityFromStruct(Newtons);
 
 const make = (value: number): Force => Quantity.make(Newtons, value);
 

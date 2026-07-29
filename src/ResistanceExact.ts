@@ -5,7 +5,7 @@ import * as Resistance from "./Resistance.ts";
 export type ResistanceExact = QuantityExact.QuantityExact<Resistance.Ohms>;
 
 export const ResistanceExact = QuantityExact.QuantityExact(Resistance.Ohms);
-export const ResistanceExactFromSelf = QuantityExact.QuantityExactFromSelf(
+export const ResistanceExactFromStruct = QuantityExact.QuantityExactFromStruct(
   Resistance.Ohms,
 );
 

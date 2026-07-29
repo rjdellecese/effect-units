@@ -6,7 +6,7 @@ import * as Rational from "./Rational.ts";
 export type CurrentExact = QuantityExact.QuantityExact<Current.Amperes>;
 
 export const CurrentExact = QuantityExact.QuantityExact(Current.Amperes);
-export const CurrentExactFromSelf = QuantityExact.QuantityExactFromSelf(
+export const CurrentExactFromStruct = QuantityExact.QuantityExactFromStruct(
   Current.Amperes,
 );
 

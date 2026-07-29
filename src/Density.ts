@@ -16,7 +16,7 @@ export const KilogramsPerCubicMeter: KilogramsPerCubicMeter = Unit.rate(
 export type Density = Quantity.Quantity<KilogramsPerCubicMeter>;
 
 export const Density = Quantity.Quantity(KilogramsPerCubicMeter);
-export const DensityFromSelf = Quantity.QuantityFromSelf(
+export const DensityFromStruct = Quantity.QuantityFromStruct(
   KilogramsPerCubicMeter,
 );
 

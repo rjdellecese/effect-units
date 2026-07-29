@@ -7,7 +7,7 @@ export const Steradians: Steradians = "Steradians";
 export type SolidAngle = Quantity.Quantity<Steradians>;
 
 export const SolidAngle = Quantity.Quantity(Steradians);
-export const SolidAngleFromSelf = Quantity.QuantityFromSelf(Steradians);
+export const SolidAngleFromStruct = Quantity.QuantityFromStruct(Steradians);
 
 const make = (value: number): SolidAngle => Quantity.make(Steradians, value);
 

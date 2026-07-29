@@ -9,7 +9,7 @@ export const Volts: Volts = Unit.rate(Power.Watts, Current.Amperes);
 export type Voltage = Quantity.Quantity<Volts>;
 
 export const Voltage = Quantity.Quantity(Volts);
-export const VoltageFromSelf = Quantity.QuantityFromSelf(Volts);
+export const VoltageFromStruct = Quantity.QuantityFromStruct(Volts);
 
 const make = (value: number): Voltage => Quantity.make(Volts, value);
 

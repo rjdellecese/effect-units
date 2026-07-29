@@ -14,8 +14,8 @@ describe("ChargeExact", () => {
   ]);
 
   testExactAnchors(ChargeExact.inCoulombs, [
-    [ChargeExact.ampereHours, Rational.unsafeMake(3600n)],
-    [ChargeExact.milliampereHours, Rational.unsafeMake(18n, 5n)],
+    [ChargeExact.ampereHours, Rational.makeUnsafe(3600n)],
+    [ChargeExact.milliampereHours, Rational.makeUnsafe(18n, 5n)],
   ]);
 
   it("matches the float module bit-for-bit where its factors are leaves", () => {
@@ -24,7 +24,7 @@ describe("ChargeExact", () => {
       [ChargeExact.milliampereHours, Charge.milliampereHours],
     ] as const) {
       assertEquals(
-        Rational.unsafeToNumber(exactCtor(Rational.one).value),
+        Rational.toNumberUnsafe(exactCtor(Rational.one).value),
         floatCtor(1).value,
       );
     }

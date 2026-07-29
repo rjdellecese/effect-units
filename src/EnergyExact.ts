@@ -7,7 +7,7 @@ import * as Rational from "./Rational.ts";
 export type EnergyExact = QuantityExact.QuantityExact<Energy.Joules>;
 
 export const EnergyExact = QuantityExact.QuantityExact(Energy.Joules);
-export const EnergyExactFromSelf = QuantityExact.QuantityExactFromSelf(
+export const EnergyExactFromStruct = QuantityExact.QuantityExactFromStruct(
   Energy.Joules,
 );
 
@@ -17,7 +17,7 @@ const make = (value: Rational.Rational): EnergyExact =>
 export const zero = make(Rational.zero);
 
 // Every extractor divides by a module factor, none of which is zero, so the
-// extractors are total via unsafeDivide.
+// extractors are total via divideUnsafe.
 
 export const joules = (r: Rational.Rational) => make(r);
 
@@ -39,7 +39,7 @@ export const inMegajoules = (e: EnergyExact) =>
  * One kilowatt hour is one kilowatt (1000 joules per second) for one hour—
  * exactly 3600000 joules.
  */
-const wattsPerKilowatt = Rational.unsafeMake(1000n);
+const wattsPerKilowatt = Rational.makeUnsafe(1000n);
 const joulesPerKilowattHour = Rational.multiply(
   wattsPerKilowatt,
   ConstantsExact.secondsPerHour,
@@ -49,4 +49,4 @@ export const kilowattHours = (r: Rational.Rational) =>
   make(Rational.multiply(r, joulesPerKilowattHour));
 
 export const inKilowattHours = (e: EnergyExact) =>
-  Rational.unsafeDivide(e.value, joulesPerKilowattHour);
+  Rational.divideUnsafe(e.value, joulesPerKilowattHour);

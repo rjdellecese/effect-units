@@ -2,11 +2,12 @@ import * as Equal from "effect/Equal";
 import * as Function from "effect/Function";
 import * as Hash from "effect/Hash";
 import type * as Inspectable from "effect/Inspectable";
-import * as Number_ from "effect/Number";
+import * as Number from "effect/Number";
 import * as order from "effect/Order";
 import type * as Pipeable from "effect/Pipeable";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 import {
   normalizeZero,
@@ -53,28 +54,43 @@ const make = (value: number): Temperature =>
 export const equals = (a: Temperature, b: Temperature): boolean =>
   valueEquals(a.value, b.value);
 
-export const TemperatureFromSelf = Schema.declare(isTemperature).annotations({
-  identifier: "TemperatureFromSelf",
-  description: "an absolute temperature",
-});
-
 /**
+ * The single definition of the wire format, shared by
+ * {@link TemperatureFromStruct} and by the `toCodecJson` annotation on
+ * {@link Temperature}, so the two can never drift apart.
+ *
  * The wire format carries a `unit: "Kelvins"` discriminator so persisted
  * temperatures are self-describing, matching the `{ unit, value }`
  * convention of `Quantity` schemas. As with quantities, only finite values
  * are admitted.
  */
-export const Temperature = Schema.transform(
-  Schema.Struct({
-    unit: Schema.Literal("Kelvins"),
-    value: Schema.Number.pipe(Schema.finite()),
-  }),
-  TemperatureFromSelf,
-  {
-    strict: true,
-    decode: ({ value }) => make(value),
-    encode: ({ value }) => ({ unit: "Kelvins" as const, value }),
-  },
+const wireStruct = Schema.Struct({
+  unit: Schema.Literal("Kelvins"),
+  value: Schema.Finite,
+});
+
+const wireTransformation = SchemaTransformation.transform({
+  decode: ({ value }: typeof wireStruct.Type) => make(value),
+  encode: ({ value }: Temperature) => ({ unit: "Kelvins" as const, value }),
+});
+
+/**
+ * The identity schema: a `Temperature` on both sides, decoded from itself.
+ *
+ * It carries the wire format as its canonical JSON representation, so
+ * `Schema.toCodecJson` derives that codec on demand—including when a
+ * temperature is nested inside a larger schema of your own.
+ * {@link TemperatureFromStruct} is the same codec named directly, with a
+ * precise `{ unit, value }` encoded type rather than `Json`.
+ */
+export const Temperature = Schema.declare(isTemperature, {
+  identifier: "Temperature",
+  description: "an absolute temperature",
+  toCodecJson: () => Schema.link<Temperature>()(wireStruct, wireTransformation),
+});
+
+export const TemperatureFromStruct = wireStruct.pipe(
+  Schema.decodeTo(Temperature, wireTransformation),
 );
 
 // Absolute temperatures
@@ -118,7 +134,7 @@ export const inDegreesFahrenheit = (t: Temperature) =>
 export type Delta = Quantity.Quantity<"CelsiusDegrees">;
 
 export const Delta = Quantity.Quantity("CelsiusDegrees");
-export const DeltaFromSelf = Quantity.QuantityFromSelf("CelsiusDegrees");
+export const DeltaFromStruct = Quantity.QuantityFromStruct("CelsiusDegrees");
 
 export const celsiusDegrees = (n: number): Delta =>
   Quantity.make("CelsiusDegrees", n);
@@ -152,17 +168,17 @@ export const minus: {
 // Comparison
 
 export const Order: order.Order<Temperature> = order.mapInput(
-  Number_.Order,
+  Number.Order,
   (t: Temperature) => t.value,
 );
 
-export const lessThan = order.lessThan(Order);
+export const isLessThan = order.isLessThan(Order);
 
-export const lessThanOrEqualTo = order.lessThanOrEqualTo(Order);
+export const isLessThanOrEqualTo = order.isLessThanOrEqualTo(Order);
 
-export const greaterThan = order.greaterThan(Order);
+export const isGreaterThan = order.isGreaterThan(Order);
 
-export const greaterThanOrEqualTo = order.greaterThanOrEqualTo(Order);
+export const isGreaterThanOrEqualTo = order.isGreaterThanOrEqualTo(Order);
 
 export const min: {
   (b: Temperature): (a: Temperature) => Temperature;

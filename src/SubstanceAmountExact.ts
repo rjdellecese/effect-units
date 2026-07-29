@@ -9,9 +9,8 @@ export type SubstanceAmountExact =
 export const SubstanceAmountExact = QuantityExact.QuantityExact(
   SubstanceAmount.Moles,
 );
-export const SubstanceAmountExactFromSelf = QuantityExact.QuantityExactFromSelf(
-  SubstanceAmount.Moles,
-);
+export const SubstanceAmountExactFromStruct =
+  QuantityExact.QuantityExactFromStruct(SubstanceAmount.Moles);
 
 const make = (value: Rational.Rational): SubstanceAmountExact =>
   QuantityExact.make(SubstanceAmount.Moles, value);

@@ -6,7 +6,7 @@ import {
   deepStrictEqual,
   throws,
 } from "@effect/vitest/utils";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import * as Equal from "effect/Equal";
 import * as Schema from "effect/Schema";
 
@@ -23,7 +23,7 @@ type Usd = Unit.Custom<"USD">;
 const Usd: Usd = Unit.custom("USD");
 
 type Money = Quantity.Quantity<Usd>;
-const Money = Quantity.Quantity(Usd);
+const Money = Quantity.QuantityFromStruct(Usd);
 
 const make = (value: number): Money => Quantity.make(Usd, value);
 
@@ -121,8 +121,8 @@ describe("custom units (a consumer-authored USD module)", () => {
     deepStrictEqual(encoded, { unit: "[USD]", value: 150 });
     assertTrue(Equal.equals(Schema.decodeSync(Money)(encoded), cents(150)));
     assertTrue(
-      Either.isLeft(
-        Schema.decodeUnknownEither(Money)({ unit: "USD", value: 150 }),
+      Result.isFailure(
+        Schema.decodeUnknownResult(Money)({ unit: "USD", value: 150 }),
       ),
     );
   });

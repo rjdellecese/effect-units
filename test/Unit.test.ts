@@ -5,7 +5,7 @@ import {
   assertTrue,
   throws,
 } from "@effect/vitest/utils";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import * as Equal from "effect/Equal";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
@@ -87,22 +87,70 @@ describe("Unit", () => {
   });
 
   it("roundtrips through the schema", () => {
-    const encoded = Schema.encodeSync(Unit.Unit)(newtons);
+    const encoded = Schema.encodeSync(Unit.UnitFromString)(newtons);
 
     assertEquals(encoded, "(Kilograms*((Meters/Seconds)/Seconds))");
-    assertTrue(Equal.equals(Schema.decodeSync(Unit.Unit)(encoded), newtons));
+    assertTrue(
+      Equal.equals(Schema.decodeSync(Unit.UnitFromString)(encoded), newtons),
+    );
   });
 
   it("the schema rejects non-canonical strings", () => {
     assertTrue(
-      Either.isLeft(Schema.decodeEither(Unit.Unit)("(Meters/Seconds")),
+      Result.isFailure(
+        Schema.decodeResult(Unit.UnitFromString)("(Meters/Seconds"),
+      ),
     );
   });
 
   it("the schema rejects deeply nested input without overflowing the stack", () => {
     assertTrue(
-      Either.isLeft(
-        Schema.decodeEither(Unit.Unit)("(".repeat(100_000) + "Meters"),
+      Result.isFailure(
+        Schema.decodeResult(Unit.UnitFromString)(
+          "(".repeat(100_000) + "Meters",
+        ),
+      ),
+    );
+  });
+
+  // The identity schema carries the string encoding as a `toCodecJson`
+  // annotation. Without it a declaration falls back to `Json` and throws on
+  // any non-JSON value, so the nesting test below is a regression test.
+
+  it("derives the canonical string encoding through toCodecJson", () => {
+    const metersPerSecond = Unit.rate("Meters", "Seconds");
+
+    assertEquals(
+      Schema.encodeSync(Schema.toCodecJson(Unit.Unit))(metersPerSecond),
+      Schema.encodeSync(Unit.UnitFromString)(metersPerSecond),
+    );
+    assertEquals(
+      Schema.encodeSync(Schema.toCodecJson(Unit.Unit))(metersPerSecond),
+      "(Meters/Seconds)",
+    );
+  });
+
+  it("serializes when nested inside a caller's own schema", () => {
+    const Reading = Schema.Struct({ label: Schema.String, unit: Unit.Unit });
+    const codec = Schema.toCodecJson(Reading);
+    const reading = { label: "speed", unit: Unit.rate("Meters", "Seconds") };
+
+    const encoded = Schema.encodeSync(codec)(reading);
+
+    assertEquals(encoded, { label: "speed", unit: "(Meters/Seconds)" });
+
+    // Survives an actual JSON round trip, not just structural equality.
+    const decoded = Schema.decodeUnknownSync(codec)(
+      JSON.parse(JSON.stringify(encoded)),
+    );
+
+    assertTrue(Equal.equals(decoded.unit, reading.unit));
+    assertTrue(
+      Result.isFailure(
+        Schema.decodeUnknownResult(codec)({
+          label: "bad",
+          unit: "(Meters/Seconds",
+        }),
       ),
     );
   });
@@ -140,20 +188,21 @@ describe("Unit", () => {
 
     it("roundtrip through the schema", () => {
       const usdPerMeter = Unit.rate(Unit.custom("USD"), "Meters");
-      const encoded = Schema.encodeSync(Unit.Unit)(usdPerMeter);
+      const encoded = Schema.encodeSync(Unit.UnitFromString)(usdPerMeter);
 
       assertEquals(encoded, "([USD]/Meters)");
       assertTrue(
-        Equal.equals(Schema.decodeSync(Unit.Unit)(encoded), usdPerMeter),
+        Equal.equals(
+          Schema.decodeSync(Unit.UnitFromString)(encoded),
+          usdPerMeter,
+        ),
       );
     });
 
-    it("UnitFromSelf validates the id", () => {
-      assertTrue(Schema.is(Unit.UnitFromSelf)({ _tag: "Custom", id: "USD" }));
-      assertFalse(
-        Schema.is(Unit.UnitFromSelf)({ _tag: "Custom", id: "not valid!" }),
-      );
-      assertFalse(Schema.is(Unit.UnitFromSelf)({ _tag: "Custom", id: 1 }));
+    it("Unit validates the id", () => {
+      assertTrue(Schema.is(Unit.Unit)({ _tag: "Custom", id: "USD" }));
+      assertFalse(Schema.is(Unit.Unit)({ _tag: "Custom", id: "not valid!" }));
+      assertFalse(Schema.is(Unit.Unit)({ _tag: "Custom", id: 1 }));
     });
 
     it("custom throws on invalid ids", () => {

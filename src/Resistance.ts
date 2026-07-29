@@ -9,7 +9,7 @@ export const Ohms: Ohms = Unit.rate(Voltage.Volts, Current.Amperes);
 export type Resistance = Quantity.Quantity<Ohms>;
 
 export const Resistance = Quantity.Quantity(Ohms);
-export const ResistanceFromSelf = Quantity.QuantityFromSelf(Ohms);
+export const ResistanceFromStruct = Quantity.QuantityFromStruct(Ohms);
 
 const make = (value: number): Resistance => Quantity.make(Ohms, value);
 

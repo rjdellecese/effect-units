@@ -7,7 +7,7 @@ export const Henries: Henries = "Henries";
 export type Inductance = Quantity.Quantity<Henries>;
 
 export const Inductance = Quantity.Quantity(Henries);
-export const InductanceFromSelf = Quantity.QuantityFromSelf(Henries);
+export const InductanceFromStruct = Quantity.QuantityFromStruct(Henries);
 
 const make = (value: number): Inductance => Quantity.make(Henries, value);
 

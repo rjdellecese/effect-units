@@ -5,39 +5,63 @@ import type * as Inspectable from "effect/Inspectable";
 import type * as Pipeable from "effect/Pipeable";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 import {
   normalizeZero,
   ValueObjectProto,
   valueEquals,
-} from "./internal/valueObject.js";
-import * as Unit from "./Unit.js";
+} from "./internal/valueObject.ts";
+import * as Unit from "./Unit.ts";
 
 export const TypeId = Symbol.for("effect-units/Quantity");
 export type TypeId = typeof TypeId;
 
-export const QuantityFromSelf = <const U extends Unit.Unit>(unit: U) =>
-  Schema.declare(hasUnit(unit));
-
 /**
+ * The single definition of the `{ unit, value }` wire format, shared by
+ * {@link QuantityFromStruct} and by the `toCodecJson` annotation on
+ * {@link Quantity}, so the two can never drift apart.
+ *
  * Note that the wire format only admits finite values: NaN and ±Infinity
  * (which in-memory arithmetic produces under IEEE semantics) fail loudly at
  * encode rather than corrupting silently through JSON (where they would
  * become `null`).
  */
-export const Quantity = <const U extends Unit.Unit>(unit: U) =>
-  Schema.transform(
-    Schema.Struct({
-      unit: Schema.Literal(Unit.encode(unit)),
-      value: Schema.Number.pipe(Schema.finite()),
+const wire = <const U extends Unit.Unit>(unit: U) => {
+  const struct = Schema.Struct({
+    unit: Schema.Literal(Unit.encode(unit)),
+    value: Schema.Finite,
+  });
+  return {
+    struct,
+    transformation: SchemaTransformation.transform({
+      decode: ({ value }: typeof struct.Type) => make(unit, value),
+      encode: ({ value }: Quantity<U>) => ({ unit: Unit.encode(unit), value }),
     }),
-    QuantityFromSelf(unit),
-    {
-      strict: true,
-      decode: ({ value }) => make(unit, value),
-      encode: ({ value }) => ({ unit: Unit.encode(unit), value }),
+  };
+};
+
+/**
+ * The identity schema: a `Quantity` on both sides, decoded from itself.
+ *
+ * It carries the wire format as its canonical JSON representation, so
+ * `Schema.toCodecJson` derives that codec on demand—including when a
+ * quantity is nested inside a larger schema of your own.
+ * {@link QuantityFromStruct} is the same codec named directly, with a
+ * precise `{ unit, value }` encoded type rather than `Json`.
+ */
+export const Quantity = <const U extends Unit.Unit>(unit: U) =>
+  Schema.declare(hasUnit(unit), {
+    toCodecJson: () => {
+      const { struct, transformation } = wire(unit);
+      return Schema.link<Quantity<U>>()(struct, transformation);
     },
-  );
+  });
+
+export const QuantityFromStruct = <const U extends Unit.Unit>(unit: U) => {
+  const { struct, transformation } = wire(unit);
+  return struct.pipe(Schema.decodeTo(Quantity(unit), transformation));
+};
 
 /**
  * A quantity is a plain 64-bit float tagged with a unit tree. Arithmetic
@@ -66,11 +90,8 @@ const Proto = {
     return isQuantity(that) && equals(this, that);
   },
   [Hash.symbol](this: Quantity<Unit.Unit>): number {
-    return Hash.cached(
-      this,
-      Hash.combine(Hash.string(Unit.encode(this.unit)))(
-        Hash.number(this.value),
-      ),
+    return Hash.combine(Hash.string(Unit.encode(this.unit)))(
+      Hash.number(this.value),
     );
   },
   toJSON(this: Quantity<Unit.Unit>) {
@@ -347,7 +368,7 @@ export const over_: {
 // involving NaN is false. min and max propagate NaN deterministically, like
 // Math.min/Math.max.
 
-export const lessThan: {
+export const isLessThan: {
   <U extends Unit.Unit>(b: Quantity<U>): (a: Quantity<U>) => boolean;
   <U extends Unit.Unit>(a: Quantity<U>, b: Quantity<U>): boolean;
 } = Function.dual(
@@ -356,7 +377,7 @@ export const lessThan: {
     a.value < b.value,
 );
 
-export const lessThanOrEqualTo: {
+export const isLessThanOrEqualTo: {
   <U extends Unit.Unit>(b: Quantity<U>): (a: Quantity<U>) => boolean;
   <U extends Unit.Unit>(a: Quantity<U>, b: Quantity<U>): boolean;
 } = Function.dual(
@@ -365,7 +386,7 @@ export const lessThanOrEqualTo: {
     a.value <= b.value,
 );
 
-export const greaterThan: {
+export const isGreaterThan: {
   <U extends Unit.Unit>(b: Quantity<U>): (a: Quantity<U>) => boolean;
   <U extends Unit.Unit>(a: Quantity<U>, b: Quantity<U>): boolean;
 } = Function.dual(
@@ -374,7 +395,7 @@ export const greaterThan: {
     a.value > b.value,
 );
 
-export const greaterThanOrEqualTo: {
+export const isGreaterThanOrEqualTo: {
   <U extends Unit.Unit>(b: Quantity<U>): (a: Quantity<U>) => boolean;
   <U extends Unit.Unit>(a: Quantity<U>, b: Quantity<U>): boolean;
 } = Function.dual(

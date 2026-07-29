@@ -21,22 +21,22 @@ describe("PressureExact", () => {
   ]);
 
   testExactAnchors(PressureExact.inPascals, [
-    [PressureExact.kilopascals, Rational.unsafeMake(1000n)],
-    [PressureExact.megapascals, Rational.unsafeMake(1000000n)],
+    [PressureExact.kilopascals, Rational.makeUnsafe(1000n)],
+    [PressureExact.megapascals, Rational.makeUnsafe(1000000n)],
     [
       PressureExact.poundsPerSquareInch,
-      Rational.unsafeDivide(
+      Rational.divideUnsafe(
         Rational.multiply(
-          Rational.unsafeMake(45359237n, 100000000n),
-          Rational.unsafeMake(196133n, 20000n),
+          Rational.makeUnsafe(45359237n, 100000000n),
+          Rational.makeUnsafe(196133n, 20000n),
         ),
         Rational.multiply(
-          Rational.unsafeMake(127n, 5000n),
-          Rational.unsafeMake(127n, 5000n),
+          Rational.makeUnsafe(127n, 5000n),
+          Rational.makeUnsafe(127n, 5000n),
         ),
       ),
     ],
-    [PressureExact.atmospheres, Rational.unsafeMake(101325n)],
+    [PressureExact.atmospheres, Rational.makeUnsafe(101325n)],
   ]);
 
   it("is an exact pound of force per exact square inch", () => {
@@ -62,7 +62,7 @@ describe("PressureExact", () => {
       [PressureExact.poundsPerSquareInch, Pressure.poundsPerSquareInch],
     ] as const) {
       assertEquals(
-        Rational.unsafeToNumber(exactCtor(Rational.one).value),
+        Rational.toNumberUnsafe(exactCtor(Rational.one).value),
         floatCtor(1).value,
       );
     }

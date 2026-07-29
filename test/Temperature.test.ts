@@ -5,7 +5,7 @@ import {
   deepStrictEqual,
 } from "@effect/vitest/utils";
 import * as Equal from "effect/Equal";
-import * as FastCheck from "effect/FastCheck";
+import * as FastCheck from "effect/testing/FastCheck";
 import * as Schema from "effect/Schema";
 
 import { double, isCloseTo, testRoundtrips } from "./testUtils.ts";
@@ -85,8 +85,8 @@ describe("Temperature", () => {
     const warm = Temperature.degreesCelsius(20);
     const hot = Temperature.degreesCelsius(100);
 
-    assertTrue(Temperature.lessThan(cold, warm));
-    assertTrue(Temperature.greaterThan(hot, warm));
+    assertTrue(Temperature.isLessThan(cold, warm));
+    assertTrue(Temperature.isGreaterThan(hot, warm));
     assertTrue(Temperature.equals(Temperature.min(cold, warm), cold));
     assertTrue(Temperature.equals(Temperature.max(cold, warm), warm));
     assertTrue(
@@ -101,8 +101,8 @@ describe("Temperature", () => {
     FastCheck.assert(
       FastCheck.property(double, (n) => {
         const temperature = Temperature.kelvins(n);
-        const decoded = Schema.decodeSync(Temperature.Temperature)(
-          Schema.encodeSync(Temperature.Temperature)(temperature),
+        const decoded = Schema.decodeSync(Temperature.TemperatureFromStruct)(
+          Schema.encodeSync(Temperature.TemperatureFromStruct)(temperature),
         );
 
         assertTrue(Equal.equals(decoded, temperature));
@@ -112,9 +112,49 @@ describe("Temperature", () => {
 
   it("carries a unit discriminator in the wire format", () => {
     deepStrictEqual(
-      Schema.encodeSync(Temperature.Temperature)(Temperature.kelvins(293.15)),
+      Schema.encodeSync(Temperature.TemperatureFromStruct)(
+        Temperature.kelvins(293.15),
+      ),
       { unit: "Kelvins", value: 293.15 },
     );
+  });
+
+  // The identity schema carries the wire format as a `toCodecJson`
+  // annotation. Without it a declaration falls back to `Json` and throws on
+  // any non-JSON value, so the nesting test below is a regression test.
+
+  it("derives the same wire format through toCodecJson", () => {
+    const temperature = Temperature.kelvins(293.15);
+
+    deepStrictEqual(
+      Schema.encodeSync(Schema.toCodecJson(Temperature.Temperature))(
+        temperature,
+      ),
+      Schema.encodeSync(Temperature.TemperatureFromStruct)(temperature),
+    );
+  });
+
+  it("serializes when nested inside a caller's own schema", () => {
+    const Reading = Schema.Struct({
+      city: Schema.String,
+      temperature: Temperature.Temperature,
+    });
+    const codec = Schema.toCodecJson(Reading);
+    const reading = { city: "Oslo", temperature: Temperature.kelvins(293.15) };
+
+    const encoded = Schema.encodeSync(codec)(reading);
+
+    deepStrictEqual(encoded, {
+      city: "Oslo",
+      temperature: { unit: "Kelvins", value: 293.15 },
+    });
+
+    // Survives an actual JSON round trip, not just structural equality.
+    const decoded = Schema.decodeUnknownSync(codec)(
+      JSON.parse(JSON.stringify(encoded)),
+    );
+
+    assertTrue(Equal.equals(decoded.temperature, reading.temperature));
   });
 
   it("absolute zero is zero kelvins", () => {

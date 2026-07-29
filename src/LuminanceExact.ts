@@ -5,7 +5,7 @@ import * as Rational from "./Rational.ts";
 export type LuminanceExact = QuantityExact.QuantityExact<Luminance.Nits>;
 
 export const LuminanceExact = QuantityExact.QuantityExact(Luminance.Nits);
-export const LuminanceExactFromSelf = QuantityExact.QuantityExactFromSelf(
+export const LuminanceExactFromStruct = QuantityExact.QuantityExactFromStruct(
   Luminance.Nits,
 );
 

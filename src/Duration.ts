@@ -12,7 +12,7 @@ export const Seconds: Seconds = "Seconds";
 export type Duration = Quantity.Quantity<Seconds>;
 
 export const Duration = Quantity.Quantity(Seconds);
-export const DurationFromSelf = Quantity.QuantityFromSelf(Seconds);
+export const DurationFromStruct = Quantity.QuantityFromStruct(Seconds);
 
 const make = (value: number): Duration => Quantity.make(Seconds, value);
 
@@ -105,7 +105,7 @@ export const addTo = (
     return Option.none();
   }
 
-  const result = DateTime.add(dateTime, { millis });
+  const result = DateTime.add(dateTime, { milliseconds: millis });
 
   return Number.isNaN(DateTime.toEpochMillis(result))
     ? Option.none()

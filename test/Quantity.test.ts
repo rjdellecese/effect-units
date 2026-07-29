@@ -6,11 +6,10 @@ import {
   deepStrictEqual,
 } from "@effect/vitest/utils";
 import * as Array from "effect/Array";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import * as Equal from "effect/Equal";
-import * as FastCheck from "effect/FastCheck";
+import * as FastCheck from "effect/testing/FastCheck";
 import * as Schema from "effect/Schema";
-import * as String from "effect/String";
 
 import { isCloseTo, double } from "./testUtils.ts";
 import * as Length from "../src/Length.ts";
@@ -196,8 +195,8 @@ describe("schema", () => {
     FastCheck.assert(
       FastCheck.property(double, (n) => {
         const quantity = Length.meters(n);
-        const encoded = Schema.encodeSync(Length.Length)(quantity);
-        const decoded = Schema.decodeSync(Length.Length)(encoded);
+        const encoded = Schema.encodeSync(Length.LengthFromStruct)(quantity);
+        const decoded = Schema.decodeSync(Length.LengthFromStruct)(encoded);
 
         assertEquals(encoded.unit, "Meters");
         assertTrue(Equal.equals(decoded, quantity));
@@ -207,7 +206,7 @@ describe("schema", () => {
 
   it("encodes and decodes a rate quantity, freezing the wire format", () => {
     const MetersPerSecond = Unit.rate(Length.Meters, "Seconds");
-    const Speed = Quantity.Quantity(MetersPerSecond);
+    const Speed = Quantity.QuantityFromStruct(MetersPerSecond);
 
     const quantity = Quantity.make(MetersPerSecond, 1);
     const encoded = Schema.encodeSync(Speed)(quantity);
@@ -220,20 +219,67 @@ describe("schema", () => {
     // In-memory arithmetic produces Infinity/NaN by design, but JSON would
     // silently turn them into null—so encoding must fail loudly instead.
     const MetersPerSecond = Unit.rate(Length.Meters, "Seconds");
-    const Speed = Quantity.Quantity(MetersPerSecond);
+    const Speed = Quantity.QuantityFromStruct(MetersPerSecond);
     const infinite = Quantity.per(
       Length.meters(1),
       Quantity.make("Seconds", 0),
     );
 
-    assertTrue(Either.isLeft(Schema.encodeEither(Speed)(infinite)));
+    assertTrue(Result.isFailure(Schema.encodeResult(Speed)(infinite)));
     assertTrue(
-      Either.isLeft(
-        Schema.decodeUnknownEither(Speed)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(Speed)({
           unit: "(Meters/Seconds)",
           value: null,
         }),
       ),
+    );
+  });
+
+  // The identity schema carries the wire format as a `toCodecJson`
+  // annotation. Without it a declaration falls back to `Json` and throws on
+  // any non-JSON value, so the nesting test below is a regression test.
+
+  it("derives the same wire format through toCodecJson", () => {
+    const quantity = Length.meters(5);
+
+    deepStrictEqual(
+      Schema.encodeSync(Schema.toCodecJson(Length.Length))(quantity),
+      Schema.encodeSync(Length.LengthFromStruct)(quantity),
+    );
+  });
+
+  it("serializes when nested inside a caller's own schema", () => {
+    const Trip = Schema.Struct({
+      name: Schema.String,
+      distance: Length.Length,
+    });
+    const codec = Schema.toCodecJson(Trip);
+    const trip = { name: "commute", distance: Length.meters(5) };
+
+    const encoded = Schema.encodeSync(codec)(trip);
+
+    deepStrictEqual(encoded, {
+      name: "commute",
+      distance: { unit: "Meters", value: 5 },
+    });
+
+    // Survives an actual JSON round trip, not just structural equality.
+    const decoded = Schema.decodeUnknownSync(codec)(
+      JSON.parse(JSON.stringify(encoded)),
+    );
+
+    assertTrue(Equal.equals(decoded.distance, trip.distance));
+  });
+
+  it("rejects non-finite values through toCodecJson too", () => {
+    const codec = Schema.toCodecJson(Length.Length);
+
+    assertTrue(
+      Result.isFailure(Schema.encodeResult(codec)(Length.meters(Infinity))),
+    );
+    assertTrue(
+      Result.isFailure(Schema.encodeResult(codec)(Length.meters(NaN))),
     );
   });
 });
@@ -312,10 +358,10 @@ describe("comparison", () => {
     const short = Length.meters(1);
     const long = Length.meters(2);
 
-    assertTrue(Quantity.lessThan(short, long));
-    assertTrue(Quantity.lessThanOrEqualTo(short, short));
-    assertTrue(Quantity.greaterThan(long, short));
-    assertTrue(Quantity.greaterThanOrEqualTo(long, long));
+    assertTrue(Quantity.isLessThan(short, long));
+    assertTrue(Quantity.isLessThanOrEqualTo(short, short));
+    assertTrue(Quantity.isGreaterThan(long, short));
+    assertTrue(Quantity.isGreaterThanOrEqualTo(long, long));
     assertTrue(Equal.equals(Quantity.min(short, long), short));
     assertTrue(Equal.equals(Quantity.max(short, long), long));
   });
@@ -323,9 +369,9 @@ describe("comparison", () => {
   it("comparisons involving NaN are false", () => {
     const nan = Quantity.make("Meters", NaN);
 
-    assertFalse(Quantity.lessThan(nan, Length.meters(1)));
-    assertFalse(Quantity.greaterThan(nan, Length.meters(1)));
-    assertFalse(Quantity.lessThanOrEqualTo(nan, nan));
+    assertFalse(Quantity.isLessThan(nan, Length.meters(1)));
+    assertFalse(Quantity.isGreaterThan(nan, Length.meters(1)));
+    assertFalse(Quantity.isLessThanOrEqualTo(nan, nan));
   });
 
   it("min and max propagate NaN regardless of argument order", () => {
@@ -348,6 +394,9 @@ describe("inspection", () => {
       unit: "(Meters/Seconds)",
       value: 5,
     });
-    assertTrue(String.includes('"unit": "(Meters/Seconds)"')(speed.toString()));
+    assertEquals(
+      speed.toString(),
+      '{"_id":"Quantity","unit":"(Meters/Seconds)","value":5}',
+    );
   });
 });

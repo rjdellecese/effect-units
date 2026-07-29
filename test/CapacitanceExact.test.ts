@@ -15,9 +15,9 @@ describe("CapacitanceExact", () => {
   ]);
 
   testExactAnchors(CapacitanceExact.inFarads, [
-    [CapacitanceExact.picofarads, Rational.unsafeMake(1n, 10n ** 12n)],
-    [CapacitanceExact.nanofarads, Rational.unsafeMake(1n, 10n ** 9n)],
-    [CapacitanceExact.microfarads, Rational.unsafeMake(1n, 10n ** 6n)],
+    [CapacitanceExact.picofarads, Rational.makeUnsafe(1n, 10n ** 12n)],
+    [CapacitanceExact.nanofarads, Rational.makeUnsafe(1n, 10n ** 9n)],
+    [CapacitanceExact.microfarads, Rational.makeUnsafe(1n, 10n ** 6n)],
   ]);
 
   it("matches the float module bit-for-bit where its factors are leaves", () => {
@@ -27,7 +27,7 @@ describe("CapacitanceExact", () => {
       [CapacitanceExact.microfarads, Capacitance.microfarads],
     ] as const) {
       assertEquals(
-        Rational.unsafeToNumber(exactCtor(Rational.one).value),
+        Rational.toNumberUnsafe(exactCtor(Rational.one).value),
         floatCtor(1).value,
       );
     }

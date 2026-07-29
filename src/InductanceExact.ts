@@ -6,7 +6,7 @@ import * as Rational from "./Rational.ts";
 export type InductanceExact = QuantityExact.QuantityExact<Inductance.Henries>;
 
 export const InductanceExact = QuantityExact.QuantityExact(Inductance.Henries);
-export const InductanceExactFromSelf = QuantityExact.QuantityExactFromSelf(
+export const InductanceExactFromStruct = QuantityExact.QuantityExactFromStruct(
   Inductance.Henries,
 );
 

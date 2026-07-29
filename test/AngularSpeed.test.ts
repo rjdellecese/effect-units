@@ -1,7 +1,7 @@
 import { describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Equal from "effect/Equal";
-import * as FastCheck from "effect/FastCheck";
+import * as FastCheck from "effect/testing/FastCheck";
 
 import * as Angle from "../src/Angle.ts";
 import * as AngularSpeed from "../src/AngularSpeed.ts";

@@ -13,7 +13,7 @@ export const Nits: Nits = Unit.rate(
 export type Luminance = Quantity.Quantity<Nits>;
 
 export const Luminance = Quantity.Quantity(Nits);
-export const LuminanceFromSelf = Quantity.QuantityFromSelf(Nits);
+export const LuminanceFromStruct = Quantity.QuantityFromStruct(Nits);
 
 const make = (value: number): Luminance => Quantity.make(Nits, value);
 

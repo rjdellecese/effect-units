@@ -22,34 +22,34 @@ describe("MassExact", () => {
   ]);
 
   testExactAnchors(MassExact.inKilograms, [
-    [MassExact.grams, Rational.unsafeMake(1n, 1000n)],
-    [MassExact.milligrams, Rational.unsafeMake(1n, 10n ** 6n)],
-    [MassExact.micrograms, Rational.unsafeMake(1n, 10n ** 9n)],
-    [MassExact.nanograms, Rational.unsafeMake(1n, 10n ** 12n)],
-    [MassExact.metricTons, Rational.unsafeMake(1000n)],
-    [MassExact.ounces, Rational.unsafeMake(45359237n, 1600000000n)],
-    [MassExact.pounds, Rational.unsafeMake(45359237n, 100000000n)],
-    [MassExact.longTons, Rational.unsafeMake(317514659n, 312500n)],
-    [MassExact.shortTons, Rational.unsafeMake(45359237n, 50000n)],
+    [MassExact.grams, Rational.makeUnsafe(1n, 1000n)],
+    [MassExact.milligrams, Rational.makeUnsafe(1n, 10n ** 6n)],
+    [MassExact.micrograms, Rational.makeUnsafe(1n, 10n ** 9n)],
+    [MassExact.nanograms, Rational.makeUnsafe(1n, 10n ** 12n)],
+    [MassExact.metricTons, Rational.makeUnsafe(1000n)],
+    [MassExact.ounces, Rational.makeUnsafe(45359237n, 1600000000n)],
+    [MassExact.pounds, Rational.makeUnsafe(45359237n, 100000000n)],
+    [MassExact.longTons, Rational.makeUnsafe(317514659n, 312500n)],
+    [MassExact.shortTons, Rational.makeUnsafe(45359237n, 50000n)],
   ]);
 
   it("relates units exactly", () => {
     assertTrue(
       Equal.equals(
         MassExact.inOunces(MassExact.pounds(Rational.one)),
-        Rational.unsafeMake(16n),
+        Rational.makeUnsafe(16n),
       ),
     );
     assertTrue(
       Equal.equals(
         MassExact.inPounds(MassExact.longTons(Rational.one)),
-        Rational.unsafeMake(2240n),
+        Rational.makeUnsafe(2240n),
       ),
     );
     assertTrue(
       Equal.equals(
         MassExact.inPounds(MassExact.shortTons(Rational.one)),
-        Rational.unsafeMake(2000n),
+        Rational.makeUnsafe(2000n),
       ),
     );
   });
@@ -67,7 +67,7 @@ describe("MassExact", () => {
       [MassExact.shortTons, Mass.shortTons],
     ] as const) {
       assertEquals(
-        Rational.unsafeToNumber(exactCtor(Rational.one).value),
+        Rational.toNumberUnsafe(exactCtor(Rational.one).value),
         floatCtor(1).value,
       );
     }

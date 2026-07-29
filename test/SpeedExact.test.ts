@@ -18,15 +18,15 @@ describe("SpeedExact", () => {
   ]);
 
   testExactAnchors(SpeedExact.inMetersPerSecond, [
-    [SpeedExact.kilometersPerHour, Rational.unsafeMake(5n, 18n)],
-    [SpeedExact.feetPerSecond, Rational.unsafeMake(381n, 1250n)],
-    [SpeedExact.milesPerHour, Rational.unsafeMake(1397n, 3125n)],
+    [SpeedExact.kilometersPerHour, Rational.makeUnsafe(5n, 18n)],
+    [SpeedExact.feetPerSecond, Rational.makeUnsafe(381n, 1250n)],
+    [SpeedExact.milesPerHour, Rational.makeUnsafe(1397n, 3125n)],
   ]);
 
   it("is the unit of an exact length-per-duration rate", () => {
     const rate = QuantityExact.per(
       LengthExact.miles(Rational.one),
-      QuantityExact.make("Seconds", Rational.unsafeMake(3600n)),
+      QuantityExact.make("Seconds", Rational.makeUnsafe(3600n)),
     );
 
     assertTrue(Option.isSome(rate));

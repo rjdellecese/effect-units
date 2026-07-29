@@ -6,9 +6,9 @@ import {
   deepStrictEqual,
   throws,
 } from "@effect/vitest/utils";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import * as Equal from "effect/Equal";
-import * as FastCheck from "effect/FastCheck";
+import * as FastCheck from "effect/testing/FastCheck";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
@@ -102,7 +102,7 @@ describe("rates", () => {
   it("at inverts per exactly", () => {
     FastCheck.assert(
       FastCheck.property(rational, nonZeroRational, (a, b) => {
-        const rate = QuantityExact.unsafePer(meters(a), seconds(b));
+        const rate = QuantityExact.perUnsafe(meters(a), seconds(b));
 
         assertTrue(Unit.equals(rate.unit, Unit.rate("Meters", "Seconds")));
         assertTrue(Equal.equals(QuantityExact.at(rate, seconds(b)), meters(a)));
@@ -113,7 +113,7 @@ describe("rates", () => {
   it("at_ inverts at exactly", () => {
     FastCheck.assert(
       FastCheck.property(nonZeroRational, rational, (r, i) => {
-        const rate = QuantityExact.unsafePer(meters(r), seconds(Rational.one));
+        const rate = QuantityExact.perUnsafe(meters(r), seconds(Rational.one));
         const dependent = QuantityExact.at(rate, seconds(i));
         const recovered = QuantityExact.at_(dependent, rate);
 
@@ -126,7 +126,7 @@ describe("rates", () => {
   it("for_ matches at with flipped arguments", () => {
     FastCheck.assert(
       FastCheck.property(nonZeroRational, rational, (r, i) => {
-        const rate = QuantityExact.unsafePer(meters(r), seconds(Rational.one));
+        const rate = QuantityExact.perUnsafe(meters(r), seconds(Rational.one));
 
         assertTrue(
           Equal.equals(
@@ -141,8 +141,8 @@ describe("rates", () => {
   it("division by zero is None for the whole division family", () => {
     const zeroSeconds = seconds(Rational.zero);
     const one = meters(Rational.one);
-    const rate = QuantityExact.unsafePer(one, seconds(Rational.one));
-    const zeroRate = QuantityExact.unsafePer(
+    const rate = QuantityExact.perUnsafe(one, seconds(Rational.one));
+    const zeroRate = QuantityExact.perUnsafe(
       meters(Rational.zero),
       seconds(Rational.one),
     );
@@ -163,16 +163,16 @@ describe("rates", () => {
 
   it("unsafe forms throw on zero divisors", () => {
     const one = meters(Rational.one);
-    const zeroRate = QuantityExact.unsafePer(
+    const zeroRate = QuantityExact.perUnsafe(
       meters(Rational.zero),
       seconds(Rational.one),
     );
 
-    throws(() => QuantityExact.unsafePer(one, seconds(Rational.zero)));
-    throws(() => QuantityExact.unsafeAt_(one, zeroRate));
-    throws(() => QuantityExact.unsafeDivide(one, Rational.zero));
+    throws(() => QuantityExact.perUnsafe(one, seconds(Rational.zero)));
+    throws(() => QuantityExact.at_Unsafe(one, zeroRate));
+    throws(() => QuantityExact.divideUnsafe(one, Rational.zero));
     throws(() =>
-      QuantityExact.unsafeOver(
+      QuantityExact.overUnsafe(
         QuantityExact.times(one, kilograms(Rational.zero)),
         kilograms(Rational.zero),
       ),
@@ -184,8 +184,8 @@ describe("equality and comparison", () => {
   it("equates equivalent fractions across representations", () => {
     assertTrue(
       Equal.equals(
-        meters(Rational.unsafeMake(2n, 4n)),
-        meters(Rational.unsafeMake(1n, 2n)),
+        meters(Rational.makeUnsafe(2n, 4n)),
+        meters(Rational.makeUnsafe(1n, 2n)),
       ),
     );
     assertFalse(Equal.equals(meters(Rational.one), seconds(Rational.one)));
@@ -195,28 +195,28 @@ describe("equality and comparison", () => {
   it("equalsWithin compares against a rational tolerance", () => {
     assertTrue(
       QuantityExact.equalsWithin(
-        meters(Rational.unsafeMake(1n)),
-        meters(Rational.unsafeMake(1001n, 1000n)),
-        meters(Rational.unsafeMake(1n, 100n)),
+        meters(Rational.makeUnsafe(1n)),
+        meters(Rational.makeUnsafe(1001n, 1000n)),
+        meters(Rational.makeUnsafe(1n, 100n)),
       ),
     );
     assertFalse(
       QuantityExact.equalsWithin(
-        meters(Rational.unsafeMake(1n)),
-        meters(Rational.unsafeMake(102n, 100n)),
-        meters(Rational.unsafeMake(1n, 100n)),
+        meters(Rational.makeUnsafe(1n)),
+        meters(Rational.makeUnsafe(102n, 100n)),
+        meters(Rational.makeUnsafe(1n, 100n)),
       ),
     );
   });
 
   it("orders quantities totally", () => {
-    const short = meters(Rational.unsafeMake(1n, 3n));
-    const long = meters(Rational.unsafeMake(1n, 2n));
+    const short = meters(Rational.makeUnsafe(1n, 3n));
+    const long = meters(Rational.makeUnsafe(1n, 2n));
 
-    assertTrue(QuantityExact.lessThan(short, long));
-    assertTrue(QuantityExact.lessThanOrEqualTo(short, short));
-    assertTrue(QuantityExact.greaterThan(long, short));
-    assertTrue(QuantityExact.greaterThanOrEqualTo(long, long));
+    assertTrue(QuantityExact.isLessThan(short, long));
+    assertTrue(QuantityExact.isLessThanOrEqualTo(short, short));
+    assertTrue(QuantityExact.isGreaterThan(long, short));
+    assertTrue(QuantityExact.isGreaterThanOrEqualTo(long, long));
     assertTrue(Equal.equals(QuantityExact.min(short, long), short));
     assertTrue(Equal.equals(QuantityExact.max(short, long), long));
   });
@@ -225,9 +225,9 @@ describe("equality and comparison", () => {
     FastCheck.assert(
       FastCheck.property(double, double, (x, y) => {
         assertEquals(
-          QuantityExact.lessThan(
-            meters(Rational.unsafeFromNumber(x)),
-            meters(Rational.unsafeFromNumber(y)),
+          QuantityExact.isLessThan(
+            meters(Rational.fromNumberUnsafe(x)),
+            meters(Rational.fromNumberUnsafe(y)),
           ),
           x < y,
         );
@@ -244,7 +244,7 @@ describe("interop with the float module", () => {
 
         assertTrue(
           Equal.equals(
-            QuantityExact.unsafeToQuantity(QuantityExact.unsafeFromQuantity(q)),
+            QuantityExact.toQuantityUnsafe(QuantityExact.fromQuantityUnsafe(q)),
             q,
           ),
         );
@@ -262,71 +262,133 @@ describe("interop with the float module", () => {
       ),
     );
     throws(() =>
-      QuantityExact.unsafeFromQuantity(Quantity.make("Meters", NaN)),
+      QuantityExact.fromQuantityUnsafe(Quantity.make("Meters", NaN)),
     );
   });
 
   it("toQuantity rounds a non-dyadic value once, correctly", () => {
-    const third = meters(Rational.unsafeMake(1n, 3n));
+    const third = meters(Rational.makeUnsafe(1n, 3n));
 
-    assertEquals(QuantityExact.unsafeToQuantity(third).value, 1 / 3);
+    assertEquals(QuantityExact.toQuantityUnsafe(third).value, 1 / 3);
     assertTrue(
       Option.isNone(
-        QuantityExact.toQuantity(meters(Rational.unsafeMake(2n ** 1024n))),
+        QuantityExact.toQuantity(meters(Rational.makeUnsafe(2n ** 1024n))),
       ),
     );
   });
 
   it("bridges float unit modules through their tags", () => {
-    const exact = QuantityExact.unsafeFromQuantity(Length.meters(1.5));
+    const exact = QuantityExact.fromQuantityUnsafe(Length.meters(1.5));
 
     assertTrue(Unit.equals(exact.unit, Length.Meters));
-    assertTrue(Equal.equals(exact.value, Rational.unsafeMake(3n, 2n)));
+    assertTrue(Equal.equals(exact.value, Rational.makeUnsafe(3n, 2n)));
   });
 });
 
 describe("schema", () => {
-  const Meters = QuantityExact.QuantityExact("Meters");
+  const Meters = QuantityExact.QuantityExactFromStruct("Meters");
 
   it("roundtrips, freezing the wire format", () => {
-    const q = meters(Rational.unsafeMake(3n, 2n));
+    const q = meters(Rational.makeUnsafe(3n, 2n));
     const encoded = Schema.encodeSync(Meters)(q);
 
     deepStrictEqual(encoded, { unit: "Meters", value: "3/2" });
     assertTrue(Equal.equals(Schema.decodeSync(Meters)(encoded), q));
 
-    const integral = Schema.encodeSync(Meters)(meters(Rational.unsafeMake(3n)));
+    const integral = Schema.encodeSync(Meters)(meters(Rational.makeUnsafe(3n)));
 
     deepStrictEqual(integral, { unit: "Meters", value: "3" });
   });
 
   it("rejects malformed values and wrong units", () => {
     assertTrue(
-      Either.isLeft(
-        Schema.decodeUnknownEither(Meters)({ unit: "Meters", value: "3/0" }),
+      Result.isFailure(
+        Schema.decodeUnknownResult(Meters)({ unit: "Meters", value: "3/0" }),
       ),
     );
     assertTrue(
-      Either.isLeft(
-        Schema.decodeUnknownEither(Meters)({ unit: "Meters", value: "1.5" }),
+      Result.isFailure(
+        Schema.decodeUnknownResult(Meters)({ unit: "Meters", value: "1.5" }),
       ),
     );
     assertTrue(
-      Either.isLeft(
-        Schema.decodeUnknownEither(Meters)({ unit: "Seconds", value: "1" }),
+      Result.isFailure(
+        Schema.decodeUnknownResult(Meters)({ unit: "Seconds", value: "1" }),
       ),
     );
   });
 
-  it("QuantityExactFromSelf rejects float quantities", () => {
+  it("QuantityExactFromStruct rejects float quantities", () => {
     assertFalse(
-      Schema.is(QuantityExact.QuantityExactFromSelf("Meters"))(
+      Schema.is(QuantityExact.QuantityExactFromStruct("Meters"))(
         Quantity.make("Meters", 1),
       ),
     );
     assertTrue(
-      Schema.is(QuantityExact.QuantityExactFromSelf("Meters"))(
+      Schema.is(QuantityExact.QuantityExactFromStruct("Meters"))(
         meters(Rational.one),
+      ),
+    );
+  });
+
+  // The identity schema carries the wire format as a `toCodecJson`
+  // annotation. Without it a declaration falls back to `Json` and throws on
+  // any non-JSON value, so the nesting test below is a regression test.
+
+  it("derives the same wire format through toCodecJson", () => {
+    const q = meters(Rational.makeUnsafe(3n, 2n));
+
+    deepStrictEqual(
+      Schema.encodeSync(
+        Schema.toCodecJson(QuantityExact.QuantityExact("Meters")),
+      )(q),
+      Schema.encodeSync(Meters)(q),
+    );
+  });
+
+  it("serializes when nested inside a caller's own schema", () => {
+    const Budget = Schema.Struct({
+      name: Schema.String,
+      amount: QuantityExact.QuantityExact("Meters"),
+    });
+    const codec = Schema.toCodecJson(Budget);
+    const budget = {
+      name: "cable",
+      amount: meters(Rational.makeUnsafe(3n, 2n)),
+    };
+
+    const encoded = Schema.encodeSync(codec)(budget);
+
+    deepStrictEqual(encoded, {
+      name: "cable",
+      amount: { unit: "Meters", value: "3/2" },
+    });
+
+    // Survives an actual JSON round trip, not just structural equality.
+    const decoded = Schema.decodeUnknownSync(codec)(
+      JSON.parse(JSON.stringify(encoded)),
+    );
+
+    assertTrue(Equal.equals(decoded.amount, budget.amount));
+  });
+
+  it("propagates rejections out of nested values", () => {
+    const codec = Schema.toCodecJson(
+      Schema.Struct({ amount: QuantityExact.QuantityExact("Meters") }),
+    );
+
+    assertTrue(
+      Result.isFailure(
+        Schema.decodeUnknownResult(codec)({
+          amount: { unit: "Meters", value: "3/0" },
+        }),
+      ),
+    );
+    assertTrue(
+      Result.isFailure(
+        Schema.decodeUnknownResult(codec)({
+          amount: { unit: "Seconds", value: "1" },
+        }),
       ),
     );
   });
@@ -337,7 +399,7 @@ describe("inspection", () => {
     deepStrictEqual(
       QuantityExact.make(
         Unit.rate("Meters", "Seconds"),
-        Rational.unsafeMake(3n, 2n),
+        Rational.makeUnsafe(3n, 2n),
       ).toJSON(),
       {
         _id: "QuantityExact",
@@ -354,13 +416,13 @@ describe("type-level", () => {
     const rate: Option.Option<
       QuantityExact.QuantityExact<Unit.Rate<Length.Meters, "Seconds">>
     > = QuantityExact.per(meters(Rational.one), seconds(Rational.one));
-    const unsafeRate: QuantityExact.QuantityExact<
+    const rateUnsafe: QuantityExact.QuantityExact<
       Unit.Rate<Length.Meters, "Seconds">
-    > = QuantityExact.unsafePer(meters(Rational.one), seconds(Rational.one));
+    > = QuantityExact.perUnsafe(meters(Rational.one), seconds(Rational.one));
     const dependent: QuantityExact.QuantityExact<Length.Meters> =
-      QuantityExact.at(unsafeRate, seconds(Rational.one));
+      QuantityExact.at(rateUnsafe, seconds(Rational.one));
     const independent: Option.Option<QuantityExact.QuantityExact<"Seconds">> =
-      QuantityExact.at_(dependent, unsafeRate);
+      QuantityExact.at_(dependent, rateUnsafe);
     const floatQuantity: Option.Option<Quantity.Quantity<Length.Meters>> =
       QuantityExact.toQuantity(dependent);
 

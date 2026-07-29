@@ -2,7 +2,7 @@ import { it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Array from "effect/Array";
 import * as Equal from "effect/Equal";
-import * as FastCheck from "effect/FastCheck";
+import * as FastCheck from "effect/testing/FastCheck";
 import { pipe } from "effect/Function";
 
 import * as Rational from "../src/Rational.ts";
@@ -16,7 +16,7 @@ export const rational = FastCheck.tuple(
   FastCheck.bigInt({ min: -(2n ** 64n), max: 2n ** 64n }),
   FastCheck.bigInt({ min: 1n, max: 2n ** 32n }),
 ).map(([numerator, denominator]) =>
-  Rational.unsafeMake(numerator, denominator),
+  Rational.makeUnsafe(numerator, denominator),
 );
 
 export const nonZeroRational = rational.filter((r) => !Rational.isZero(r));

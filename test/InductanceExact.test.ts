@@ -16,10 +16,10 @@ describe("InductanceExact", () => {
   ]);
 
   testExactAnchors(InductanceExact.inHenries, [
-    [InductanceExact.nanohenries, Rational.unsafeMake(1n, 10n ** 9n)],
-    [InductanceExact.microhenries, Rational.unsafeMake(1n, 10n ** 6n)],
-    [InductanceExact.millihenries, Rational.unsafeMake(1n, 1000n)],
-    [InductanceExact.kilohenries, Rational.unsafeMake(1000n)],
+    [InductanceExact.nanohenries, Rational.makeUnsafe(1n, 10n ** 9n)],
+    [InductanceExact.microhenries, Rational.makeUnsafe(1n, 10n ** 6n)],
+    [InductanceExact.millihenries, Rational.makeUnsafe(1n, 1000n)],
+    [InductanceExact.kilohenries, Rational.makeUnsafe(1000n)],
   ]);
 
   it("matches the float module bit-for-bit where its factors are leaves", () => {
@@ -30,7 +30,7 @@ describe("InductanceExact", () => {
       [InductanceExact.kilohenries, Inductance.kilohenries],
     ] as const) {
       assertEquals(
-        Rational.unsafeToNumber(exactCtor(Rational.one).value),
+        Rational.toNumberUnsafe(exactCtor(Rational.one).value),
         floatCtor(1).value,
       );
     }

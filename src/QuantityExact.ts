@@ -6,6 +6,7 @@ import * as Option from "effect/Option";
 import type * as Pipeable from "effect/Pipeable";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 import { ValueObjectProto } from "./internal/valueObject.ts";
 import * as Quantity from "./Quantity.ts";
@@ -15,27 +16,54 @@ import * as Unit from "./Unit.ts";
 export const TypeId = Symbol.for("effect-units/QuantityExact");
 export type TypeId = typeof TypeId;
 
-export const QuantityExactFromSelf = <const U extends Unit.Unit>(unit: U) =>
-  Schema.declare(hasUnit(unit));
-
 /**
+ * The single definition of the wire format, shared by
+ * {@link QuantityExactFromStruct} and by the `toCodecJson` annotation on
+ * {@link QuantityExact}, so the two can never drift apart.
+ *
  * The wire format is `{ unit, value }` with the value in the canonical
  * rational encoding (`"3/2"`, `"-3/2"`, `"3"`)—exact on the wire, with no
  * width or precision ceiling.
  */
-export const QuantityExact = <const U extends Unit.Unit>(unit: U) =>
-  Schema.transform(
-    Schema.Struct({
-      unit: Schema.Literal(Unit.encode(unit)),
-      value: Rational.Rational,
+const wire = <const U extends Unit.Unit>(unit: U) => {
+  const struct = Schema.Struct({
+    unit: Schema.Literal(Unit.encode(unit)),
+    value: Rational.RationalFromString,
+  });
+  return {
+    struct,
+    transformation: SchemaTransformation.transform({
+      decode: ({ value }: typeof struct.Type) => make(unit, value),
+      encode: ({ value }: QuantityExact<U>) => ({
+        unit: Unit.encode(unit),
+        value,
+      }),
     }),
-    QuantityExactFromSelf(unit),
-    {
-      strict: true,
-      decode: ({ value }) => make(unit, value),
-      encode: ({ value }) => ({ unit: Unit.encode(unit), value }),
+  };
+};
+
+/**
+ * The identity schema: a `QuantityExact` on both sides, decoded from
+ * itself.
+ *
+ * It carries the wire format as its canonical JSON representation, so
+ * `Schema.toCodecJson` derives that codec on demand—including when an exact
+ * quantity is nested inside a larger schema of your own.
+ * {@link QuantityExactFromStruct} is the same codec named directly, with a
+ * precise `{ unit, value }` encoded type rather than `Json`.
+ */
+export const QuantityExact = <const U extends Unit.Unit>(unit: U) =>
+  Schema.declare(hasUnit(unit), {
+    toCodecJson: () => {
+      const { struct, transformation } = wire(unit);
+      return Schema.link<QuantityExact<U>>()(struct, transformation);
     },
-  );
+  });
+
+export const QuantityExactFromStruct = <const U extends Unit.Unit>(unit: U) => {
+  const { struct, transformation } = wire(unit);
+  return struct.pipe(Schema.decodeTo(QuantityExact(unit), transformation));
+};
 
 /**
  * An exact quantity is an arbitrary-precision rational tagged with a unit
@@ -66,9 +94,8 @@ const Proto = {
     return isQuantityExact(that) && equals(this, that);
   },
   [Hash.symbol](this: QuantityExact<Unit.Unit>): number {
-    return Hash.cached(
-      this,
-      Hash.combine(Hash.string(Unit.encode(this.unit)))(Hash.hash(this.value)),
+    return Hash.combine(Hash.string(Unit.encode(this.unit)))(
+      Hash.hash(this.value),
     );
   },
   toJSON(this: QuantityExact<Unit.Unit>) {
@@ -117,7 +144,7 @@ export const equalsWithin: {
     b: QuantityExact<Unit.Unit>,
     tolerance: QuantityExact<Unit.Unit>,
   ): boolean =>
-    Rational.lessThanOrEqualTo(
+    Rational.isLessThanOrEqualTo(
       Rational.abs(Rational.subtract(a.value, b.value)),
       Rational.abs(tolerance.value),
     ),
@@ -172,7 +199,7 @@ export const divide: {
 );
 
 /** Throws a `RangeError` when the divisor is zero. */
-export const unsafeDivide: {
+export const divideUnsafe: {
   <U extends Unit.Unit>(
     b: Rational.Rational,
   ): (a: QuantityExact<U>) => QuantityExact<U>;
@@ -186,7 +213,7 @@ export const unsafeDivide: {
     a: QuantityExact<Unit.Unit>,
     b: Rational.Rational,
   ): QuantityExact<Unit.Unit> =>
-    make(a.unit, Rational.unsafeDivide(a.value, b)),
+    make(a.unit, Rational.divideUnsafe(a.value, b)),
 );
 
 export const sum: {
@@ -283,7 +310,7 @@ export const per: {
 );
 
 /** {@link per}, throwing a `RangeError` when the independent quantity is zero. */
-export const unsafePer: {
+export const perUnsafe: {
   <Independent extends Unit.Unit>(
     independent: QuantityExact<Independent>,
   ): <Dependent extends Unit.Unit>(
@@ -301,7 +328,7 @@ export const unsafePer: {
   ): QuantityExact<Unit.Rate<Unit.Unit, Unit.Unit>> =>
     make(
       Unit.rate(dependent.unit, independent.unit),
-      Rational.unsafeDivide(dependent.value, independent.value),
+      Rational.divideUnsafe(dependent.value, independent.value),
     ),
 );
 
@@ -355,7 +382,7 @@ export const at_: {
 );
 
 /** {@link at_}, throwing a `RangeError` when the rate is zero. */
-export const unsafeAt_: {
+export const at_Unsafe: {
   <Dependent extends Unit.Unit, Independent extends Unit.Unit>(
     rate: QuantityExact<Unit.Rate<Dependent, Independent>>,
   ): (dependent: QuantityExact<Dependent>) => QuantityExact<Independent>;
@@ -371,7 +398,7 @@ export const unsafeAt_: {
   ): QuantityExact<Unit.Unit> =>
     make(
       rate.unit.independent,
-      Rational.unsafeDivide(dependent.value, rate.value),
+      Rational.divideUnsafe(dependent.value, rate.value),
     ),
 );
 
@@ -422,7 +449,7 @@ export const over: {
 );
 
 /** {@link over}, throwing a `RangeError` when the divisor is zero. */
-export const unsafeOver: {
+export const overUnsafe: {
   <U2 extends Unit.Unit>(
     b: QuantityExact<U2>,
   ): <U1 extends Unit.Unit>(
@@ -438,7 +465,7 @@ export const unsafeOver: {
     product: QuantityExact<Unit.Product<Unit.Unit, Unit.Unit>>,
     b: QuantityExact<Unit.Unit>,
   ): QuantityExact<Unit.Unit> =>
-    make(product.unit.left, Rational.unsafeDivide(product.value, b.value)),
+    make(product.unit.left, Rational.divideUnsafe(product.value, b.value)),
 );
 
 /**
@@ -467,7 +494,7 @@ export const over_: {
 );
 
 /** {@link over_}, throwing a `RangeError` when the divisor is zero. */
-export const unsafeOver_: {
+export const over_Unsafe: {
   <U1 extends Unit.Unit>(
     b: QuantityExact<U1>,
   ): <U2 extends Unit.Unit>(
@@ -483,7 +510,7 @@ export const unsafeOver_: {
     product: QuantityExact<Unit.Product<Unit.Unit, Unit.Unit>>,
     b: QuantityExact<Unit.Unit>,
   ): QuantityExact<Unit.Unit> =>
-    make(product.unit.right, Rational.unsafeDivide(product.value, b.value)),
+    make(product.unit.right, Rational.divideUnsafe(product.value, b.value)),
 );
 
 // Comparison
@@ -491,40 +518,40 @@ export const unsafeOver_: {
 // Rationals are totally ordered, so the ordering predicates are total —
 // there is no NaN and no partial branch.
 
-export const lessThan: {
+export const isLessThan: {
   <U extends Unit.Unit>(b: QuantityExact<U>): (a: QuantityExact<U>) => boolean;
   <U extends Unit.Unit>(a: QuantityExact<U>, b: QuantityExact<U>): boolean;
 } = Function.dual(
   2,
   (a: QuantityExact<Unit.Unit>, b: QuantityExact<Unit.Unit>): boolean =>
-    Rational.lessThan(a.value, b.value),
+    Rational.isLessThan(a.value, b.value),
 );
 
-export const lessThanOrEqualTo: {
+export const isLessThanOrEqualTo: {
   <U extends Unit.Unit>(b: QuantityExact<U>): (a: QuantityExact<U>) => boolean;
   <U extends Unit.Unit>(a: QuantityExact<U>, b: QuantityExact<U>): boolean;
 } = Function.dual(
   2,
   (a: QuantityExact<Unit.Unit>, b: QuantityExact<Unit.Unit>): boolean =>
-    Rational.lessThanOrEqualTo(a.value, b.value),
+    Rational.isLessThanOrEqualTo(a.value, b.value),
 );
 
-export const greaterThan: {
+export const isGreaterThan: {
   <U extends Unit.Unit>(b: QuantityExact<U>): (a: QuantityExact<U>) => boolean;
   <U extends Unit.Unit>(a: QuantityExact<U>, b: QuantityExact<U>): boolean;
 } = Function.dual(
   2,
   (a: QuantityExact<Unit.Unit>, b: QuantityExact<Unit.Unit>): boolean =>
-    Rational.greaterThan(a.value, b.value),
+    Rational.isGreaterThan(a.value, b.value),
 );
 
-export const greaterThanOrEqualTo: {
+export const isGreaterThanOrEqualTo: {
   <U extends Unit.Unit>(b: QuantityExact<U>): (a: QuantityExact<U>) => boolean;
   <U extends Unit.Unit>(a: QuantityExact<U>, b: QuantityExact<U>): boolean;
 } = Function.dual(
   2,
   (a: QuantityExact<Unit.Unit>, b: QuantityExact<Unit.Unit>): boolean =>
-    Rational.greaterThanOrEqualTo(a.value, b.value),
+    Rational.isGreaterThanOrEqualTo(a.value, b.value),
 );
 
 export const min: {
@@ -540,7 +567,8 @@ export const min: {
   (
     a: QuantityExact<Unit.Unit>,
     b: QuantityExact<Unit.Unit>,
-  ): QuantityExact<Unit.Unit> => (Rational.lessThan(b.value, a.value) ? b : a),
+  ): QuantityExact<Unit.Unit> =>
+    Rational.isLessThan(b.value, a.value) ? b : a,
 );
 
 export const max: {
@@ -557,7 +585,7 @@ export const max: {
     a: QuantityExact<Unit.Unit>,
     b: QuantityExact<Unit.Unit>,
   ): QuantityExact<Unit.Unit> =>
-    Rational.greaterThan(b.value, a.value) ? b : a,
+    Rational.isGreaterThan(b.value, a.value) ? b : a,
 );
 
 // Interop
@@ -577,9 +605,9 @@ export const fromQuantity = <U extends Unit.Unit>(
   Option.map(Rational.fromNumber(q.value), (value) => make(q.unit, value));
 
 /** Throws a `RangeError` on NaN and ±Infinity values. */
-export const unsafeFromQuantity = <U extends Unit.Unit>(
+export const fromQuantityUnsafe = <U extends Unit.Unit>(
   q: Quantity.Quantity<U>,
-): QuantityExact<U> => make(q.unit, Rational.unsafeFromNumber(q.value));
+): QuantityExact<U> => make(q.unit, Rational.fromNumberUnsafe(q.value));
 
 /**
  * The float quantity nearest the exact one—a single correct rounding.
@@ -593,7 +621,7 @@ export const toQuantity = <U extends Unit.Unit>(
   );
 
 /** Throws a `RangeError` when the value overflows to ±Infinity. */
-export const unsafeToQuantity = <U extends Unit.Unit>(
+export const toQuantityUnsafe = <U extends Unit.Unit>(
   q: QuantityExact<U>,
 ): Quantity.Quantity<U> =>
-  Quantity.make(q.unit, Rational.unsafeToNumber(q.value));
+  Quantity.make(q.unit, Rational.toNumberUnsafe(q.value));

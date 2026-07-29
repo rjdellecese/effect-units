@@ -43,12 +43,12 @@ const base10Exponents: Record<Prefix.Prefix, number> = {
 
 const factorOf = (exponent: number): Rational.Rational =>
   exponent >= 0
-    ? Rational.unsafeMake(10n ** BigInt(exponent))
-    : Rational.unsafeMake(1n, 10n ** BigInt(-exponent));
+    ? Rational.makeUnsafe(10n ** BigInt(exponent))
+    : Rational.makeUnsafe(1n, 10n ** BigInt(-exponent));
 
 export const factors = Record.map(base10Exponents, factorOf);
 
-const inverseFactors = Record.map(factors, Rational.unsafeReciprocal);
+const inverseFactors = Record.map(factors, Rational.reciprocalUnsafe);
 
 export const toBase = (
   prefix: Prefix.Prefix,

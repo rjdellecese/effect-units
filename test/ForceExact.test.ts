@@ -17,21 +17,21 @@ describe("ForceExact", () => {
   ]);
 
   testExactAnchors(ForceExact.inNewtons, [
-    [ForceExact.kilonewtons, Rational.unsafeMake(1000n)],
-    [ForceExact.meganewtons, Rational.unsafeMake(1000000n)],
+    [ForceExact.kilonewtons, Rational.makeUnsafe(1000n)],
+    [ForceExact.meganewtons, Rational.makeUnsafe(1000000n)],
     [
       ForceExact.pounds,
       Rational.multiply(
-        Rational.unsafeMake(45359237n, 100000000n),
-        Rational.unsafeMake(196133n, 20000n),
+        Rational.makeUnsafe(45359237n, 100000000n),
+        Rational.makeUnsafe(196133n, 20000n),
       ),
     ],
     [
       ForceExact.kips,
       Rational.multiplyAll([
-        Rational.unsafeMake(45359237n, 100000000n),
-        Rational.unsafeMake(196133n, 20000n),
-        Rational.unsafeMake(1000n),
+        Rational.makeUnsafe(45359237n, 100000000n),
+        Rational.makeUnsafe(196133n, 20000n),
+        Rational.makeUnsafe(1000n),
       ]),
     ],
   ]);
@@ -40,13 +40,13 @@ describe("ForceExact", () => {
     assertTrue(
       Equal.equals(
         ForceExact.inPounds(ForceExact.kips(Rational.one)),
-        Rational.unsafeMake(1000n),
+        Rational.makeUnsafe(1000n),
       ),
     );
     assertTrue(
       Equal.equals(
         ForceExact.inNewtons(ForceExact.kilonewtons(Rational.one)),
-        Rational.unsafeMake(1000n),
+        Rational.makeUnsafe(1000n),
       ),
     );
   });
@@ -59,7 +59,7 @@ describe("ForceExact", () => {
       [ForceExact.kips, Force.kips],
     ] as const) {
       assertEquals(
-        Rational.unsafeToNumber(exactCtor(Rational.one).value),
+        Rational.toNumberUnsafe(exactCtor(Rational.one).value),
         floatCtor(1).value,
       );
     }

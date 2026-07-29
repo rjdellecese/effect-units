@@ -8,7 +8,7 @@ import * as Unit from "./Unit.ts";
 export type Pixels = Quantity.Quantity<"Pixels">;
 
 export const Pixels = Quantity.Quantity("Pixels");
-export const PixelsFromSelf = Quantity.QuantityFromSelf("Pixels");
+export const PixelsFromStruct = Quantity.QuantityFromStruct("Pixels");
 
 export type PixelsPerSecond = Unit.Rate<"Pixels", Duration.Seconds>;
 export const PixelsPerSecond: PixelsPerSecond = Unit.rate(

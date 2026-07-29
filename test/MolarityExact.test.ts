@@ -17,11 +17,11 @@ describe("MolarityExact", () => {
   ]);
 
   testExactAnchors(MolarityExact.inMolesPerCubicMeter, [
-    [MolarityExact.molesPerLiter, Rational.unsafeMake(1000n)],
-    [MolarityExact.decimolesPerLiter, Rational.unsafeMake(100n)],
-    [MolarityExact.centimolesPerLiter, Rational.unsafeMake(10n)],
+    [MolarityExact.molesPerLiter, Rational.makeUnsafe(1000n)],
+    [MolarityExact.decimolesPerLiter, Rational.makeUnsafe(100n)],
+    [MolarityExact.centimolesPerLiter, Rational.makeUnsafe(10n)],
     [MolarityExact.millimolesPerLiter, Rational.one],
-    [MolarityExact.micromolesPerLiter, Rational.unsafeMake(1n, 1000n)],
+    [MolarityExact.micromolesPerLiter, Rational.makeUnsafe(1n, 1000n)],
   ]);
 
   it("matches the float module bit-for-bit where its factors are exact chains", () => {
@@ -33,7 +33,7 @@ describe("MolarityExact", () => {
       [MolarityExact.micromolesPerLiter, Molarity.micromolesPerLiter],
     ] as const) {
       assertEquals(
-        Rational.unsafeToNumber(exactCtor(Rational.one).value),
+        Rational.toNumberUnsafe(exactCtor(Rational.one).value),
         floatCtor(1).value,
       );
     }

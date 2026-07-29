@@ -20,9 +20,9 @@ describe("TorqueExact", () => {
     [
       TorqueExact.poundFeet,
       Rational.multiplyAll([
-        Rational.unsafeMake(45359237n, 100000000n),
-        Rational.unsafeMake(196133n, 20000n),
-        Rational.unsafeMake(381n, 1250n),
+        Rational.makeUnsafe(45359237n, 100000000n),
+        Rational.makeUnsafe(196133n, 20000n),
+        Rational.makeUnsafe(381n, 1250n),
       ]),
     ],
   ]);
@@ -41,7 +41,7 @@ describe("TorqueExact", () => {
       [TorqueExact.poundFeet, Torque.poundFeet],
     ] as const) {
       assertEquals(
-        Rational.unsafeToNumber(exactCtor(Rational.one).value),
+        Rational.toNumberUnsafe(exactCtor(Rational.one).value),
         floatCtor(1).value,
       );
     }

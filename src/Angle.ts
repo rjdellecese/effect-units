@@ -6,7 +6,7 @@ export const Radians: Radians = "Radians";
 export type Angle = Quantity.Quantity<Radians>;
 
 export const Angle = Quantity.Quantity(Radians);
-export const AngleFromSelf = Quantity.QuantityFromSelf(Radians);
+export const AngleFromStruct = Quantity.QuantityFromStruct(Radians);
 
 const make = (value: number): Angle => Quantity.make(Radians, value);
 

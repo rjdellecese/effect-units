@@ -13,7 +13,7 @@ export const NewtonMeters: NewtonMeters = Unit.product(
 export type Torque = Quantity.Quantity<NewtonMeters>;
 
 export const Torque = Quantity.Quantity(NewtonMeters);
-export const TorqueFromSelf = Quantity.QuantityFromSelf(NewtonMeters);
+export const TorqueFromStruct = Quantity.QuantityFromStruct(NewtonMeters);
 
 const make = (value: number): Torque => Quantity.make(NewtonMeters, value);
 

@@ -1,7 +1,7 @@
 import { describe, it } from "@effect/vitest";
 import { assertEquals, assertTrue } from "@effect/vitest/utils";
 import * as Equal from "effect/Equal";
-import * as FastCheck from "effect/FastCheck";
+import * as FastCheck from "effect/testing/FastCheck";
 
 import { isCloseTo } from "./testUtils.ts";
 import * as Constants from "../src/internal/constants.ts";
@@ -18,7 +18,7 @@ import * as Volume from "../src/Volume.ts";
 const rational = FastCheck.tuple(
   FastCheck.bigInt({ min: -(2n ** 64n), max: 2n ** 64n }),
   FastCheck.bigInt({ min: 1n, max: 2n ** 32n }),
-).map(([n, d]) => Rational.unsafeMake(n, d));
+).map(([n, d]) => Rational.makeUnsafe(n, d));
 
 describe("float constants stay pinned to their historical bit patterns", () => {
   // Hardcoded literals, not imports: a change to either family must fail
@@ -39,32 +39,32 @@ describe("float constants stay pinned to their historical bit patterns", () => {
 describe("exact constants are bit-identical to the float constants", () => {
   it("matches every shared constant", () => {
     assertEquals(
-      Rational.unsafeToNumber(ConstantsExact.metersPerInch),
+      Rational.toNumberUnsafe(ConstantsExact.metersPerInch),
       Constants.metersPerInch,
     );
     assertEquals(
-      Rational.unsafeToNumber(ConstantsExact.metersPerFoot),
+      Rational.toNumberUnsafe(ConstantsExact.metersPerFoot),
       Constants.metersPerFoot,
     );
     assertEquals(
-      Rational.unsafeToNumber(ConstantsExact.metersPerYard),
+      Rational.toNumberUnsafe(ConstantsExact.metersPerYard),
       Constants.metersPerYard,
     );
     assertEquals(
-      Rational.unsafeToNumber(ConstantsExact.metersPerMile),
+      Rational.toNumberUnsafe(ConstantsExact.metersPerMile),
       Constants.metersPerMile,
     );
     assertEquals(
-      Rational.unsafeToNumber(ConstantsExact.kilogramsPerPound),
+      Rational.toNumberUnsafe(ConstantsExact.kilogramsPerPound),
       Constants.kilogramsPerPound,
     );
-    assertEquals(Rational.unsafeToNumber(ConstantsExact.gee), Constants.gee);
+    assertEquals(Rational.toNumberUnsafe(ConstantsExact.gee), Constants.gee);
     assertEquals(
-      Rational.unsafeToNumber(ConstantsExact.secondsPerMinute),
+      Rational.toNumberUnsafe(ConstantsExact.secondsPerMinute),
       Constants.secondsPerMinute,
     );
     assertEquals(
-      Rational.unsafeToNumber(ConstantsExact.secondsPerHour),
+      Rational.toNumberUnsafe(ConstantsExact.secondsPerHour),
       Constants.secondsPerHour,
     );
   });
@@ -73,7 +73,7 @@ describe("exact constants are bit-identical to the float constants", () => {
     // The float side is a chain (two roundings); the exact side is the true
     // product, rounded once. They agree bit-for-bit.
     assertEquals(
-      Rational.unsafeToNumber(ConstantsExact.newtonsPerPoundForce),
+      Rational.toNumberUnsafe(ConstantsExact.newtonsPerPoundForce),
       Constants.newtonsPerPoundForce,
     );
   });
@@ -83,7 +83,7 @@ describe("exact prefixes agree with Prefix", () => {
   it("matches toBase and toPrefixed for every prefix", () => {
     for (const prefix of Prefix.Prefix.literals) {
       assertEquals(
-        Rational.unsafeToNumber(PrefixExact.toBase(prefix, Rational.one)),
+        Rational.toNumberUnsafe(PrefixExact.toBase(prefix, Rational.one)),
         Prefix.toBase(prefix, 1),
       );
       // toPrefixed is compared within a ulp rather than bit-for-bit: the
@@ -94,7 +94,7 @@ describe("exact prefixes agree with Prefix", () => {
       // modules only bake in toBase factors, which match exactly.
       assertTrue(
         isCloseTo(
-          Rational.unsafeToNumber(PrefixExact.toPrefixed(prefix, Rational.one)),
+          Rational.toNumberUnsafe(PrefixExact.toPrefixed(prefix, Rational.one)),
           Prefix.toPrefixed(prefix, 1),
           { relativeTolerance: Number.EPSILON },
         ),
@@ -127,70 +127,70 @@ describe("representative module factors are bit-identical", () => {
   > = [
     [
       "angstrom",
-      Rational.unsafeMake(1n, 10n ** 10n),
+      Rational.makeUnsafe(1n, 10n ** 10n),
       Length.angstroms(1).value,
     ],
-    ["point", Rational.unsafeMake(127n, 360000n), Length.points(1).value],
+    ["point", Rational.makeUnsafe(127n, 360000n), Length.points(1).value],
     [
       "astronomicalUnit",
-      Rational.unsafeMake(149597870700n),
+      Rational.makeUnsafe(149597870700n),
       Length.astronomicalUnits(1).value,
     ],
     [
       "lightYear",
-      Rational.unsafeMake(9460730472580800n),
+      Rational.makeUnsafe(9460730472580800n),
       Length.lightYears(1).value,
     ],
     [
       "julianYear",
-      Rational.unsafeMake(31557600n),
+      Rational.makeUnsafe(31557600n),
       Duration.julianYears(1).value,
     ],
     [
       "kilometerPerHour",
-      Rational.unsafeMake(5n, 18n),
+      Rational.makeUnsafe(5n, 18n),
       Speed.kilometersPerHour(1).value,
     ],
     [
       "milePerHour",
-      Rational.unsafeMake(1397n, 3125n),
+      Rational.makeUnsafe(1397n, 3125n),
       Speed.milesPerHour(1).value,
     ],
-    ["liter", Rational.unsafeMake(1n, 1000n), Volume.liters(1).value],
+    ["liter", Rational.makeUnsafe(1n, 1000n), Volume.liters(1).value],
     [
       "usLiquidGallon",
-      Rational.unsafeMake(3785411784n, 10n ** 12n),
+      Rational.makeUnsafe(3785411784n, 10n ** 12n),
       Volume.usLiquidGallons(1).value,
     ],
     [
       "usDryGallon",
-      Rational.unsafeMake(440488377086n, 10n ** 14n),
+      Rational.makeUnsafe(440488377086n, 10n ** 14n),
       Volume.usDryGallons(1).value,
     ],
     [
       "imperialGallon",
-      Rational.unsafeMake(454609n, 10n ** 8n),
+      Rational.makeUnsafe(454609n, 10n ** 8n),
       Volume.imperialGallons(1).value,
     ],
     [
       "fahrenheitDegree",
-      Rational.unsafeMake(5n, 9n),
+      Rational.makeUnsafe(5n, 9n),
       Temperature.fahrenheitDegrees(1).value,
     ],
-    ["thou", Rational.unsafeMake(127n, 5000000n), Length.thou(1).value],
-    ["cssPixel", Rational.unsafeMake(127n, 480000n), Length.cssPixels(1).value],
-    ["pica", Rational.unsafeMake(127n, 30000n), Length.picas(1).value],
+    ["thou", Rational.makeUnsafe(127n, 5000000n), Length.thou(1).value],
+    ["cssPixel", Rational.makeUnsafe(127n, 480000n), Length.cssPixels(1).value],
+    ["pica", Rational.makeUnsafe(127n, 30000n), Length.picas(1).value],
   ];
 
   for (const [label, exact, float] of cases) {
     it(`matches ${label}`, () => {
-      assertEquals(Rational.unsafeToNumber(exact), float);
+      assertEquals(Rational.toNumberUnsafe(exact), float);
     });
   }
 
   it("matches the celsius offset", () => {
     assertEquals(
-      Rational.unsafeToNumber(Rational.unsafeMake(5463n, 20n)),
+      Rational.toNumberUnsafe(Rational.makeUnsafe(5463n, 20n)),
       Temperature.inKelvins(Temperature.degreesCelsius(0)),
     );
   });

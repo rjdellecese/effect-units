@@ -8,9 +8,8 @@ export type LuminousFluxExact =
 export const LuminousFluxExact = QuantityExact.QuantityExact(
   LuminousFlux.Lumens,
 );
-export const LuminousFluxExactFromSelf = QuantityExact.QuantityExactFromSelf(
-  LuminousFlux.Lumens,
-);
+export const LuminousFluxExactFromStruct =
+  QuantityExact.QuantityExactFromStruct(LuminousFlux.Lumens);
 
 const make = (value: Rational.Rational): LuminousFluxExact =>
   QuantityExact.make(LuminousFlux.Lumens, value);

@@ -10,7 +10,7 @@ export const Amperes: Amperes = Unit.rate(Charge.Coulombs, Duration.Seconds);
 export type Current = Quantity.Quantity<Amperes>;
 
 export const Current = Quantity.Quantity(Amperes);
-export const CurrentFromSelf = Quantity.QuantityFromSelf(Amperes);
+export const CurrentFromStruct = Quantity.QuantityFromStruct(Amperes);
 
 const make = (value: number): Current => Quantity.make(Amperes, value);
 

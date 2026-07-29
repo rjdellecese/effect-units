@@ -1,6 +1,7 @@
 import * as Array from "effect/Array";
 import * as BigDecimal from "effect/BigDecimal";
-import * as BigInt_ from "effect/BigInt";
+import * as BigInt from "effect/BigInt";
+import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Equivalence_ from "effect/Equivalence";
 import * as Function from "effect/Function";
@@ -10,11 +11,12 @@ import * as Match from "effect/Match";
 import * as Option from "effect/Option";
 import * as order from "effect/Order";
 import type * as Ordering from "effect/Ordering";
-import * as ParseResult from "effect/ParseResult";
 import type * as Pipeable from "effect/Pipeable";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
-import * as String_ from "effect/String";
+import * as SchemaGetter from "effect/SchemaGetter";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as String from "effect/String";
 
 import { ValueObjectProto } from "./internal/valueObject.ts";
 
@@ -47,16 +49,13 @@ const Proto = {
     return isRational(that) && equals(this, that);
   },
   [Hash.symbol](this: Rational): number {
-    return Hash.cached(
-      this,
-      Hash.combine(Hash.hash(this.numerator))(Hash.hash(this.denominator)),
-    );
+    return Hash.combine(Hash.hash(this.numerator))(Hash.hash(this.denominator));
   },
   toJSON(this: Rational) {
     return {
       _id: "Rational",
-      numerator: String(this.numerator),
-      denominator: String(this.denominator),
+      numerator: globalThis.String(this.numerator),
+      denominator: globalThis.String(this.denominator),
     };
   },
 } as const;
@@ -75,14 +74,14 @@ const reduce = (numerator: bigint, denominator: bigint): Rational => {
   const flip = denominator < 0n ? -1n : 1n;
   const n = flip * numerator;
   const d = flip * denominator;
-  const g = BigInt_.gcd(n < 0n ? -n : n, d);
+  const g = BigInt.gcd(n < 0n ? -n : n, d);
   return ofReduced(n / g, d / g);
 };
 
 /**
  * Creates the rational `numerator / denominator`, reduced to lowest terms
  * with the sign carried by the numerator. Returns `Option.none()` on a zero
- * denominator; {@link unsafeMake} is the throwing counterpart for
+ * denominator; {@link makeUnsafe} is the throwing counterpart for
  * developer-written literals.
  */
 export const make = (
@@ -94,12 +93,12 @@ export const make = (
     : Option.some(reduce(numerator, denominator));
 
 /** Throws a `RangeError` on a zero denominator. */
-export const unsafeMake = (
+export const makeUnsafe = (
   numerator: bigint,
   denominator: bigint = 1n,
 ): Rational => {
   if (denominator === 0n) {
-    throw new RangeError("Rational.unsafeMake: zero denominator");
+    throw new RangeError("Rational.makeUnsafe: zero denominator");
   }
   return reduce(numerator, denominator);
 };
@@ -145,13 +144,13 @@ export const Order: order.Order<Rational> = order.make((a, b) => {
   return left < right ? -1 : left > right ? 1 : 0;
 });
 
-export const lessThan = order.lessThan(Order);
+export const isLessThan = order.isLessThan(Order);
 
-export const lessThanOrEqualTo = order.lessThanOrEqualTo(Order);
+export const isLessThanOrEqualTo = order.isLessThanOrEqualTo(Order);
 
-export const greaterThan = order.greaterThan(Order);
+export const isGreaterThan = order.isGreaterThan(Order);
 
-export const greaterThanOrEqualTo = order.greaterThanOrEqualTo(Order);
+export const isGreaterThanOrEqualTo = order.isGreaterThanOrEqualTo(Order);
 
 export const min = order.min(Order);
 
@@ -159,7 +158,7 @@ export const max = order.max(Order);
 
 export const clamp = order.clamp(Order);
 
-export const between = order.between(Order);
+export const isBetween = order.isBetween(Order);
 
 // Arithmetic
 
@@ -215,7 +214,7 @@ export const reciprocal = (r: Rational): Option.Option<Rational> =>
       );
 
 /** Throws a `RangeError` when the argument is zero. */
-export const unsafeReciprocal = (r: Rational): Rational => {
+export const reciprocalUnsafe = (r: Rational): Rational => {
   if (r.numerator === 0n) {
     throw new RangeError("Division by zero");
   }
@@ -235,12 +234,12 @@ export const divide: {
 );
 
 /** Throws a `RangeError` when the divisor is zero. */
-export const unsafeDivide: {
+export const divideUnsafe: {
   (b: Rational): (a: Rational) => Rational;
   (a: Rational, b: Rational): Rational;
 } = Function.dual(
   2,
-  (a: Rational, b: Rational): Rational => multiply(a, unsafeReciprocal(b)),
+  (a: Rational, b: Rational): Rational => multiply(a, reciprocalUnsafe(b)),
 );
 
 export const sumAll = (collection: Iterable<Rational>): Rational =>
@@ -323,24 +322,24 @@ export const round: {
 //—at most 1075 steps, for the smallest subnormal.
 const dyadic = (mantissa: number, denominator: bigint): Rational =>
   Number.isInteger(mantissa)
-    ? reduce(BigInt(mantissa), denominator)
+    ? reduce(globalThis.BigInt(mantissa), denominator)
     : dyadic(mantissa * 2, denominator << 1n);
 
-export const unsafeFromNumber = (n: number): Rational => {
+export const fromNumberUnsafe = (n: number): Rational => {
   if (!Number.isFinite(n)) {
-    throw new RangeError(`Rational.unsafeFromNumber: ${n}`);
+    throw new RangeError(`Rational.fromNumberUnsafe: ${n}`);
   }
   return dyadic(n, 1n);
 };
 
 export const fromNumber = (n: number): Option.Option<Rational> =>
-  Number.isFinite(n) ? Option.some(unsafeFromNumber(n)) : Option.none();
+  Number.isFinite(n) ? Option.some(fromNumberUnsafe(n)) : Option.none();
 
 const maxSafeInteger = 9007199254740991n;
 
 // No Effect helper covers a bigint's binary width, so this stays on the
 // built-in radix conversion.
-const bitLength = (n: bigint): number => String_.length(n.toString(2));
+const bitLength = (n: bigint): number => String.length(n.toString(2));
 
 /**
  * The correctly rounded (nearest, ties to even) double of a positive
@@ -367,8 +366,8 @@ const positiveToNumber = (a: bigint, b: bigint): number | undefined => {
 
   // Scale so the integer quotient has at least 55 bits.
   const shift = 55 - e;
-  const scaledA = shift >= 0 ? a << BigInt(shift) : a;
-  const scaledB = shift >= 0 ? b : b << BigInt(-shift);
+  const scaledA = shift >= 0 ? a << globalThis.BigInt(shift) : a;
+  const scaledB = shift >= 0 ? b : b << globalThis.BigInt(-shift);
   const quotient = scaledA / scaledB;
   const remainder = scaledA % scaledB;
 
@@ -385,17 +384,19 @@ const positiveToNumber = (a: bigint, b: bigint): number | undefined => {
     // Candidates are 0 and 2^-1074, with the midpoint at 2^-1075: exactly
     // the midpoint ties to even (0), anything above rounds up.
     const isExactMidpoint =
-      quotient === 1n << BigInt(quotientBits - 1) && remainder === 0n;
+      quotient === 1n << globalThis.BigInt(quotientBits - 1) &&
+      remainder === 0n;
     return isExactMidpoint ? 0 : 2 ** -1074;
   }
 
   // Subnormal results keep fewer than 53 bits (the lowest kept bit is 2^-1074).
   const precision = Math.min(53, leadPosition + 1075);
   const drop = quotientBits - precision;
-  const truncated = quotient >> BigInt(drop);
-  const roundBit = (quotient >> BigInt(drop - 1)) & 1n;
+  const truncated = quotient >> globalThis.BigInt(drop);
+  const roundBit = (quotient >> globalThis.BigInt(drop - 1)) & 1n;
   const sticky =
-    (quotient & ((1n << BigInt(drop - 1)) - 1n)) !== 0n || remainder !== 0n;
+    (quotient & ((1n << globalThis.BigInt(drop - 1)) - 1n)) !== 0n ||
+    remainder !== 0n;
   // Ties to even: round up on a set guard bit unless the remainder is
   // exactly half and the kept mantissa is already even.
   const mantissa =
@@ -435,16 +436,16 @@ export const toNumber = (r: Rational): Option.Option<number> => {
 };
 
 /** Throws a `RangeError` when the nearest double is ±Infinity. */
-export const unsafeToNumber = (r: Rational): number =>
+export const toNumberUnsafe = (r: Rational): number =>
   Option.getOrThrowWith(
     toNumber(r),
-    () => new RangeError(`Rational.unsafeToNumber: ${format(r)} overflows`),
+    () => new RangeError(`Rational.toNumberUnsafe: ${format(r)} overflows`),
   );
 
 export const fromBigDecimal = (bd: BigDecimal.BigDecimal): Rational =>
   bd.scale >= 0
-    ? reduce(bd.value, 10n ** BigInt(bd.scale))
-    : fromBigInt(bd.value * 10n ** BigInt(-bd.scale));
+    ? reduce(bd.value, 10n ** globalThis.BigInt(bd.scale))
+    : fromBigInt(bd.value * 10n ** globalThis.BigInt(-bd.scale));
 
 /**
  * Rounds to a `BigDecimal` at the given scale—exactly one rounding, made
@@ -475,12 +476,12 @@ export const toBigDecimal: {
     const scaled =
       options.scale >= 0
         ? reduce(
-            self.numerator * 10n ** BigInt(options.scale),
+            self.numerator * 10n ** globalThis.BigInt(options.scale),
             self.denominator,
           )
         : reduce(
             self.numerator,
-            self.denominator * 10n ** BigInt(-options.scale),
+            self.denominator * 10n ** globalThis.BigInt(-options.scale),
           );
     return BigDecimal.make(
       round(scaled, options.mode === undefined ? {} : { mode: options.mode }),
@@ -515,7 +516,7 @@ export const toBigDecimalExact = (
   const scale = Math.max(twos, fives);
   return Option.some(
     BigDecimal.make(
-      (self.numerator * 10n ** BigInt(scale)) / self.denominator,
+      (self.numerator * 10n ** globalThis.BigInt(scale)) / self.denominator,
       scale,
     ),
   );
@@ -529,7 +530,7 @@ export const toBigDecimalExact = (
  */
 export const format = (r: Rational): string =>
   r.denominator === 1n
-    ? String(r.numerator)
+    ? globalThis.String(r.numerator)
     : `${r.numerator}/${r.denominator}`;
 
 const parsePattern = /^(-?\d+)(?:\/([1-9]\d*))?$/;
@@ -540,49 +541,67 @@ const parsePattern = /^(-?\d+)(?:\/([1-9]\d*))?$/;
  * Returns `Option.none()` for anything else, including zero denominators.
  */
 export const fromString = (s: string): Option.Option<Rational> =>
-  String_.match(parsePattern)(s).pipe(
+  String.match(parsePattern)(s).pipe(
     Option.flatMap((groups) =>
-      Option.map(Option.fromNullable(groups[1]), (numerator) =>
+      Option.map(Option.fromUndefinedOr(groups[1]), (numerator) =>
         reduce(
-          BigInt(numerator),
-          groups[2] === undefined ? 1n : BigInt(groups[2]),
+          globalThis.BigInt(numerator),
+          groups[2] === undefined ? 1n : globalThis.BigInt(groups[2]),
         ),
       ),
     ),
   );
 
 /** Throws a `RangeError` on input {@link fromString} would reject. */
-export const unsafeFromString = (s: string): Rational =>
+export const fromStringUnsafe = (s: string): Rational =>
   Option.getOrThrowWith(
     fromString(s),
-    () => new RangeError(`Rational.unsafeFromString: ${JSON.stringify(s)}`),
+    () => new RangeError(`Rational.fromStringUnsafe: ${JSON.stringify(s)}`),
   );
 
-export const RationalFromSelf = Schema.declare(isRational, {
-  identifier: "RationalFromSelf",
-  pretty: () => format,
-  arbitrary: () => (fc) =>
+/**
+ * The single definition of the canonical string encoding, shared by
+ * {@link RationalFromString} and by the `toCodecJson` annotation on
+ * {@link Rational}, so the two can never drift apart.
+ */
+const stringTransformation = {
+  decode: SchemaGetter.transformOrFail((s: string) =>
+    Option.match(fromString(s), {
+      onNone: () =>
+        Effect.fail(
+          new SchemaIssue.InvalidValue(Option.some(s), {
+            message: "not a canonical rational encoding",
+          }),
+        ),
+      onSome: Effect.succeed,
+    }),
+  ),
+  encode: SchemaGetter.transform(format),
+};
+
+/**
+ * The identity schema: a `Rational` on both sides, decoded from itself.
+ *
+ * It carries the canonical string encoding as its JSON representation, so
+ * `Schema.toCodecJson` derives that codec on demand—including when a
+ * rational is nested inside a larger schema of your own.
+ * {@link RationalFromString} is the same codec named directly, with a
+ * precise `string` encoded type rather than `Json`.
+ */
+export const Rational = Schema.declare(isRational, {
+  identifier: "Rational",
+  toFormatter: () => format,
+  toArbitrary: () => (fc) =>
     fc
       .tuple(fc.bigInt(), fc.bigInt({ min: 1n }))
-      .map(([numerator, denominator]) => unsafeMake(numerator, denominator)),
-  equivalence: () => Equivalence,
+      .map(([numerator, denominator]) => makeUnsafe(numerator, denominator)),
+  toEquivalence: () => Equivalence,
+  toCodecJson: () =>
+    Schema.link<Rational>()(Schema.String, stringTransformation),
 });
 
-export const Rational = Schema.transformOrFail(
-  Schema.String.annotations({
-    description: "a string to be decoded into a Rational",
-  }),
-  RationalFromSelf,
-  {
-    strict: true,
-    decode: (s, _options, ast) =>
-      Option.match(fromString(s), {
-        onNone: () =>
-          ParseResult.fail(
-            new ParseResult.Type(ast, s, "not a canonical rational encoding"),
-          ),
-        onSome: (r) => ParseResult.succeed(r),
-      }),
-    encode: (r) => ParseResult.succeed(format(r)),
-  },
-).annotations({ identifier: "Rational" });
+export const RationalFromString = Schema.String.annotate({
+  description: "a string to be decoded into a Rational",
+})
+  .pipe(Schema.decodeTo(Rational, stringTransformation))
+  .annotate({ identifier: "RationalFromString" });

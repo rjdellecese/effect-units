@@ -10,7 +10,7 @@ export const Lux: Lux = Unit.rate(LuminousFlux.Lumens, Area.SquareMeters);
 export type Illuminance = Quantity.Quantity<Lux>;
 
 export const Illuminance = Quantity.Quantity(Lux);
-export const IlluminanceFromSelf = Quantity.QuantityFromSelf(Lux);
+export const IlluminanceFromStruct = Quantity.QuantityFromStruct(Lux);
 
 const make = (value: number): Illuminance => Quantity.make(Lux, value);
 

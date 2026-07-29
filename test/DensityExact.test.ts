@@ -22,26 +22,26 @@ describe("DensityExact", () => {
   ]);
 
   testExactAnchors(DensityExact.inKilogramsPerCubicMeter, [
-    [DensityExact.gramsPerCubicCentimeter, Rational.unsafeMake(1000n)],
+    [DensityExact.gramsPerCubicCentimeter, Rational.makeUnsafe(1000n)],
     [
       DensityExact.poundsPerCubicInch,
-      Rational.unsafeDivide(
-        Rational.unsafeMake(45359237n, 100000000n),
+      Rational.divideUnsafe(
+        Rational.makeUnsafe(45359237n, 100000000n),
         Rational.multiplyAll([
-          Rational.unsafeMake(127n, 5000n),
-          Rational.unsafeMake(127n, 5000n),
-          Rational.unsafeMake(127n, 5000n),
+          Rational.makeUnsafe(127n, 5000n),
+          Rational.makeUnsafe(127n, 5000n),
+          Rational.makeUnsafe(127n, 5000n),
         ]),
       ),
     ],
     [
       DensityExact.poundsPerCubicFoot,
-      Rational.unsafeDivide(
-        Rational.unsafeMake(45359237n, 100000000n),
+      Rational.divideUnsafe(
+        Rational.makeUnsafe(45359237n, 100000000n),
         Rational.multiplyAll([
-          Rational.unsafeMake(381n, 1250n),
-          Rational.unsafeMake(381n, 1250n),
-          Rational.unsafeMake(381n, 1250n),
+          Rational.makeUnsafe(381n, 1250n),
+          Rational.makeUnsafe(381n, 1250n),
+          Rational.makeUnsafe(381n, 1250n),
         ]),
       ),
     ],
@@ -54,7 +54,7 @@ describe("DensityExact", () => {
         DensityExact.inPoundsPerCubicFoot(
           DensityExact.poundsPerCubicInch(Rational.one),
         ),
-        Rational.unsafeMake(1728n),
+        Rational.makeUnsafe(1728n),
       ),
     );
   });
@@ -66,7 +66,7 @@ describe("DensityExact", () => {
       [DensityExact.poundsPerCubicFoot, Density.poundsPerCubicFoot],
     ] as const) {
       assertEquals(
-        Rational.unsafeToNumber(exactCtor(Rational.one).value),
+        Rational.toNumberUnsafe(exactCtor(Rational.one).value),
         floatCtor(1).value,
       );
     }

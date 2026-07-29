@@ -7,6 +7,7 @@ import * as order from "effect/Order";
 import type * as Pipeable from "effect/Pipeable";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 import { ValueObjectProto } from "./internal/valueObject.ts";
 import * as QuantityExact from "./QuantityExact.ts";
@@ -55,31 +56,49 @@ const make = (value: Rational.Rational): TemperatureExact =>
 export const equals = (a: TemperatureExact, b: TemperatureExact): boolean =>
   Rational.equals(a.value, b.value);
 
-export const TemperatureExactFromSelf = Schema.declare(
-  isTemperatureExact,
-).annotations({
-  identifier: "TemperatureExactFromSelf",
-  description: "an exact absolute temperature",
-});
-
 /**
+ * The single definition of the wire format, shared by
+ * {@link TemperatureExactFromStruct} and by the `toCodecJson` annotation on
+ * {@link TemperatureExact}, so the two can never drift apart.
+ *
  * The wire format carries a `unit: "Kelvins"` discriminator so persisted
  * temperatures are self-describing, matching the `{ unit, value }`
  * convention of `QuantityExact` schemas, with the value in the canonical
  * rational encoding (`"3/2"`, `"-3/2"`, `"3"`)—exact on the wire, with no
  * width or precision ceiling.
  */
-export const TemperatureExact = Schema.transform(
-  Schema.Struct({
-    unit: Schema.Literal("Kelvins"),
-    value: Rational.Rational,
+const wireStruct = Schema.Struct({
+  unit: Schema.Literal("Kelvins"),
+  value: Rational.RationalFromString,
+});
+
+const wireTransformation = SchemaTransformation.transform({
+  decode: ({ value }: typeof wireStruct.Type) => make(value),
+  encode: ({ value }: TemperatureExact) => ({
+    unit: "Kelvins" as const,
+    value,
   }),
-  TemperatureExactFromSelf,
-  {
-    strict: true,
-    decode: ({ value }) => make(value),
-    encode: ({ value }) => ({ unit: "Kelvins" as const, value }),
-  },
+});
+
+/**
+ * The identity schema: a `TemperatureExact` on both sides, decoded from
+ * itself.
+ *
+ * It carries the wire format as its canonical JSON representation, so
+ * `Schema.toCodecJson` derives that codec on demand—including when an exact
+ * temperature is nested inside a larger schema of your own.
+ * {@link TemperatureExactFromStruct} is the same codec named directly, with
+ * a precise `{ unit, value }` encoded type rather than `Json`.
+ */
+export const TemperatureExact = Schema.declare(isTemperatureExact, {
+  identifier: "TemperatureExact",
+  description: "an exact absolute temperature",
+  toCodecJson: () =>
+    Schema.link<TemperatureExact>()(wireStruct, wireTransformation),
+});
+
+export const TemperatureExactFromStruct = wireStruct.pipe(
+  Schema.decodeTo(TemperatureExact, wireTransformation),
 );
 
 // Absolute temperatures
@@ -90,7 +109,7 @@ export const inKelvins = (t: TemperatureExact) => t.value;
 
 export const absoluteZero = kelvins(Rational.zero);
 
-const zeroCelsiusInKelvins = Rational.unsafeMake(5463n, 20n);
+const zeroCelsiusInKelvins = Rational.makeUnsafe(5463n, 20n);
 
 export const degreesCelsius = (r: Rational.Rational): TemperatureExact =>
   make(Rational.sum(r, zeroCelsiusInKelvins));
@@ -99,20 +118,20 @@ export const inDegreesCelsius = (t: TemperatureExact) =>
   Rational.subtract(t.value, zeroCelsiusInKelvins);
 
 /** The size of a Fahrenheit degree relative to a Celsius degree. */
-const fiveNinths = Rational.unsafeMake(5n, 9n);
+const fiveNinths = Rational.makeUnsafe(5n, 9n);
 
 export const degreesFahrenheit = (r: Rational.Rational): TemperatureExact =>
   degreesCelsius(
     Rational.multiply(
-      Rational.subtract(r, Rational.unsafeMake(32n)),
+      Rational.subtract(r, Rational.makeUnsafe(32n)),
       fiveNinths,
     ),
   );
 
 export const inDegreesFahrenheit = (t: TemperatureExact) =>
   Rational.sum(
-    Rational.unsafeDivide(inDegreesCelsius(t), fiveNinths),
-    Rational.unsafeMake(32n),
+    Rational.divideUnsafe(inDegreesCelsius(t), fiveNinths),
+    Rational.makeUnsafe(32n),
   );
 
 // Deltas
@@ -131,8 +150,8 @@ export const inDegreesFahrenheit = (t: TemperatureExact) =>
 export type Delta = QuantityExact.QuantityExact<"CelsiusDegrees">;
 
 export const Delta = QuantityExact.QuantityExact("CelsiusDegrees");
-export const DeltaFromSelf =
-  QuantityExact.QuantityExactFromSelf("CelsiusDegrees");
+export const DeltaFromStruct =
+  QuantityExact.QuantityExactFromStruct("CelsiusDegrees");
 
 export const celsiusDegrees = (r: Rational.Rational): Delta =>
   QuantityExact.make("CelsiusDegrees", r);
@@ -143,7 +162,7 @@ export const fahrenheitDegrees = (r: Rational.Rational): Delta =>
   celsiusDegrees(Rational.multiply(r, fiveNinths));
 
 export const inFahrenheitDegrees = (d: Delta) =>
-  Rational.unsafeDivide(d.value, fiveNinths);
+  Rational.divideUnsafe(d.value, fiveNinths);
 
 // Arithmetic
 
@@ -173,13 +192,13 @@ export const Order: order.Order<TemperatureExact> = order.mapInput(
   (t: TemperatureExact) => t.value,
 );
 
-export const lessThan = order.lessThan(Order);
+export const isLessThan = order.isLessThan(Order);
 
-export const lessThanOrEqualTo = order.lessThanOrEqualTo(Order);
+export const isLessThanOrEqualTo = order.isLessThanOrEqualTo(Order);
 
-export const greaterThan = order.greaterThan(Order);
+export const isGreaterThan = order.isGreaterThan(Order);
 
-export const greaterThanOrEqualTo = order.greaterThanOrEqualTo(Order);
+export const isGreaterThanOrEqualTo = order.isGreaterThanOrEqualTo(Order);
 
 export const min: {
   (b: TemperatureExact): (a: TemperatureExact) => TemperatureExact;
@@ -222,9 +241,9 @@ export const fromTemperature = (
   Option.map(Rational.fromNumber(t.value), make);
 
 /** Throws a `RangeError` on NaN and ±Infinity values. */
-export const unsafeFromTemperature = (
+export const fromTemperatureUnsafe = (
   t: Temperature.Temperature,
-): TemperatureExact => make(Rational.unsafeFromNumber(t.value));
+): TemperatureExact => make(Rational.fromNumberUnsafe(t.value));
 
 /**
  * The float temperature nearest the exact one—a single correct rounding.
@@ -236,7 +255,7 @@ export const toTemperature = (
   Option.map(Rational.toNumber(t.value), Temperature.kelvins);
 
 /** Throws a `RangeError` when the value overflows to ±Infinity. */
-export const unsafeToTemperature = (
+export const toTemperatureUnsafe = (
   t: TemperatureExact,
 ): Temperature.Temperature =>
-  Temperature.kelvins(Rational.unsafeToNumber(t.value));
+  Temperature.kelvins(Rational.toNumberUnsafe(t.value));

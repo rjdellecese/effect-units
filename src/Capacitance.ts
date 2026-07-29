@@ -7,7 +7,7 @@ export const Farads: Farads = "Farads";
 export type Capacitance = Quantity.Quantity<Farads>;
 
 export const Capacitance = Quantity.Quantity(Farads);
-export const CapacitanceFromSelf = Quantity.QuantityFromSelf(Farads);
+export const CapacitanceFromStruct = Quantity.QuantityFromStruct(Farads);
 
 const make = (value: number): Capacitance => Quantity.make(Farads, value);
 

@@ -10,7 +10,7 @@ export const Pascals: Pascals = Unit.rate(Force.Newtons, Area.SquareMeters);
 export type Pressure = Quantity.Quantity<Pascals>;
 
 export const Pressure = Quantity.Quantity(Pascals);
-export const PressureFromSelf = Quantity.QuantityFromSelf(Pascals);
+export const PressureFromStruct = Quantity.QuantityFromStruct(Pascals);
 
 const make = (value: number): Pressure => Quantity.make(Pascals, value);
 

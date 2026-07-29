@@ -6,7 +6,7 @@ import * as Torque from "./Torque.ts";
 export type TorqueExact = QuantityExact.QuantityExact<Torque.NewtonMeters>;
 
 export const TorqueExact = QuantityExact.QuantityExact(Torque.NewtonMeters);
-export const TorqueExactFromSelf = QuantityExact.QuantityExactFromSelf(
+export const TorqueExactFromStruct = QuantityExact.QuantityExactFromStruct(
   Torque.NewtonMeters,
 );
 
@@ -16,7 +16,7 @@ const make = (value: Rational.Rational): TorqueExact =>
 export const zero = make(Rational.zero);
 
 // Every extractor divides by a module factor, none of which is zero, so the
-// extractors are total via unsafeDivide.
+// extractors are total via divideUnsafe.
 
 export const newtonMeters = (r: Rational.Rational) => make(r);
 
@@ -35,4 +35,4 @@ export const poundFeet = (r: Rational.Rational) =>
   make(Rational.multiply(r, newtonMetersPerPoundFoot));
 
 export const inPoundFeet = (t: TorqueExact) =>
-  Rational.unsafeDivide(t.value, newtonMetersPerPoundFoot);
+  Rational.divideUnsafe(t.value, newtonMetersPerPoundFoot);
