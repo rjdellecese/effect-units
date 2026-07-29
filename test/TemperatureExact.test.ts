@@ -124,9 +124,7 @@ describe("TemperatureExact", () => {
 
   // The identity schema carries the wire format as a `toCodecJson`
   // annotation. Without it a declaration falls back to `Json` and throws on
-  // any non-JSON value, so the nesting test below is a regression test. Note
-  // the nested `Rational` lowers to its string form on its own—the struct
-  // never names `Rational.RationalFromString`.
+  // any non-JSON value, so the nesting test below is a regression test.
 
   it("derives the same wire format through toCodecJson", () => {
     const temperature = TemperatureExact.degreesCelsius(Rational.zero);
