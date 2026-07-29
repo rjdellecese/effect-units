@@ -151,7 +151,7 @@ pnpm add effect-units
 
 ### Exact units
 
-Every unit module above whose conversion factors are exact rationals has an exact twin named with an `Exact` suffix (`effect-units/LengthExact`, `effect-units/SpeedExact`, `effect-units/TemperatureExact`, …), taking and returning `Rational` values with lossless conversions. The rule for what has a twin: **if a conversion factor involves π, it stays float-only.** That excludes `Angle`, `AngularSpeed`, `AngularAcceleration`, and `SolidAngle` entirely, `parsecs` within `LengthExact`, and `footLamberts` within `LuminanceExact`—everything else converts exactly (an exact US liquid gallon is _exactly_ 231 cubic inches; 212 °F is _exactly_ 100 °C).
+Nearly every unit module above has an exact twin named with an `Exact` suffix (`effect-units/LengthExact`, `effect-units/SpeedExact`, `effect-units/TemperatureExact`, …), taking and returning `Rational` values with lossless conversions. The rule for what gets a twin: **if a conversion factor involves π, it stays float-only.** That excludes `Angle`, `AngularSpeed`, `AngularAcceleration`, and `SolidAngle` entirely, plus `parsecs` within `LengthExact` and `footLamberts` within `LuminanceExact`. Everything else converts exactly: a US liquid gallon is _exactly_ 231 cubic inches, and 212 °F is _exactly_ 100 °C.
 
 ## Custom units
 
@@ -183,7 +183,7 @@ inDollars(cost); // 15
 
 Ids must match `/^[A-Za-z][A-Za-z0-9]*$/` (`Unit.custom` throws otherwise), and encode in bracketed form—`"[USD]"`, `"([USD]/Meters)"`—so they can never collide with built-in names on the wire. A custom unit is always distinct from a built-in base unit with the same name: `Unit.custom("Meters")` is not `"Meters"`.
 
-Precision: integer minor units are exact in float64 up to `Number.MAX_SAFE_INTEGER` (2^53 − 1) cents, but rate arithmetic (`per`, `at`, …) is ordinary IEEE 754 division and multiplication—measurement semantics, not accounting semantics. Keep your money library as the system of record: round explicitly when converting a computed quantity back (or raise the dinero `scale` to keep sub-minor-unit precision), and reject amounts beyond the safe-integer range (e.g. from dinero's bigint calculator) at the boundary rather than letting them degrade silently. See `test/CustomUnits.test.ts` for a boundary that does both—or use `QuantityExact` for money instead, where none of these caveats apply (see below).
+Precision: integer minor units are exact in float64 up to `Number.MAX_SAFE_INTEGER` (2^53 − 1) cents, but rate arithmetic (`per`, `at`, …) is ordinary IEEE 754 division and multiplication—measurement semantics, not accounting semantics. Keep your money library as the system of record: round explicitly when converting a computed quantity back (or raise the dinero `scale` to keep sub-minor-unit precision), and reject amounts beyond the safe-integer range at the boundary rather than letting them degrade silently—`test/CustomUnits.test.ts` shows a boundary that does both. Or use `QuantityExact` for money instead, where none of these caveats apply (see below).
 
 ## Exact quantities
 
@@ -210,7 +210,7 @@ const cost = QuantityExact.at(
 // exactly 200 cents—Equal.equals, not isCloseTo
 ```
 
-Because ℚ has no infinities or NaN, partiality lives in the types instead of sentinel values: `per`, `at_`, `over`, `over_`, `divide`, and `Rational.reciprocal` return `Option` (`Option.none()` exactly when the divisor is zero), each with an `unsafe*` twin that throws. Everything else—`sum`, `subtract`, `multiply`, `times`, `squared`, `cubed`, `at`, `for_`, comparisons—is total and exact, `equals` is decidable, and quantities are safe `HashMap` keys with no NaN or -0 caveats.
+Because ℚ has no infinities or NaN, partiality lives in the types instead of sentinel values: `per`, `at_`, `over`, `over_`, `divide`, and `Rational.reciprocal` return `Option` (`Option.none()` exactly when the divisor is zero), each with an `unsafe*` twin that throws. Everything else—`sum`, `subtract`, `multiply`, `times`, `squared`, `cubed`, `at`, `for_`, comparisons—is total and exact. `equals` is decidable, and quantities are safe `HashMap` keys with no NaN or -0 caveats.
 
 Rounding happens only at explicitly parameterized boundaries:
 
@@ -223,7 +223,7 @@ The wire format is `{ unit, value }` with the value as a canonical fraction stri
 
 ## Numbers, precision, and equality
 
-The library is two-track: `Quantity` values are plain 64-bit floats (as in `elm-units`) with measurement semantics, and `QuantityExact` values are arbitrary-precision rationals with accounting/algebraic semantics. The two tracks agree at every conversion factor: each float factor is the correctly rounded float of its exact defining rational (asserted bit-for-bit against the exact modules in the test suite), and no float module imports any bigint code. What remains float-only is _arithmetic on runtime values_—e.g. the float `Temperature.degreesFahrenheit` rounds per operation as any float affine map must, where `TemperatureExact` is exact.
+The library is two-track: `Quantity` values are plain 64-bit floats (as in `elm-units`) with measurement semantics, and `QuantityExact` values are arbitrary-precision rationals with accounting/algebraic semantics. The two tracks agree at every conversion factor: each float factor is the correctly rounded float of its exact defining rational, asserted bit-for-bit against the exact modules in the test suite. No float module imports any bigint code, so using only the float track loads no rational arithmetic. Where the tracks differ is _arithmetic on runtime values_: the float `Temperature.degreesFahrenheit` rounds at every operation, as any float affine map must, while `TemperatureExact` is exact.
 
 On the float track, arithmetic follows IEEE 754 semantics: division by zero yields ±Infinity, invalid operations yield NaN, and every operation carries ordinary float rounding (~15-16 significant digits). Check results with `Quantity.isNaN`, `isInfinite`, and `isFinite`.
 
