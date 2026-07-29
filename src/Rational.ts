@@ -1,6 +1,6 @@
 import * as Array from "effect/Array";
 import * as BigDecimal from "effect/BigDecimal";
-import * as BigInt_ from "effect/BigInt";
+import * as BigInt from "effect/BigInt";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Equivalence_ from "effect/Equivalence";
@@ -74,7 +74,7 @@ const reduce = (numerator: bigint, denominator: bigint): Rational => {
   const flip = denominator < 0n ? -1n : 1n;
   const n = flip * numerator;
   const d = flip * denominator;
-  const g = BigInt_.gcd(n < 0n ? -n : n, d);
+  const g = BigInt.gcd(n < 0n ? -n : n, d);
   return ofReduced(n / g, d / g);
 };
 
@@ -322,7 +322,7 @@ export const round: {
 //—at most 1075 steps, for the smallest subnormal.
 const dyadic = (mantissa: number, denominator: bigint): Rational =>
   Number.isInteger(mantissa)
-    ? reduce(BigInt(mantissa), denominator)
+    ? reduce(globalThis.BigInt(mantissa), denominator)
     : dyadic(mantissa * 2, denominator << 1n);
 
 export const fromNumberUnsafe = (n: number): Rational => {
@@ -366,8 +366,8 @@ const positiveToNumber = (a: bigint, b: bigint): number | undefined => {
 
   // Scale so the integer quotient has at least 55 bits.
   const shift = 55 - e;
-  const scaledA = shift >= 0 ? a << BigInt(shift) : a;
-  const scaledB = shift >= 0 ? b : b << BigInt(-shift);
+  const scaledA = shift >= 0 ? a << globalThis.BigInt(shift) : a;
+  const scaledB = shift >= 0 ? b : b << globalThis.BigInt(-shift);
   const quotient = scaledA / scaledB;
   const remainder = scaledA % scaledB;
 
@@ -384,17 +384,19 @@ const positiveToNumber = (a: bigint, b: bigint): number | undefined => {
     // Candidates are 0 and 2^-1074, with the midpoint at 2^-1075: exactly
     // the midpoint ties to even (0), anything above rounds up.
     const isExactMidpoint =
-      quotient === 1n << BigInt(quotientBits - 1) && remainder === 0n;
+      quotient === 1n << globalThis.BigInt(quotientBits - 1) &&
+      remainder === 0n;
     return isExactMidpoint ? 0 : 2 ** -1074;
   }
 
   // Subnormal results keep fewer than 53 bits (the lowest kept bit is 2^-1074).
   const precision = Math.min(53, leadPosition + 1075);
   const drop = quotientBits - precision;
-  const truncated = quotient >> BigInt(drop);
-  const roundBit = (quotient >> BigInt(drop - 1)) & 1n;
+  const truncated = quotient >> globalThis.BigInt(drop);
+  const roundBit = (quotient >> globalThis.BigInt(drop - 1)) & 1n;
   const sticky =
-    (quotient & ((1n << BigInt(drop - 1)) - 1n)) !== 0n || remainder !== 0n;
+    (quotient & ((1n << globalThis.BigInt(drop - 1)) - 1n)) !== 0n ||
+    remainder !== 0n;
   // Ties to even: round up on a set guard bit unless the remainder is
   // exactly half and the kept mantissa is already even.
   const mantissa =
@@ -442,8 +444,8 @@ export const toNumberUnsafe = (r: Rational): number =>
 
 export const fromBigDecimal = (bd: BigDecimal.BigDecimal): Rational =>
   bd.scale >= 0
-    ? reduce(bd.value, 10n ** BigInt(bd.scale))
-    : fromBigInt(bd.value * 10n ** BigInt(-bd.scale));
+    ? reduce(bd.value, 10n ** globalThis.BigInt(bd.scale))
+    : fromBigInt(bd.value * 10n ** globalThis.BigInt(-bd.scale));
 
 /**
  * Rounds to a `BigDecimal` at the given scale—exactly one rounding, made
@@ -474,12 +476,12 @@ export const toBigDecimal: {
     const scaled =
       options.scale >= 0
         ? reduce(
-            self.numerator * 10n ** BigInt(options.scale),
+            self.numerator * 10n ** globalThis.BigInt(options.scale),
             self.denominator,
           )
         : reduce(
             self.numerator,
-            self.denominator * 10n ** BigInt(-options.scale),
+            self.denominator * 10n ** globalThis.BigInt(-options.scale),
           );
     return BigDecimal.make(
       round(scaled, options.mode === undefined ? {} : { mode: options.mode }),
@@ -514,7 +516,7 @@ export const toBigDecimalExact = (
   const scale = Math.max(twos, fives);
   return Option.some(
     BigDecimal.make(
-      (self.numerator * 10n ** BigInt(scale)) / self.denominator,
+      (self.numerator * 10n ** globalThis.BigInt(scale)) / self.denominator,
       scale,
     ),
   );
@@ -543,8 +545,8 @@ export const fromString = (s: string): Option.Option<Rational> =>
     Option.flatMap((groups) =>
       Option.map(Option.fromUndefinedOr(groups[1]), (numerator) =>
         reduce(
-          BigInt(numerator),
-          groups[2] === undefined ? 1n : BigInt(groups[2]),
+          globalThis.BigInt(numerator),
+          groups[2] === undefined ? 1n : globalThis.BigInt(groups[2]),
         ),
       ),
     ),

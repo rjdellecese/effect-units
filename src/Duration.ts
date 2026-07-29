@@ -99,13 +99,13 @@ export const addTo = (
   dateTime: DateTime.DateTime,
   duration: Duration,
 ): Option.Option<DateTime.DateTime> => {
-  const wholeMilliseconds = Math.round(inMilliseconds(duration));
+  const millis = Math.round(inMilliseconds(duration));
 
-  if (!Number.isFinite(wholeMilliseconds)) {
+  if (!Number.isFinite(millis)) {
     return Option.none();
   }
 
-  const result = DateTime.add(dateTime, { milliseconds: wholeMilliseconds });
+  const result = DateTime.add(dateTime, { milliseconds: millis });
 
   return Number.isNaN(DateTime.toEpochMillis(result))
     ? Option.none()
