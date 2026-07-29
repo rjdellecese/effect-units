@@ -1,6 +1,7 @@
 import * as Array from "effect/Array";
 import * as BigDecimal from "effect/BigDecimal";
 import * as BigInt_ from "effect/BigInt";
+import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Equivalence_ from "effect/Equivalence";
 import * as Function from "effect/Function";
@@ -10,10 +11,11 @@ import * as Match from "effect/Match";
 import * as Option from "effect/Option";
 import * as order from "effect/Order";
 import type * as Ordering from "effect/Ordering";
-import * as ParseResult from "effect/ParseResult";
 import type * as Pipeable from "effect/Pipeable";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
+import * as SchemaIssue from "effect/SchemaIssue";
 import * as String_ from "effect/String";
 
 import { ValueObjectProto } from "./internal/valueObject.ts";
@@ -47,10 +49,7 @@ const Proto = {
     return isRational(that) && equals(this, that);
   },
   [Hash.symbol](this: Rational): number {
-    return Hash.cached(
-      this,
-      Hash.combine(Hash.hash(this.numerator))(Hash.hash(this.denominator)),
-    );
+    return Hash.combine(Hash.hash(this.numerator))(Hash.hash(this.denominator));
   },
   toJSON(this: Rational) {
     return {
@@ -145,13 +144,13 @@ export const Order: order.Order<Rational> = order.make((a, b) => {
   return left < right ? -1 : left > right ? 1 : 0;
 });
 
-export const lessThan = order.lessThan(Order);
+export const lessThan = order.isLessThan(Order);
 
-export const lessThanOrEqualTo = order.lessThanOrEqualTo(Order);
+export const lessThanOrEqualTo = order.isLessThanOrEqualTo(Order);
 
-export const greaterThan = order.greaterThan(Order);
+export const greaterThan = order.isGreaterThan(Order);
 
-export const greaterThanOrEqualTo = order.greaterThanOrEqualTo(Order);
+export const greaterThanOrEqualTo = order.isGreaterThanOrEqualTo(Order);
 
 export const min = order.min(Order);
 
@@ -159,7 +158,7 @@ export const max = order.max(Order);
 
 export const clamp = order.clamp(Order);
 
-export const between = order.between(Order);
+export const between = order.isBetween(Order);
 
 // Arithmetic
 
@@ -542,7 +541,7 @@ const parsePattern = /^(-?\d+)(?:\/([1-9]\d*))?$/;
 export const fromString = (s: string): Option.Option<Rational> =>
   String_.match(parsePattern)(s).pipe(
     Option.flatMap((groups) =>
-      Option.map(Option.fromNullable(groups[1]), (numerator) =>
+      Option.map(Option.fromUndefinedOr(groups[1]), (numerator) =>
         reduce(
           BigInt(numerator),
           groups[2] === undefined ? 1n : BigInt(groups[2]),
@@ -560,29 +559,31 @@ export const unsafeFromString = (s: string): Rational =>
 
 export const RationalFromSelf = Schema.declare(isRational, {
   identifier: "RationalFromSelf",
-  pretty: () => format,
-  arbitrary: () => (fc) =>
+  toFormatter: () => format,
+  toArbitrary: () => (fc) =>
     fc
       .tuple(fc.bigInt(), fc.bigInt({ min: 1n }))
       .map(([numerator, denominator]) => unsafeMake(numerator, denominator)),
-  equivalence: () => Equivalence,
+  toEquivalence: () => Equivalence,
 });
 
-export const Rational = Schema.transformOrFail(
-  Schema.String.annotations({
-    description: "a string to be decoded into a Rational",
-  }),
-  RationalFromSelf,
-  {
-    strict: true,
-    decode: (s, _options, ast) =>
-      Option.match(fromString(s), {
-        onNone: () =>
-          ParseResult.fail(
-            new ParseResult.Type(ast, s, "not a canonical rational encoding"),
-          ),
-        onSome: (r) => ParseResult.succeed(r),
-      }),
-    encode: (r) => ParseResult.succeed(format(r)),
-  },
-).annotations({ identifier: "Rational" });
+export const Rational = Schema.String.annotate({
+  description: "a string to be decoded into a Rational",
+})
+  .pipe(
+    Schema.decodeTo(RationalFromSelf, {
+      decode: SchemaGetter.transformOrFail((s: string) =>
+        Option.match(fromString(s), {
+          onNone: () =>
+            Effect.fail(
+              new SchemaIssue.InvalidValue(Option.some(s), {
+                message: "not a canonical rational encoding",
+              }),
+            ),
+          onSome: Effect.succeed,
+        }),
+      ),
+      encode: SchemaGetter.transform(format),
+    }),
+  )
+  .annotate({ identifier: "Rational" });

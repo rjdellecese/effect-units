@@ -1,18 +1,20 @@
+import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import { pipe } from "effect/Function";
 import * as Hash from "effect/Hash";
 import * as Inspectable from "effect/Inspectable";
 import * as Option from "effect/Option";
-import * as ParseResult from "effect/ParseResult";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
+import * as SchemaIssue from "effect/SchemaIssue";
 import * as String from "effect/String";
 
 /**
  * The leaf tags of the unit algebra—every other unit is a `Product` or
  * `Rate` composition of these.
  */
-export const BaseUnit = Schema.Literal(
+export const BaseUnit = Schema.Literals([
   "Meters",
   "Seconds",
   "Kilograms",
@@ -25,7 +27,7 @@ export const BaseUnit = Schema.Literal(
   "Moles",
   "Steradians",
   "CelsiusDegrees",
-);
+]);
 
 export type BaseUnit = typeof BaseUnit.Type;
 
@@ -78,7 +80,7 @@ const Proto = {
     return isUnit(that) && equals(this, that);
   },
   [Hash.symbol](this: Unit & object): number {
-    return Hash.cached(this, Hash.string(encode(this)));
+    return Hash.string(encode(this));
   },
   toJSON(this: Unit): string {
     return encode(this);
@@ -133,7 +135,7 @@ export const cubed = <U extends Unit>(unit: U): Cubed<U> =>
 export const isUnit = (u: unknown): u is Unit =>
   typeof u === "string"
     ? isBaseUnit(u)
-    : Predicate.isRecord(u) &&
+    : Predicate.isReadonlyObject(u) &&
       (u._tag === "Product"
         ? isUnit(u.left) && isUnit(u.right)
         : u._tag === "Rate"
@@ -186,7 +188,7 @@ const maxDepth = 64;
 const parseBaseUnit = (input: string): Option.Option<Parsed> =>
   pipe(
     String.match(baseUnitName)(input),
-    Option.flatMap((matches) => Option.fromNullable(matches[0])),
+    Option.flatMap((matches) => Option.fromUndefinedOr(matches[0])),
     Option.filter(isBaseUnit),
     Option.map((name) => [name, String.slice(name.length)(input)] as const),
   );
@@ -196,7 +198,7 @@ const customUnit = /^\[[A-Za-z][A-Za-z0-9]*\]/;
 const parseCustom = (input: string): Option.Option<Parsed> =>
   pipe(
     String.match(customUnit)(input),
-    Option.flatMap((matches) => Option.fromNullable(matches[0])),
+    Option.flatMap((matches) => Option.fromUndefinedOr(matches[0])),
     Option.map(
       (matched) =>
         [
@@ -252,20 +254,24 @@ export const decode = (input: string): Option.Option<Unit> =>
     ),
   );
 
-export const UnitFromSelf = Schema.declare(isUnit).annotations({
+export const UnitFromSelf = Schema.declare(isUnit, {
   identifier: "UnitFromSelf",
   description: "a unit tree",
 });
 
-export const Unit = Schema.transformOrFail(Schema.String, UnitFromSelf, {
-  strict: true,
-  decode: (input, _options, ast) =>
-    Option.match(decode(input), {
-      onNone: () =>
-        ParseResult.fail(
-          new ParseResult.Type(ast, input, "not a canonical unit encoding"),
-        ),
-      onSome: (unit) => ParseResult.succeed(unit),
-    }),
-  encode: (unit) => ParseResult.succeed(encode(unit)),
-}).annotations({ identifier: "Unit" });
+export const Unit = Schema.String.pipe(
+  Schema.decodeTo(UnitFromSelf, {
+    decode: SchemaGetter.transformOrFail((input: string) =>
+      Option.match(decode(input), {
+        onNone: () =>
+          Effect.fail(
+            new SchemaIssue.InvalidValue(Option.some(input), {
+              message: "not a canonical unit encoding",
+            }),
+          ),
+        onSome: Effect.succeed,
+      }),
+    ),
+    encode: SchemaGetter.transform(encode),
+  }),
+).annotate({ identifier: "Unit" });

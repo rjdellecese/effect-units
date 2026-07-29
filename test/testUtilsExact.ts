@@ -2,7 +2,7 @@ import { it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Array from "effect/Array";
 import * as Equal from "effect/Equal";
-import * as FastCheck from "effect/FastCheck";
+import * as FastCheck from "effect/testing/FastCheck";
 import { pipe } from "effect/Function";
 
 import * as Rational from "../src/Rational.ts";

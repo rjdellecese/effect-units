@@ -6,6 +6,7 @@ import * as Option from "effect/Option";
 import type * as Pipeable from "effect/Pipeable";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 import { ValueObjectProto } from "./internal/valueObject.ts";
 import * as Quantity from "./Quantity.ts";
@@ -24,17 +25,17 @@ export const QuantityExactFromSelf = <const U extends Unit.Unit>(unit: U) =>
  * width or precision ceiling.
  */
 export const QuantityExact = <const U extends Unit.Unit>(unit: U) =>
-  Schema.transform(
-    Schema.Struct({
-      unit: Schema.Literal(Unit.encode(unit)),
-      value: Rational.Rational,
-    }),
-    QuantityExactFromSelf(unit),
-    {
-      strict: true,
-      decode: ({ value }) => make(unit, value),
-      encode: ({ value }) => ({ unit: Unit.encode(unit), value }),
-    },
+  Schema.Struct({
+    unit: Schema.Literal(Unit.encode(unit)),
+    value: Rational.Rational,
+  }).pipe(
+    Schema.decodeTo(
+      QuantityExactFromSelf(unit),
+      SchemaTransformation.transform({
+        decode: ({ value }) => make(unit, value),
+        encode: ({ value }) => ({ unit: Unit.encode(unit), value }),
+      }),
+    ),
   );
 
 /**
@@ -66,9 +67,8 @@ const Proto = {
     return isQuantityExact(that) && equals(this, that);
   },
   [Hash.symbol](this: QuantityExact<Unit.Unit>): number {
-    return Hash.cached(
-      this,
-      Hash.combine(Hash.string(Unit.encode(this.unit)))(Hash.hash(this.value)),
+    return Hash.combine(Hash.string(Unit.encode(this.unit)))(
+      Hash.hash(this.value),
     );
   },
   toJSON(this: QuantityExact<Unit.Unit>) {

@@ -5,13 +5,14 @@ import type * as Inspectable from "effect/Inspectable";
 import type * as Pipeable from "effect/Pipeable";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 import {
   normalizeZero,
   ValueObjectProto,
   valueEquals,
-} from "./internal/valueObject.js";
-import * as Unit from "./Unit.js";
+} from "./internal/valueObject.ts";
+import * as Unit from "./Unit.ts";
 
 export const TypeId = Symbol.for("effect-units/Quantity");
 export type TypeId = typeof TypeId;
@@ -26,17 +27,17 @@ export const QuantityFromSelf = <const U extends Unit.Unit>(unit: U) =>
  * become `null`).
  */
 export const Quantity = <const U extends Unit.Unit>(unit: U) =>
-  Schema.transform(
-    Schema.Struct({
-      unit: Schema.Literal(Unit.encode(unit)),
-      value: Schema.Number.pipe(Schema.finite()),
-    }),
-    QuantityFromSelf(unit),
-    {
-      strict: true,
-      decode: ({ value }) => make(unit, value),
-      encode: ({ value }) => ({ unit: Unit.encode(unit), value }),
-    },
+  Schema.Struct({
+    unit: Schema.Literal(Unit.encode(unit)),
+    value: Schema.Finite,
+  }).pipe(
+    Schema.decodeTo(
+      QuantityFromSelf(unit),
+      SchemaTransformation.transform({
+        decode: ({ value }) => make(unit, value),
+        encode: ({ value }) => ({ unit: Unit.encode(unit), value }),
+      }),
+    ),
   );
 
 /**
@@ -66,11 +67,8 @@ const Proto = {
     return isQuantity(that) && equals(this, that);
   },
   [Hash.symbol](this: Quantity<Unit.Unit>): number {
-    return Hash.cached(
-      this,
-      Hash.combine(Hash.string(Unit.encode(this.unit)))(
-        Hash.number(this.value),
-      ),
+    return Hash.combine(Hash.string(Unit.encode(this.unit)))(
+      Hash.number(this.value),
     );
   },
   toJSON(this: Quantity<Unit.Unit>) {

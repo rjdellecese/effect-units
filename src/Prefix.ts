@@ -2,7 +2,7 @@ import * as Function from "effect/Function";
 import * as Record from "effect/Record";
 import * as Schema from "effect/Schema";
 
-export const Prefix = Schema.Literal(
+export const Prefix = Schema.Literals([
   "Quetta",
   "Ronna",
   "Yotta",
@@ -27,7 +27,7 @@ export const Prefix = Schema.Literal(
   "Yocto",
   "Ronto",
   "Quecto",
-);
+]);
 
 export type Prefix = typeof Prefix.Type;
 

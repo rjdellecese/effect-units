@@ -6,11 +6,10 @@ import {
   deepStrictEqual,
 } from "@effect/vitest/utils";
 import * as Array from "effect/Array";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import * as Equal from "effect/Equal";
-import * as FastCheck from "effect/FastCheck";
+import * as FastCheck from "effect/testing/FastCheck";
 import * as Schema from "effect/Schema";
-import * as String from "effect/String";
 
 import { isCloseTo, double } from "./testUtils.ts";
 import * as Length from "../src/Length.ts";
@@ -226,10 +225,10 @@ describe("schema", () => {
       Quantity.make("Seconds", 0),
     );
 
-    assertTrue(Either.isLeft(Schema.encodeEither(Speed)(infinite)));
+    assertTrue(Result.isFailure(Schema.encodeResult(Speed)(infinite)));
     assertTrue(
-      Either.isLeft(
-        Schema.decodeUnknownEither(Speed)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(Speed)({
           unit: "(Meters/Seconds)",
           value: null,
         }),
@@ -348,6 +347,9 @@ describe("inspection", () => {
       unit: "(Meters/Seconds)",
       value: 5,
     });
-    assertTrue(String.includes('"unit": "(Meters/Seconds)"')(speed.toString()));
+    assertEquals(
+      speed.toString(),
+      '{"_id":"Quantity","unit":"(Meters/Seconds)","value":5}',
+    );
   });
 });

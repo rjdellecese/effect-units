@@ -6,9 +6,9 @@ import {
   deepStrictEqual,
   throws,
 } from "@effect/vitest/utils";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import * as Equal from "effect/Equal";
-import * as FastCheck from "effect/FastCheck";
+import * as FastCheck from "effect/testing/FastCheck";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
@@ -302,18 +302,18 @@ describe("schema", () => {
 
   it("rejects malformed values and wrong units", () => {
     assertTrue(
-      Either.isLeft(
-        Schema.decodeUnknownEither(Meters)({ unit: "Meters", value: "3/0" }),
+      Result.isFailure(
+        Schema.decodeUnknownResult(Meters)({ unit: "Meters", value: "3/0" }),
       ),
     );
     assertTrue(
-      Either.isLeft(
-        Schema.decodeUnknownEither(Meters)({ unit: "Meters", value: "1.5" }),
+      Result.isFailure(
+        Schema.decodeUnknownResult(Meters)({ unit: "Meters", value: "1.5" }),
       ),
     );
     assertTrue(
-      Either.isLeft(
-        Schema.decodeUnknownEither(Meters)({ unit: "Seconds", value: "1" }),
+      Result.isFailure(
+        Schema.decodeUnknownResult(Meters)({ unit: "Seconds", value: "1" }),
       ),
     );
   });

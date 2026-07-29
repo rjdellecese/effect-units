@@ -105,7 +105,7 @@ export const addTo = (
     return Option.none();
   }
 
-  const result = DateTime.add(dateTime, { millis });
+  const result = DateTime.add(dateTime, { milliseconds: millis });
 
   return Number.isNaN(DateTime.toEpochMillis(result))
     ? Option.none()

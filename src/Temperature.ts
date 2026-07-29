@@ -7,6 +7,7 @@ import * as order from "effect/Order";
 import type * as Pipeable from "effect/Pipeable";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 import {
   normalizeZero,
@@ -53,7 +54,7 @@ const make = (value: number): Temperature =>
 export const equals = (a: Temperature, b: Temperature): boolean =>
   valueEquals(a.value, b.value);
 
-export const TemperatureFromSelf = Schema.declare(isTemperature).annotations({
+export const TemperatureFromSelf = Schema.declare(isTemperature, {
   identifier: "TemperatureFromSelf",
   description: "an absolute temperature",
 });
@@ -64,17 +65,17 @@ export const TemperatureFromSelf = Schema.declare(isTemperature).annotations({
  * convention of `Quantity` schemas. As with quantities, only finite values
  * are admitted.
  */
-export const Temperature = Schema.transform(
-  Schema.Struct({
-    unit: Schema.Literal("Kelvins"),
-    value: Schema.Number.pipe(Schema.finite()),
-  }),
-  TemperatureFromSelf,
-  {
-    strict: true,
-    decode: ({ value }) => make(value),
-    encode: ({ value }) => ({ unit: "Kelvins" as const, value }),
-  },
+export const Temperature = Schema.Struct({
+  unit: Schema.Literal("Kelvins"),
+  value: Schema.Finite,
+}).pipe(
+  Schema.decodeTo(
+    TemperatureFromSelf,
+    SchemaTransformation.transform({
+      decode: ({ value }) => make(value),
+      encode: ({ value }) => ({ unit: "Kelvins" as const, value }),
+    }),
+  ),
 );
 
 // Absolute temperatures
@@ -156,13 +157,13 @@ export const Order: order.Order<Temperature> = order.mapInput(
   (t: Temperature) => t.value,
 );
 
-export const lessThan = order.lessThan(Order);
+export const lessThan = order.isLessThan(Order);
 
-export const lessThanOrEqualTo = order.lessThanOrEqualTo(Order);
+export const lessThanOrEqualTo = order.isLessThanOrEqualTo(Order);
 
-export const greaterThan = order.greaterThan(Order);
+export const greaterThan = order.isGreaterThan(Order);
 
-export const greaterThanOrEqualTo = order.greaterThanOrEqualTo(Order);
+export const greaterThanOrEqualTo = order.isGreaterThanOrEqualTo(Order);
 
 export const min: {
   (b: Temperature): (a: Temperature) => Temperature;

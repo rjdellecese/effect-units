@@ -8,9 +8,9 @@ import {
 } from "@effect/vitest/utils";
 import * as BigDecimal from "effect/BigDecimal";
 import * as BigInt_ from "effect/BigInt";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import * as Equal from "effect/Equal";
-import * as FastCheck from "effect/FastCheck";
+import * as FastCheck from "effect/testing/FastCheck";
 import * as Hash from "effect/Hash";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
@@ -521,19 +521,19 @@ describe("BigDecimal interop", () => {
           scale: 0,
           mode: "half-even",
         }),
-        BigDecimal.unsafeFromString("67"),
+        BigDecimal.fromStringUnsafe("67"),
       ),
     );
     assertTrue(
       BigDecimal.equals(
         Rational.toBigDecimal(Rational.unsafeMake(200n, 3n), { scale: 2 }),
-        BigDecimal.unsafeFromString("66.67"),
+        BigDecimal.fromStringUnsafe("66.67"),
       ),
     );
     assertTrue(
       BigDecimal.equals(
         Rational.toBigDecimal(Rational.unsafeMake(9n, 2n), { scale: 1 }),
-        BigDecimal.unsafeFromString("4.5"),
+        BigDecimal.fromStringUnsafe("4.5"),
       ),
     );
   });
@@ -596,8 +596,8 @@ describe("schema", () => {
   });
 
   it("rejects malformed strings", () => {
-    assertTrue(Either.isLeft(Schema.decodeEither(Rational.Rational)("3/0")));
-    assertTrue(Either.isLeft(Schema.decodeEither(Rational.Rational)("1.5")));
+    assertTrue(Result.isFailure(Schema.decodeResult(Rational.Rational)("3/0")));
+    assertTrue(Result.isFailure(Schema.decodeResult(Rational.Rational)("1.5")));
   });
 
   it("RationalFromSelf validates by guard", () => {

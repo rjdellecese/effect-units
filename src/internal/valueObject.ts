@@ -27,14 +27,7 @@ export const normalizeZero = (value: number): number =>
  * Prototype fragment providing `Inspectable`'s derived members (in terms of
  * the host's `toJSON`) and `Pipeable`.
  */
-export const ValueObjectProto = {
-  toString(this: Inspectable.Inspectable): string {
-    return Inspectable.format(this.toJSON());
-  },
-  [Inspectable.NodeInspectSymbol](this: Inspectable.Inspectable) {
-    return this.toJSON();
-  },
-  pipe() {
-    return Pipeable.pipeArguments(this, arguments);
-  },
-} as const;
+export const ValueObjectProto: Inspectable.Inspectable & Pipeable.Pipeable = {
+  ...Inspectable.BaseProto,
+  ...Pipeable.Prototype,
+};

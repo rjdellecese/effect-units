@@ -7,6 +7,7 @@ import * as order from "effect/Order";
 import type * as Pipeable from "effect/Pipeable";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 import { ValueObjectProto } from "./internal/valueObject.ts";
 import * as QuantityExact from "./QuantityExact.ts";
@@ -55,9 +56,7 @@ const make = (value: Rational.Rational): TemperatureExact =>
 export const equals = (a: TemperatureExact, b: TemperatureExact): boolean =>
   Rational.equals(a.value, b.value);
 
-export const TemperatureExactFromSelf = Schema.declare(
-  isTemperatureExact,
-).annotations({
+export const TemperatureExactFromSelf = Schema.declare(isTemperatureExact, {
   identifier: "TemperatureExactFromSelf",
   description: "an exact absolute temperature",
 });
@@ -69,17 +68,17 @@ export const TemperatureExactFromSelf = Schema.declare(
  * rational encoding (`"3/2"`, `"-3/2"`, `"3"`)—exact on the wire, with no
  * width or precision ceiling.
  */
-export const TemperatureExact = Schema.transform(
-  Schema.Struct({
-    unit: Schema.Literal("Kelvins"),
-    value: Rational.Rational,
-  }),
-  TemperatureExactFromSelf,
-  {
-    strict: true,
-    decode: ({ value }) => make(value),
-    encode: ({ value }) => ({ unit: "Kelvins" as const, value }),
-  },
+export const TemperatureExact = Schema.Struct({
+  unit: Schema.Literal("Kelvins"),
+  value: Rational.Rational,
+}).pipe(
+  Schema.decodeTo(
+    TemperatureExactFromSelf,
+    SchemaTransformation.transform({
+      decode: ({ value }) => make(value),
+      encode: ({ value }) => ({ unit: "Kelvins" as const, value }),
+    }),
+  ),
 );
 
 // Absolute temperatures
@@ -173,13 +172,13 @@ export const Order: order.Order<TemperatureExact> = order.mapInput(
   (t: TemperatureExact) => t.value,
 );
 
-export const lessThan = order.lessThan(Order);
+export const lessThan = order.isLessThan(Order);
 
-export const lessThanOrEqualTo = order.lessThanOrEqualTo(Order);
+export const lessThanOrEqualTo = order.isLessThanOrEqualTo(Order);
 
-export const greaterThan = order.greaterThan(Order);
+export const greaterThan = order.isGreaterThan(Order);
 
-export const greaterThanOrEqualTo = order.greaterThanOrEqualTo(Order);
+export const greaterThanOrEqualTo = order.isGreaterThanOrEqualTo(Order);
 
 export const min: {
   (b: TemperatureExact): (a: TemperatureExact) => TemperatureExact;

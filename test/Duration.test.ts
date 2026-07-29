@@ -2,7 +2,7 @@ import { describe, it } from "@effect/vitest";
 import { assertEquals, assertTrue } from "@effect/vitest/utils";
 import * as DateTime from "effect/DateTime";
 import * as EffectDuration from "effect/Duration";
-import * as FastCheck from "effect/FastCheck";
+import * as FastCheck from "effect/testing/FastCheck";
 import * as Option from "effect/Option";
 
 import * as Duration from "../src/Duration.ts";
@@ -66,15 +66,15 @@ describe("Duration", () => {
     });
 
     it("between measures the signed difference between DateTimes", () => {
-      const start = DateTime.unsafeMake(1000);
-      const end = DateTime.unsafeMake(91_000);
+      const start = DateTime.makeUnsafe(1000);
+      const end = DateTime.makeUnsafe(91_000);
 
       assertEquals(Duration.inSeconds(Duration.between(start, end)), 90);
       assertEquals(Duration.inSeconds(Duration.between(end, start)), -90);
     });
 
     it("addTo adds to a DateTime, rounding to milliseconds", () => {
-      const start = DateTime.unsafeMake(0);
+      const start = DateTime.makeUnsafe(0);
 
       assertEquals(
         DateTime.toEpochMillis(
@@ -91,7 +91,7 @@ describe("Duration", () => {
     });
 
     it("addTo is none for non-finite or out-of-range results", () => {
-      const start = DateTime.unsafeMake(0);
+      const start = DateTime.makeUnsafe(0);
 
       assertTrue(
         Option.isNone(Duration.addTo(start, Duration.seconds(Infinity))),

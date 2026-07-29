@@ -5,7 +5,7 @@ import {
   deepStrictEqual,
 } from "@effect/vitest/utils";
 import * as Equal from "effect/Equal";
-import * as FastCheck from "effect/FastCheck";
+import * as FastCheck from "effect/testing/FastCheck";
 import * as Schema from "effect/Schema";
 
 import { double, isCloseTo, testRoundtrips } from "./testUtils.ts";

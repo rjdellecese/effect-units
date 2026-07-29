@@ -3,7 +3,7 @@ import { assertEquals, assertTrue } from "@effect/vitest/utils";
 import * as DateTime from "effect/DateTime";
 import * as EffectDuration from "effect/Duration";
 import * as Equal from "effect/Equal";
-import * as FastCheck from "effect/FastCheck";
+import * as FastCheck from "effect/testing/FastCheck";
 import * as Option from "effect/Option";
 
 import { testExactAnchors, testExactRoundtrips } from "./testUtilsExact.ts";
@@ -119,8 +119,8 @@ describe("DurationExact", () => {
     });
 
     it("between measures the signed difference exactly", () => {
-      const start = DateTime.unsafeMake(1000);
-      const end = DateTime.unsafeMake(91_000);
+      const start = DateTime.makeUnsafe(1000);
+      const end = DateTime.makeUnsafe(91_000);
 
       assertTrue(
         Equal.equals(
@@ -139,8 +139,8 @@ describe("DurationExact", () => {
     it("between stays exact across spans wider than 2^53 milliseconds", () => {
       // Subtracting the endpoints as doubles first would round this span up
       // to a whole number of seconds.
-      const start = DateTime.unsafeMake(-8_640_000_000_000_000);
-      const end = DateTime.unsafeMake(8_639_999_999_999_999);
+      const start = DateTime.makeUnsafe(-8_640_000_000_000_000);
+      const end = DateTime.makeUnsafe(8_639_999_999_999_999);
 
       assertTrue(
         Equal.equals(
@@ -151,7 +151,7 @@ describe("DurationExact", () => {
     });
 
     it("addTo adds to a DateTime, rounding to milliseconds", () => {
-      const start = DateTime.unsafeMake(0);
+      const start = DateTime.makeUnsafe(0);
 
       assertEquals(
         DateTime.toEpochMillis(
@@ -190,7 +190,7 @@ describe("DurationExact", () => {
     });
 
     it("addTo is none for out-of-range results", () => {
-      const start = DateTime.unsafeMake(0);
+      const start = DateTime.makeUnsafe(0);
 
       // Exact, but lands outside the representable DateTime range.
       assertTrue(
@@ -229,8 +229,8 @@ describe("DurationExact", () => {
       // instant rather than yielding a NaN epoch a guard could inspect
       // afterwards—so the range check has to come before construction.
       const zoned = DateTime.setZone(
-        DateTime.unsafeMake(0),
-        DateTime.zoneUnsafeMakeNamed("America/New_York"),
+        DateTime.makeUnsafe(0),
+        DateTime.zoneMakeNamedUnsafe("America/New_York"),
       );
 
       assertTrue(
@@ -244,8 +244,8 @@ describe("DurationExact", () => {
     });
 
     it("addTo preserves the time zone of its input", () => {
-      const zone = DateTime.zoneUnsafeMakeNamed("America/New_York");
-      const zoned = DateTime.setZone(DateTime.unsafeMake(0), zone);
+      const zone = DateTime.zoneMakeNamedUnsafe("America/New_York");
+      const zoned = DateTime.setZone(DateTime.makeUnsafe(0), zone);
       const shifted = Option.getOrThrow(
         DurationExact.addTo(
           zoned,
@@ -260,7 +260,7 @@ describe("DurationExact", () => {
     it("addTo does not re-round offsets beyond 2^53 milliseconds", () => {
       // The offset exceeds Number.MAX_SAFE_INTEGER, so narrowing it before
       // the addition would land one millisecond short of the exact result.
-      const start = DateTime.unsafeMake(-8_640_000_000_000_000);
+      const start = DateTime.makeUnsafe(-8_640_000_000_000_000);
       const offset = 10_000_000_000_000_001n;
 
       assertEquals(

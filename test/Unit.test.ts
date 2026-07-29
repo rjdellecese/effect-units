@@ -5,7 +5,7 @@ import {
   assertTrue,
   throws,
 } from "@effect/vitest/utils";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import * as Equal from "effect/Equal";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
@@ -95,14 +95,14 @@ describe("Unit", () => {
 
   it("the schema rejects non-canonical strings", () => {
     assertTrue(
-      Either.isLeft(Schema.decodeEither(Unit.Unit)("(Meters/Seconds")),
+      Result.isFailure(Schema.decodeResult(Unit.Unit)("(Meters/Seconds")),
     );
   });
 
   it("the schema rejects deeply nested input without overflowing the stack", () => {
     assertTrue(
-      Either.isLeft(
-        Schema.decodeEither(Unit.Unit)("(".repeat(100_000) + "Meters"),
+      Result.isFailure(
+        Schema.decodeResult(Unit.Unit)("(".repeat(100_000) + "Meters"),
       ),
     );
   });

@@ -1,7 +1,7 @@
 import { describe, it } from "@effect/vitest";
 import { assertEquals, assertTrue } from "@effect/vitest/utils";
 import * as Equal from "effect/Equal";
-import * as FastCheck from "effect/FastCheck";
+import * as FastCheck from "effect/testing/FastCheck";
 
 import { isCloseTo } from "./testUtils.ts";
 import * as Constants from "../src/internal/constants.ts";

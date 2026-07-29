@@ -169,7 +169,7 @@ export const addTo = (
   }
 
   // In range, so this narrowing is exact.
-  const shifted = DateTime.unsafeMake(Number(epochMillis));
+  const shifted = DateTime.makeUnsafe(Number(epochMillis));
 
   return Option.some(
     DateTime.isZoned(dateTime)
