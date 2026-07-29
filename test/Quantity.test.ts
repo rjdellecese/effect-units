@@ -12,6 +12,7 @@ import * as FastCheck from "effect/testing/FastCheck";
 import * as Schema from "effect/Schema";
 
 import { isCloseTo, double } from "./testUtils.ts";
+import * as Dimensionless from "../src/Dimensionless.ts";
 import * as Length from "../src/Length.ts";
 import * as Mass from "../src/Mass.ts";
 import * as Quantity from "../src/Quantity.ts";
@@ -186,6 +187,108 @@ describe("rates", () => {
         assertTrue(Unit.equals(recovered.unit, "Seconds"));
         assertTrue(isCloseTo(recovered.value, i));
       }),
+    );
+  });
+});
+
+describe("dimensionless", () => {
+  it("ratio collapses same-unit division to Unitless", () => {
+    FastCheck.assert(
+      FastCheck.property(double, nonZeroDouble, (a, b) => {
+        const r = Quantity.ratio(Length.meters(a), Length.meters(b));
+
+        assertTrue(Unit.equals(r.unit, "Unitless"));
+        assertEquals(r.value, a / b);
+      }),
+    );
+  });
+
+  it("ratio erases the units it came from", () => {
+    assertTrue(
+      Equal.equals(
+        Quantity.ratio(Length.meters(1), Length.meters(4)),
+        Quantity.ratio(Mass.kilograms(1), Mass.kilograms(4)),
+      ),
+    );
+  });
+
+  it("ratio by zero is Infinity", () => {
+    assertTrue(
+      Quantity.isInfinite(Quantity.ratio(Length.meters(1), Length.meters(0))),
+    );
+    assertTrue(
+      Quantity.isNaN(Quantity.ratio(Length.meters(0), Length.meters(0))),
+    );
+  });
+
+  it("timesUnitless scales without leaving the units", () => {
+    // Compile-time inference check: scaling a Length stays a Length, where
+    // `times` would give a Quantity<Product<"Meters", "Unitless">>.
+    const scaled: Quantity.Quantity<Length.Meters> = Quantity.timesUnitless(
+      Length.meters(200),
+      Dimensionless.percent(90),
+    );
+
+    assertTrue(Unit.equals(scaled.unit, Length.Meters));
+    assertTrue(isCloseTo(scaled.value, 180));
+  });
+
+  it("timesUnitless by one is the identity", () => {
+    FastCheck.assert(
+      FastCheck.property(double, (n) => {
+        assertTrue(
+          Equal.equals(
+            Quantity.timesUnitless(Length.meters(n), Dimensionless.one),
+            Length.meters(n),
+          ),
+        );
+      }),
+    );
+  });
+
+  it("overUnitless inverts timesUnitless", () => {
+    FastCheck.assert(
+      FastCheck.property(double, nonZeroDouble, (n, f) => {
+        const factor = Dimensionless.fraction(f);
+        const scaled = Quantity.timesUnitless(Length.meters(n), factor);
+
+        assertTrue(isCloseTo(Quantity.overUnitless(scaled, factor).value, n));
+      }),
+    );
+  });
+
+  it("composes two dimensionless factors", () => {
+    const half = Dimensionless.percent(50);
+
+    assertTrue(
+      isCloseTo(
+        Dimensionless.inPercent(Quantity.timesUnitless(half, half)),
+        25,
+      ),
+    );
+  });
+
+  it("data-last forms match data-first", () => {
+    const length = Length.meters(8);
+    const factor = Dimensionless.percent(25);
+
+    assertTrue(
+      Equal.equals(
+        length.pipe(Quantity.timesUnitless(factor)),
+        Quantity.timesUnitless(length, factor),
+      ),
+    );
+    assertTrue(
+      Equal.equals(
+        length.pipe(Quantity.overUnitless(factor)),
+        Quantity.overUnitless(length, factor),
+      ),
+    );
+    assertTrue(
+      Equal.equals(
+        length.pipe(Quantity.ratio(Length.meters(2))),
+        Quantity.ratio(length, Length.meters(2)),
+      ),
     );
   });
 });

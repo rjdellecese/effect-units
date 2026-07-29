@@ -13,6 +13,11 @@ import * as String from "effect/String";
 /**
  * The leaf tags of the unit algebra—every other unit is a `Product` or
  * `Rate` composition of these.
+ *
+ * `Unitless` is the dimensionless leaf—the SI unit one, which `Dimensionless`
+ * is built on. It is an ordinary leaf like the rest: the algebra never
+ * cancels it, so `Quantity.ratio`, `timesUnitless`, and `overUnitless` are
+ * the operations that put quantities into and out of it.
  */
 export const BaseUnit = Schema.Literals([
   "Meters",
@@ -27,6 +32,7 @@ export const BaseUnit = Schema.Literals([
   "Moles",
   "Steradians",
   "CelsiusDegrees",
+  "Unitless",
 ]);
 
 export type BaseUnit = typeof BaseUnit.Type;

@@ -513,6 +513,122 @@ export const over_Unsafe: {
     make(product.unit.right, Rational.divideUnsafe(product.value, b.value)),
 );
 
+// Dimensionless quantities
+//
+// The exact counterparts of `Quantity.ratio`, `timesUnitless`, and
+// `overUnitless`: the bridge into and out of `Unitless`, the dimensionless
+// leaf. The two that divide return `Option` like the rest of this module.
+// See the `DimensionlessExact` module for the constructors that read and
+// write `Unitless` values.
+
+/**
+ * Divides two quantities in the same units, producing a dimensionless
+ * quantity, whatever units the two were built from. Returns `Option.none()`
+ * when the divisor is zero.
+ */
+export const ratio: {
+  <U extends Unit.Unit>(
+    b: QuantityExact<U>,
+  ): (a: QuantityExact<U>) => Option.Option<QuantityExact<"Unitless">>;
+  <U extends Unit.Unit>(
+    a: QuantityExact<U>,
+    b: QuantityExact<U>,
+  ): Option.Option<QuantityExact<"Unitless">>;
+} = Function.dual(
+  2,
+  (
+    a: QuantityExact<Unit.Unit>,
+    b: QuantityExact<Unit.Unit>,
+  ): Option.Option<QuantityExact<"Unitless">> =>
+    Option.map(Rational.divide(a.value, b.value), (value) =>
+      make("Unitless", value),
+    ),
+);
+
+/** {@link ratio}, throwing a `RangeError` when the divisor is zero. */
+export const ratioUnsafe: {
+  <U extends Unit.Unit>(
+    b: QuantityExact<U>,
+  ): (a: QuantityExact<U>) => QuantityExact<"Unitless">;
+  <U extends Unit.Unit>(
+    a: QuantityExact<U>,
+    b: QuantityExact<U>,
+  ): QuantityExact<"Unitless">;
+} = Function.dual(
+  2,
+  (
+    a: QuantityExact<Unit.Unit>,
+    b: QuantityExact<Unit.Unit>,
+  ): QuantityExact<"Unitless"> =>
+    make("Unitless", Rational.divideUnsafe(a.value, b.value)),
+);
+
+/**
+ * Scales a quantity by a dimensionless factor, staying in its units.
+ * Contrast {@link times}, which would form a `Product` with the factor's
+ * unit.
+ */
+export const timesUnitless: {
+  (
+    factor: QuantityExact<"Unitless">,
+  ): <U extends Unit.Unit>(a: QuantityExact<U>) => QuantityExact<U>;
+  <U extends Unit.Unit>(
+    a: QuantityExact<U>,
+    factor: QuantityExact<"Unitless">,
+  ): QuantityExact<U>;
+} = Function.dual(
+  2,
+  (
+    a: QuantityExact<Unit.Unit>,
+    factor: QuantityExact<"Unitless">,
+  ): QuantityExact<Unit.Unit> =>
+    make(a.unit, Rational.multiply(a.value, factor.value)),
+);
+
+/**
+ * Divides a quantity by a dimensionless factor, staying in its units—the
+ * inverse of {@link timesUnitless}. Returns `Option.none()` when the factor
+ * is zero.
+ */
+export const overUnitless: {
+  (
+    factor: QuantityExact<"Unitless">,
+  ): <U extends Unit.Unit>(
+    a: QuantityExact<U>,
+  ) => Option.Option<QuantityExact<U>>;
+  <U extends Unit.Unit>(
+    a: QuantityExact<U>,
+    factor: QuantityExact<"Unitless">,
+  ): Option.Option<QuantityExact<U>>;
+} = Function.dual(
+  2,
+  (
+    a: QuantityExact<Unit.Unit>,
+    factor: QuantityExact<"Unitless">,
+  ): Option.Option<QuantityExact<Unit.Unit>> =>
+    Option.map(Rational.divide(a.value, factor.value), (value) =>
+      make(a.unit, value),
+    ),
+);
+
+/** {@link overUnitless}, throwing a `RangeError` when the factor is zero. */
+export const overUnitlessUnsafe: {
+  (
+    factor: QuantityExact<"Unitless">,
+  ): <U extends Unit.Unit>(a: QuantityExact<U>) => QuantityExact<U>;
+  <U extends Unit.Unit>(
+    a: QuantityExact<U>,
+    factor: QuantityExact<"Unitless">,
+  ): QuantityExact<U>;
+} = Function.dual(
+  2,
+  (
+    a: QuantityExact<Unit.Unit>,
+    factor: QuantityExact<"Unitless">,
+  ): QuantityExact<Unit.Unit> =>
+    make(a.unit, Rational.divideUnsafe(a.value, factor.value)),
+);
+
 // Comparison
 //
 // Rationals are totally ordered, so the ordering predicates are total —

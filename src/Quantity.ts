@@ -362,6 +362,75 @@ export const over_: {
   ): Quantity<Unit.Unit> => make(product.unit.right, product.value / b.value),
 );
 
+// Dimensionless quantities
+//
+// The unit algebra is structural—it never cancels—so dividing two quantities
+// in the same units gives a `Rate<U, U>`, and scaling a quantity by a ratio
+// with `times` grows a `Product`. These three operations are the
+// dimensionless bridge: `ratio` collapses same-unit division to `Unitless`,
+// and `timesUnitless`/`overUnitless` apply a dimensionless factor without
+// leaving the units they scale. See the `Dimensionless` module for the
+// constructors (`fraction`, `percent`, …) that read and write `Unitless`
+// values; it is not imported here, since the dependency runs the other way.
+
+/**
+ * Divides two quantities in the same units, producing a dimensionless
+ * quantity—`ratio(marathon, kilometer)` is a factor of 42.1648128, and the
+ * units it was measured in are gone. Division by zero yields ±Infinity (or
+ * NaN for 0/0).
+ *
+ * Read the result with `Dimensionless.inFraction` or `inPercent`.
+ */
+export const ratio: {
+  <U extends Unit.Unit>(
+    b: Quantity<U>,
+  ): (a: Quantity<U>) => Quantity<"Unitless">;
+  <U extends Unit.Unit>(a: Quantity<U>, b: Quantity<U>): Quantity<"Unitless">;
+} = Function.dual(
+  2,
+  (a: Quantity<Unit.Unit>, b: Quantity<Unit.Unit>): Quantity<"Unitless"> =>
+    make("Unitless", a.value / b.value),
+);
+
+/**
+ * Scales a quantity by a dimensionless factor, staying in its units:
+ * `timesUnitless(length, Dimensionless.percent(90))` is nine tenths of that
+ * length. Contrast {@link times}, which would form a `Product` with the
+ * factor's unit.
+ */
+export const timesUnitless: {
+  (
+    factor: Quantity<"Unitless">,
+  ): <U extends Unit.Unit>(a: Quantity<U>) => Quantity<U>;
+  <U extends Unit.Unit>(
+    a: Quantity<U>,
+    factor: Quantity<"Unitless">,
+  ): Quantity<U>;
+} = Function.dual(
+  2,
+  (a: Quantity<Unit.Unit>, factor: Quantity<"Unitless">): Quantity<Unit.Unit> =>
+    make(a.unit, a.value * factor.value),
+);
+
+/**
+ * Divides a quantity by a dimensionless factor, staying in its units—the
+ * inverse of {@link timesUnitless}. Division by zero yields ±Infinity (or
+ * NaN for 0/0).
+ */
+export const overUnitless: {
+  (
+    factor: Quantity<"Unitless">,
+  ): <U extends Unit.Unit>(a: Quantity<U>) => Quantity<U>;
+  <U extends Unit.Unit>(
+    a: Quantity<U>,
+    factor: Quantity<"Unitless">,
+  ): Quantity<U>;
+} = Function.dual(
+  2,
+  (a: Quantity<Unit.Unit>, factor: Quantity<"Unitless">): Quantity<Unit.Unit> =>
+    make(a.unit, a.value / factor.value),
+);
+
 // Comparison
 //
 // The ordering predicates follow IEEE semantics for NaN: every comparison

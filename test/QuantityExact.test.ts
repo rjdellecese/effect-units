@@ -15,6 +15,7 @@ import * as Schema from "effect/Schema";
 import { nonZeroRational, rational } from "./testUtilsExact.ts";
 import { double } from "./testUtils.ts";
 import * as QuantityExact from "../src/QuantityExact.ts";
+import * as DimensionlessExact from "../src/DimensionlessExact.ts";
 import * as Length from "../src/Length.ts";
 import * as Quantity from "../src/Quantity.ts";
 import * as Rational from "../src/Rational.ts";
@@ -176,6 +177,75 @@ describe("rates", () => {
         QuantityExact.times(one, kilograms(Rational.zero)),
         kilograms(Rational.zero),
       ),
+    );
+  });
+});
+
+describe("dimensionless", () => {
+  const third = Rational.makeUnsafe(1n, 3n);
+  const three = Rational.makeUnsafe(3n);
+
+  it("ratio collapses same-unit division to Unitless exactly", () => {
+    FastCheck.assert(
+      FastCheck.property(rational, nonZeroRational, (a, b) => {
+        const r = QuantityExact.ratioUnsafe(meters(a), meters(b));
+
+        assertTrue(Unit.equals(r.unit, "Unitless"));
+        assertTrue(Rational.equals(r.value, Rational.divideUnsafe(a, b)));
+      }),
+    );
+  });
+
+  it("ratio erases the units it came from", () => {
+    assertTrue(
+      Equal.equals(
+        QuantityExact.ratioUnsafe(meters(Rational.one), meters(three)),
+        QuantityExact.ratioUnsafe(kilograms(Rational.one), kilograms(three)),
+      ),
+    );
+  });
+
+  it("timesUnitless and overUnitless are exact inverses", () => {
+    FastCheck.assert(
+      FastCheck.property(rational, nonZeroRational, (n, f) => {
+        const factor = DimensionlessExact.fraction(f);
+        const scaled = QuantityExact.timesUnitless(meters(n), factor);
+        const recovered = QuantityExact.overUnitless(scaled, factor);
+
+        assertTrue(Option.isSome(recovered));
+        assertTrue(Equal.equals(Option.getOrThrow(recovered), meters(n)));
+      }),
+    );
+  });
+
+  it("scales by a third with nothing lost", () => {
+    // The float track cannot do this: 3 * (1/3) is 1 only because the two
+    // roundings happen to cancel, and 10 * (1/3) * 3 is not 10.
+    const factor = DimensionlessExact.fraction(third);
+
+    assertTrue(
+      Equal.equals(
+        QuantityExact.timesUnitless(
+          meters(Rational.makeUnsafe(10n)),
+          factor,
+        ).pipe(QuantityExact.overUnitless(factor)),
+        Option.some(meters(Rational.makeUnsafe(10n))),
+      ),
+    );
+  });
+
+  it("division by zero is None, and the unsafe forms throw", () => {
+    const one = meters(Rational.one);
+
+    assertTrue(Option.isNone(QuantityExact.ratio(one, meters(Rational.zero))));
+    assertTrue(
+      Option.isNone(QuantityExact.overUnitless(one, DimensionlessExact.zero)),
+    );
+    assertTrue(Option.isSome(QuantityExact.ratio(one, one)));
+
+    throws(() => QuantityExact.ratioUnsafe(one, meters(Rational.zero)));
+    throws(() =>
+      QuantityExact.overUnitlessUnsafe(one, DimensionlessExact.zero),
     );
   });
 });
