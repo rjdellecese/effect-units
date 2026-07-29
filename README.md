@@ -2,6 +2,99 @@
 
 Typed quantities and unit conversions for [Effect](https://effect.website), ported from Elm's [`ianmackenzie/elm-units`](https://package.elm-lang.org/packages/ianmackenzie/elm-units/latest/).
 
+Store, pass around, convert between, compare, and do arithmetic on lengths, durations, speeds, temperatures, pixels, money, and dozens of other kinds of quantity—with the type system checking your units and your dimensional analysis at every step.
+
+## Highlights
+
+### Never mix up units again
+
+A quantity is a number tagged with a unit at the type level. Values are stored in SI base units, so constructing and converting in any unit you like is just a function call—and combining quantities whose units don't agree doesn't typecheck:
+
+```ts
+import * as Duration from "effect-units/Duration";
+import * as Length from "effect-units/Length";
+import * as Quantity from "effect-units/Quantity";
+
+const marathon = Length.miles(26.2); // a Length — Quantity<"Meters">
+Length.inFeet(marathon); // 138336
+Length.inKilometers(marathon); // 42.1648128
+
+const record = Duration.hours(2.001); // a Duration — Quantity<"Seconds">
+
+Quantity.sum(marathon, Length.kilometers(1)); // fine: both are lengths
+marathon.pipe(Quantity.sum(record)); // ✗ compile error: meters + seconds
+```
+
+### The type system checks your dimensional analysis
+
+`times`, `squared`, `per`, `at`, and friends compose units into products and rates, and the result types follow along. Divide a length by a duration and you have a speed; apply that speed to a duration and you're back to a length:
+
+```ts
+import * as Speed from "effect-units/Speed";
+
+const speed = Quantity.per(Length.miles(3), Duration.hours(1));
+// Quantity<Rate<"Meters", "Seconds">> — a Speed
+
+Speed.inKilometersPerHour(speed); // 4.828032
+
+const distance = Quantity.at(speed, Duration.minutes(20));
+// Quantity<"Meters"> — a Length
+
+Length.inMiles(distance); // 1
+
+Quantity.at(speed, Length.meters(5)); // ✗ compile error: a speed applies to a duration, not a length
+```
+
+The derived quantities you'd reach for—`Area`, `Speed`, `Force`, `Energy`, `Power`, `Pressure`, and many more—are names for exactly these compositions, each with its own module of conversions (see [Modules](#modules)).
+
+### Custom units compose like built-in ones
+
+The built-in base units cover physics, but a custom unit—`USD`, tiles in a game, requests—is a first-class leaf of the unit tree and participates in all the same algebra:
+
+```ts
+import * as Unit from "effect-units/Unit";
+
+const Usd = Unit.custom("USD");
+const cents = (n: number) => Quantity.make(Usd, n);
+
+const price = Quantity.per(cents(300), Length.meters(2));
+// Quantity<Rate<Custom<"USD">, "Meters">> — cents per meter
+
+const cost = Quantity.at(price, Length.meters(10)); // 1500 cents
+```
+
+See [Custom units](#custom-units) for the full pattern, including a lossless boundary with money libraries like dinero.js.
+
+### Effect-native, wire-ready
+
+Quantities are Effect value objects: `Equal` and `Hash` (safe `HashMap` keys), `Pipeable`, with dual data-first/data-last functions throughout. Every quantity module exports a `Schema` with a stable, self-describing wire format—one that rejects NaN and ±Infinity at the boundary instead of letting JSON silently turn them into `null`:
+
+```ts
+import * as Schema from "effect/Schema";
+
+Schema.encodeSync(Speed.Speed)(speed);
+// { unit: "(Meters/Seconds)", value: 1.34112 }
+```
+
+`Duration` interoperates with `effect/Duration` and `effect/DateTime`, and `Rational` follows the `effect/BigDecimal` idiom.
+
+### Exact arithmetic, when a lost cent is a bug
+
+Floats are right for measurement; money and time often want exactness. `QuantityExact` runs the same unit algebra over arbitrary-precision rationals: sums, products, and—crucially—rates lose nothing, and partiality moves into the types (`Option` instead of NaN or ±Infinity). Equality is decidable, so you can say things like:
+
+```ts
+import * as Equal from "effect/Equal";
+import * as Rational from "effect-units/Rational";
+import * as TemperatureExact from "effect-units/TemperatureExact";
+
+Equal.equals(
+  TemperatureExact.degreesFahrenheit(Rational.fromBigInt(212n)),
+  TemperatureExact.degreesCelsius(Rational.fromBigInt(100n)),
+); // true — exactly, not within a tolerance
+```
+
+Nearly every unit module has an exact twin (`LengthExact`, `SpeedExact`, `DurationExact`, …) with lossless conversion factors, and the two tracks agree bit-for-bit on every factor. See [Exact quantities](#exact-quantities).
+
 ## Install
 
 ```bash
@@ -58,25 +151,7 @@ pnpm add effect-units
 
 ### Exact units
 
-Every unit module above whose conversion factors are exact rationals has an exact twin named with an `Exact` suffix (`effect-units/LengthExact`, `effect-units/SpeedExact`, `effect-units/TemperatureExact`, …), taking and returning `Rational` values with lossless conversions. The rule for what has a twin: **if a conversion factor involves π, it stays float-only.** That excludes `Angle`, `AngularSpeed`, `AngularAcceleration`, and `SolidAngle` entirely, `parsecs` within `LengthExact`, and `footLamberts` within `LuminanceExact`—everything else converts exactly (an exact US liquid gallon is _exactly_ 231 cubic inches; 212 °F is _exactly_ 100 °C).
-
-## Example
-
-```ts
-import * as Duration from "effect-units/Duration";
-import * as Length from "effect-units/Length";
-import * as Quantity from "effect-units/Quantity";
-import * as Speed from "effect-units/Speed";
-
-const height = Length.centimeters(180);
-const inInches = Length.inInches(height);
-
-const area = Quantity.times(height, height); // Quantity<Squared<"Meters">>
-
-const speed = Quantity.per(Length.miles(3), Duration.hours(1)); // Quantity<Rate<"Meters", "Seconds">>, usable as a Speed
-
-const distance = Quantity.at(speed, Duration.minutes(20));
-```
+Nearly every unit module above has an exact twin named with an `Exact` suffix (`effect-units/LengthExact`, `effect-units/SpeedExact`, `effect-units/TemperatureExact`, …), taking and returning `Rational` values with lossless conversions. The rule for what gets a twin: **if a conversion factor involves π, it stays float-only.** That excludes `Angle`, `AngularSpeed`, `AngularAcceleration`, and `SolidAngle` entirely, plus `parsecs` within `LengthExact` and `footLamberts` within `LuminanceExact`. Everything else converts exactly: a US liquid gallon is _exactly_ 231 cubic inches, and 212 °F is _exactly_ 100 °C.
 
 ## Custom units
 
@@ -108,7 +183,7 @@ inDollars(cost); // 15
 
 Ids must match `/^[A-Za-z][A-Za-z0-9]*$/` (`Unit.custom` throws otherwise), and encode in bracketed form—`"[USD]"`, `"([USD]/Meters)"`—so they can never collide with built-in names on the wire. A custom unit is always distinct from a built-in base unit with the same name: `Unit.custom("Meters")` is not `"Meters"`.
 
-Precision: integer minor units are exact in float64 up to `Number.MAX_SAFE_INTEGER` (2^53 − 1) cents, but rate arithmetic (`per`, `at`, …) is ordinary IEEE 754 division and multiplication—measurement semantics, not accounting semantics. Keep your money library as the system of record: round explicitly when converting a computed quantity back (or raise the dinero `scale` to keep sub-minor-unit precision), and reject amounts beyond the safe-integer range (e.g. from dinero's bigint calculator) at the boundary rather than letting them degrade silently. See `test/CustomUnits.test.ts` for a boundary that does both—or use `QuantityExact` for money instead, where none of these caveats apply (see below).
+Precision: integer minor units are exact in float64 up to `Number.MAX_SAFE_INTEGER` (2^53 − 1) cents, but rate arithmetic (`per`, `at`, …) is ordinary IEEE 754 division and multiplication—measurement semantics, not accounting semantics. Keep your money library as the system of record: round explicitly when converting a computed quantity back (or raise the dinero `scale` to keep sub-minor-unit precision), and reject amounts beyond the safe-integer range at the boundary rather than letting them degrade silently—`test/CustomUnits.test.ts` shows a boundary that does both. Or use `QuantityExact` for money instead, where none of these caveats apply (see below).
 
 ## Exact quantities
 
@@ -135,7 +210,7 @@ const cost = QuantityExact.at(
 // exactly 200 cents—Equal.equals, not isCloseTo
 ```
 
-Because ℚ has no infinities or NaN, partiality lives in the types instead of sentinel values: `per`, `at_`, `over`, `over_`, `divide`, and `Rational.reciprocal` return `Option` (`Option.none()` exactly when the divisor is zero), each with an `unsafe*` twin that throws. Everything else—`sum`, `subtract`, `multiply`, `times`, `squared`, `cubed`, `at`, `for_`, comparisons—is total and exact, `equals` is decidable, and quantities are safe `HashMap` keys with no NaN or -0 caveats.
+Because ℚ has no infinities or NaN, partiality lives in the types instead of sentinel values: `per`, `at_`, `over`, `over_`, `divide`, and `Rational.reciprocal` return `Option` (`Option.none()` exactly when the divisor is zero), each with an `unsafe*` twin that throws. Everything else—`sum`, `subtract`, `multiply`, `times`, `squared`, `cubed`, `at`, `for_`, comparisons—is total and exact. `equals` is decidable, and quantities are safe `HashMap` keys with no NaN or -0 caveats.
 
 Rounding happens only at explicitly parameterized boundaries:
 
@@ -148,7 +223,7 @@ The wire format is `{ unit, value }` with the value as a canonical fraction stri
 
 ## Numbers, precision, and equality
 
-The library is two-track: `Quantity` values are plain 64-bit floats (as in `elm-units`) with measurement semantics, and `QuantityExact` values are arbitrary-precision rationals with accounting/algebraic semantics. The two tracks agree at every conversion factor: each float factor is the correctly rounded float of its exact defining rational (asserted bit-for-bit against the exact modules in the test suite), and no float module imports any bigint code. What remains float-only is _arithmetic on runtime values_—e.g. the float `Temperature.degreesFahrenheit` rounds per operation as any float affine map must, where `TemperatureExact` is exact.
+The library is two-track: `Quantity` values are plain 64-bit floats (as in `elm-units`) with measurement semantics, and `QuantityExact` values are arbitrary-precision rationals with accounting/algebraic semantics. The two tracks agree at every conversion factor: each float factor is the correctly rounded float of its exact defining rational, asserted bit-for-bit against the exact modules in the test suite. No float module imports any bigint code, so using only the float track loads no rational arithmetic. Where the tracks differ is _arithmetic on runtime values_: the float `Temperature.degreesFahrenheit` rounds at every operation, as any float affine map must, while `TemperatureExact` is exact.
 
 On the float track, arithmetic follows IEEE 754 semantics: division by zero yields ±Infinity, invalid operations yield NaN, and every operation carries ordinary float rounding (~15-16 significant digits). Check results with `Quantity.isNaN`, `isInfinite`, and `isFinite`.
 
