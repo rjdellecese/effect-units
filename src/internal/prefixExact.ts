@@ -1,6 +1,6 @@
 /**
  * Exact rational counterparts of the SI-prefix factors in ../Prefix.ts.
- * Every prefix is a power of ten, so prefix math is exact in ℚ — unlike the
+ * Every prefix is a power of ten, so prefix math is exact in ℚ—unlike the
  * float side, dividing by the factor and multiplying by its reciprocal are
  * the same operation here.
  *

@@ -227,7 +227,7 @@ describe("DurationExact", () => {
     it("addTo is none, not a throw, for out-of-range zoned results", () => {
       // A named zone resolves through Intl, which throws on an out-of-range
       // instant rather than yielding a NaN epoch a guard could inspect
-      // afterwards — so the range check has to come before construction.
+      // afterwards—so the range check has to come before construction.
       const zoned = DateTime.setZone(
         DateTime.unsafeMake(0),
         DateTime.zoneUnsafeMakeNamed("America/New_York"),

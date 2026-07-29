@@ -44,7 +44,7 @@ export const inPounds = (f: ForceExact) =>
   Rational.unsafeDivide(f.value, newtonsPerPound);
 
 /**
- * One kip is 1000 pounds of force — exactly 8896443230521/2000000000
+ * One kip is 1000 pounds of force—exactly 8896443230521/2000000000
  * (4448.2216152605) newtons.
  */
 const newtonsPerKip = Rational.multiply(

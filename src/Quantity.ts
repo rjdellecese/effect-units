@@ -42,7 +42,7 @@ export const Quantity = <const U extends Unit.Unit>(unit: U) =>
 /**
  * A quantity is a plain 64-bit float tagged with a unit tree. Arithmetic
  * follows IEEE 754 semantics: division by zero yields ±Infinity, and invalid
- * operations yield NaN — check with {@link isNaN} and {@link isInfinite}.
+ * operations yield NaN—check with {@link isNaN} and {@link isInfinite}.
  */
 export interface Quantity<U extends Unit.Unit>
   extends Equal.Equal, Inspectable.Inspectable, Pipeable.Pipeable {
@@ -94,7 +94,7 @@ export const make = <U extends Unit.Unit>(
 /**
  * Exact equality: identical values (with NaN equal to itself, so equality is
  * reflexive) and structurally equal units. For float quantities this is
- * identity, not "approximately the same measurement" — domain logic and
+ * identity, not "approximately the same measurement"—domain logic and
  * tests usually want {@link equalsWithin} instead.
  */
 export const equals = <U extends Unit.Unit>(
@@ -104,8 +104,8 @@ export const equals = <U extends Unit.Unit>(
 
 /**
  * Tolerance-based equality: whether `a` and `b` differ by no more than
- * `tolerance` (a quantity in the same units). Identical values — including
- * two equal infinities — are always equal within any tolerance; NaN is
+ * `tolerance` (a quantity in the same units). Identical values—including
+ * two equal infinities—are always equal within any tolerance; NaN is
  * never equal to anything.
  */
 export const equalsWithin: {
@@ -277,7 +277,7 @@ export const at_: {
 );
 
 /**
- * `for_(duration, speed)` is the length covered at `speed` for `duration` —
+ * `for_(duration, speed)` is the length covered at `speed` for `duration`—
  * {@link at} with its arguments flipped. (Named `for_` because `for` is a
  * reserved word.)
  */

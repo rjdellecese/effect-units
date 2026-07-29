@@ -34,7 +34,7 @@ export const inMegapascals = (p: Pressure) =>
  * One pound per square inch is one pound of force per square inch: exactly
  * 8,896,443,230,521/1,290,320,000 pascals (the pound-force and inch
  * definitions combined into one reduced fraction), written as one division
- * of exact integers so the factor is correctly rounded — chaining the
+ * of exact integers so the factor is correctly rounded—chaining the
  * already-rounded constants would land one ulp off.
  */
 const pascalsPerPoundPerSquareInch = 8_896_443_230_521 / 1_290_320_000;

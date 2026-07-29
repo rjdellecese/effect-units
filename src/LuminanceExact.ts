@@ -18,6 +18,6 @@ export const nits = (r: Rational.Rational) => make(r);
 
 export const inNits = (l: LuminanceExact) => l.value;
 
-// NOTE: no footLamberts — one foot-lambert is 1/π candelas per square foot,
+// NOTE: no footLamberts—one foot-lambert is 1/π candelas per square foot,
 // and π has no exact rational representation. Use Luminance.footLamberts on
 // the float side.

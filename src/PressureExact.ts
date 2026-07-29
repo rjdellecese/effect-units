@@ -36,7 +36,7 @@ export const inMegapascals = (p: PressureExact) =>
   PrefixExact.toPrefixed("Mega", p.value);
 
 /**
- * One pound per square inch is one pound of force per square inch — exactly
+ * One pound per square inch is one pound of force per square inch—exactly
  * 8896443230521/1290320000 pascals.
  */
 const pascalsPerPoundPerSquareInch = Rational.unsafeDivide(

@@ -19,7 +19,7 @@ export type TypeId = typeof TypeId;
 /**
  * An exact absolute temperature (a point on the thermodynamic temperature
  * scale, stored in kelvins as an arbitrary-precision rational). Unlike a
- * temperature `Delta`, an absolute temperature is not an `QuantityExact` —
+ * temperature `Delta`, an absolute temperature is not an `QuantityExact`—
  * it makes no sense to add two absolute temperatures, for example.
  */
 export interface TemperatureExact
@@ -66,7 +66,7 @@ export const TemperatureExactFromSelf = Schema.declare(
  * The wire format carries a `unit: "Kelvins"` discriminator so persisted
  * temperatures are self-describing, matching the `{ unit, value }`
  * convention of `QuantityExact` schemas, with the value in the canonical
- * rational encoding (`"3/2"`, `"-3/2"`, `"3"`) — exact on the wire, with no
+ * rational encoding (`"3/2"`, `"-3/2"`, `"3"`)—exact on the wire, with no
  * width or precision ceiling.
  */
 export const TemperatureExact = Schema.transform(
@@ -125,7 +125,7 @@ export const inDegreesFahrenheit = (t: TemperatureExact) =>
  * Note the deliberate word order, following `elm-units` and standard
  * metrology usage: "degrees Celsius" (`degreesCelsius`) is a point on the
  * scale, while "Celsius degrees" (`celsiusDegrees`) is a number of
- * scale-sized intervals — a rise of 5 Celsius degrees, from 20 degrees
+ * scale-sized intervals—a rise of 5 Celsius degrees, from 20 degrees
  * Celsius to 25.
  */
 export type Delta = QuantityExact.QuantityExact<"CelsiusDegrees">;
@@ -212,7 +212,7 @@ export const clamp: {
 // is one correct rounding.
 
 /**
- * The exact image of a float temperature — lossless, since every finite
+ * The exact image of a float temperature—lossless, since every finite
  * double is a dyadic rational. Returns `Option.none()` for NaN and
  * ±Infinity, which have no rational image.
  */
@@ -227,7 +227,7 @@ export const unsafeFromTemperature = (
 ): TemperatureExact => make(Rational.unsafeFromNumber(t.value));
 
 /**
- * The float temperature nearest the exact one — a single correct rounding.
+ * The float temperature nearest the exact one—a single correct rounding.
  * Returns `Option.none()` when the value overflows to ±Infinity.
  */
 export const toTemperature = (

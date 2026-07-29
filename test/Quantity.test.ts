@@ -97,7 +97,7 @@ describe("times", () => {
   });
 });
 
-describe("squared / cubed", () => {
+describe("squared/cubed", () => {
   it("squared multiplies a quantity by itself", () => {
     FastCheck.assert(
       FastCheck.property(double, (a) => {
@@ -218,7 +218,7 @@ describe("schema", () => {
 
   it("rejects non-finite values at the wire boundary", () => {
     // In-memory arithmetic produces Infinity/NaN by design, but JSON would
-    // silently turn them into null — so encoding must fail loudly instead.
+    // silently turn them into null—so encoding must fail loudly instead.
     const MetersPerSecond = Unit.rate(Length.Meters, "Seconds");
     const Speed = Quantity.Quantity(MetersPerSecond);
     const infinite = Quantity.per(

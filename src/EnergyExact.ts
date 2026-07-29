@@ -36,7 +36,7 @@ export const inMegajoules = (e: EnergyExact) =>
   PrefixExact.toPrefixed("Mega", e.value);
 
 /**
- * One kilowatt hour is one kilowatt (1000 joules per second) for one hour —
+ * One kilowatt hour is one kilowatt (1000 joules per second) for one hour—
  * exactly 3600000 joules.
  */
 const wattsPerKilowatt = Rational.unsafeMake(1000n);

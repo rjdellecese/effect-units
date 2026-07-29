@@ -21,7 +21,7 @@ export type TypeId = typeof TypeId;
 /**
  * An absolute temperature (a point on the thermodynamic temperature scale,
  * stored in kelvins). Unlike a temperature `Delta`, an absolute temperature
- * is not a `Quantity` — it makes no sense to add two absolute temperatures,
+ * is not a `Quantity`—it makes no sense to add two absolute temperatures,
  * for example.
  */
 export interface Temperature
@@ -112,7 +112,7 @@ export const inDegreesFahrenheit = (t: Temperature) =>
  * Note the deliberate word order, following `elm-units` and standard
  * metrology usage: "degrees Celsius" (`degreesCelsius`) is a point on the
  * scale, while "Celsius degrees" (`celsiusDegrees`) is a number of
- * scale-sized intervals — a rise of 5 Celsius degrees, from 20 degrees
+ * scale-sized intervals—a rise of 5 Celsius degrees, from 20 degrees
  * Celsius to 25.
  */
 export type Delta = Quantity.Quantity<"CelsiusDegrees">;

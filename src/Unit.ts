@@ -9,7 +9,7 @@ import * as Schema from "effect/Schema";
 import * as String from "effect/String";
 
 /**
- * The leaf tags of the unit algebra — every other unit is a `Product` or
+ * The leaf tags of the unit algebra—every other unit is a `Product` or
  * `Rate` composition of these.
  */
 export const BaseUnit = Schema.Literal(
@@ -107,7 +107,7 @@ const validCustomId = /^[A-Za-z][A-Za-z0-9]*$/;
 
 /**
  * Creates a {@link Custom} base unit. The id must match
- * `/^[A-Za-z][A-Za-z0-9]*$/` — the charset keeps ids trivially safe inside
+ * `/^[A-Za-z][A-Za-z0-9]*$/`—the charset keeps ids trivially safe inside
  * the canonical encoding's grammar. Ids are expected to be developer-written
  * literals, so an invalid id throws (a defect, not a recoverable error).
  *
@@ -159,7 +159,7 @@ export const equals = (a: Unit, b: Unit): boolean =>
  * (a custom unit), `"(Meters/Seconds)"`, or
  * `"(Kilograms*((Meters/Seconds)/Seconds))"`.
  *
- * This is a stable serialization format — it appears as the `unit` field of
+ * This is a stable serialization format—it appears as the `unit` field of
  * a `Quantity`'s encoded form and feeds unit hashing. It doubles as the
  * inspection output for composite units, whose `Inspectable` implementation
  * delegates to it.

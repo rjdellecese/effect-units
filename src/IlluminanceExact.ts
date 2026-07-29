@@ -23,7 +23,7 @@ export const lux = (r: Rational.Rational) => make(r);
 export const inLux = (i: IlluminanceExact) => i.value;
 
 /**
- * One foot candle is one lumen per square foot — exactly 1562500/145161 lux.
+ * One foot candle is one lumen per square foot—exactly 1562500/145161 lux.
  */
 const luxPerFootCandle = Rational.unsafeDivide(
   Rational.one,

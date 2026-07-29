@@ -90,7 +90,7 @@ const millisecondsPerSecond = Rational.unsafeMake(1000n);
 const maxEpochMillis = 8_640_000_000_000_000n;
 
 /**
- * Converts an `effect/Duration` to an `DurationExact` — lossless, since a
+ * Converts an `effect/Duration` to an `DurationExact`—lossless, since a
  * whole number of nanoseconds is an exact rational number of seconds.
  * Returns `Option.none()` for infinite durations, which have no rational
  * image.
@@ -104,7 +104,7 @@ export const fromDuration = (
 
 /**
  * Converts an `DurationExact` to an `effect/Duration`, rounding to a whole
- * number of nanoseconds under the given mode — exactly one rounding, made
+ * number of nanoseconds under the given mode—exactly one rounding, made
  * explicit. Returns `Option.none()` when the duration is negative
  * (`effect/Duration`s are non-negative).
  */
@@ -125,7 +125,7 @@ export const toDuration = (
 
 /**
  * The signed duration from `start` to `end` (negative when `end` is earlier
- * than `start`) — exact, since `DateTime`s are whole numbers of epoch
+ * than `start`)—exact, since `DateTime`s are whole numbers of epoch
  * milliseconds.
  */
 export const between = (
@@ -135,7 +135,7 @@ export const between = (
   make(
     Rational.unsafeMake(
       // Each endpoint is a safe integer (|epochMillis| <= 8.64e15 < 2^53), so
-      // widening before subtracting is exact — subtracting first would round
+      // widening before subtracting is exact—subtracting first would round
       // spans wider than 2^53 milliseconds.
       BigInt(DateTime.toEpochMillis(end)) -
         BigInt(DateTime.toEpochMillis(start)),
@@ -145,7 +145,7 @@ export const between = (
 
 /**
  * Adds a duration to a `DateTime`, rounding to a whole number of
- * milliseconds (the resolution of `DateTime`) under the given mode —
+ * milliseconds (the resolution of `DateTime`) under the given mode—
  * exactly one rounding, made explicit. Returns `Option.none()` when the
  * result falls outside the representable `DateTime` range.
  */
