@@ -17,7 +17,7 @@ const make = (value: Rational.Rational): ChargeExact =>
 export const zero = make(Rational.zero);
 
 // Every extractor divides by a module factor, none of which is zero, so the
-// extractors are total via unsafeDivide.
+// extractors are total via divideUnsafe.
 
 export const coulombs = (r: Rational.Rational) => make(r);
 
@@ -30,7 +30,7 @@ export const ampereHours = (r: Rational.Rational) =>
   make(Rational.multiply(r, coulombsPerAmpereHour));
 
 export const inAmpereHours = (c: ChargeExact) =>
-  Rational.unsafeDivide(c.value, coulombsPerAmpereHour);
+  Rational.divideUnsafe(c.value, coulombsPerAmpereHour);
 
 /** One milliampere hour is exactly 18/5 (3.6) coulombs. */
 const coulombsPerMilliampereHour = PrefixExact.toBase(
@@ -42,4 +42,4 @@ export const milliampereHours = (r: Rational.Rational) =>
   make(Rational.multiply(r, coulombsPerMilliampereHour));
 
 export const inMilliampereHours = (c: ChargeExact) =>
-  Rational.unsafeDivide(c.value, coulombsPerMilliampereHour);
+  Rational.divideUnsafe(c.value, coulombsPerMilliampereHour);

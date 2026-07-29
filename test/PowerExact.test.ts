@@ -21,25 +21,25 @@ describe("PowerExact", () => {
   ]);
 
   testExactAnchors(PowerExact.inWatts, [
-    [PowerExact.kilowatts, Rational.unsafeMake(1000n)],
-    [PowerExact.megawatts, Rational.unsafeMake(1000000n)],
-    [PowerExact.metricHorsepower, Rational.unsafeMake(588399n, 800n)],
+    [PowerExact.kilowatts, Rational.makeUnsafe(1000n)],
+    [PowerExact.megawatts, Rational.makeUnsafe(1000000n)],
+    [PowerExact.metricHorsepower, Rational.makeUnsafe(588399n, 800n)],
     [
       PowerExact.mechanicalHorsepower,
       Rational.multiplyAll([
-        Rational.unsafeMake(550n),
-        Rational.unsafeMake(45359237n, 100000000n),
-        Rational.unsafeMake(196133n, 20000n),
-        Rational.unsafeMake(381n, 1250n),
+        Rational.makeUnsafe(550n),
+        Rational.makeUnsafe(45359237n, 100000000n),
+        Rational.makeUnsafe(196133n, 20000n),
+        Rational.makeUnsafe(381n, 1250n),
       ]),
     ],
-    [PowerExact.electricalHorsepower, Rational.unsafeMake(746n)],
+    [PowerExact.electricalHorsepower, Rational.makeUnsafe(746n)],
   ]);
 
   it("is the unit of an exact energy-per-duration rate", () => {
     const rate = QuantityExact.per(
       EnergyExact.kilowattHours(Rational.one),
-      QuantityExact.make("Seconds", Rational.unsafeMake(3600n)),
+      QuantityExact.make("Seconds", Rational.makeUnsafe(3600n)),
     );
 
     assertTrue(Option.isSome(rate));
@@ -60,7 +60,7 @@ describe("PowerExact", () => {
       [PowerExact.electricalHorsepower, Power.electricalHorsepower],
     ] as const) {
       assertEquals(
-        Rational.unsafeToNumber(exactCtor(Rational.one).value),
+        Rational.toNumberUnsafe(exactCtor(Rational.one).value),
         floatCtor(1).value,
       );
     }

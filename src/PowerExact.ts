@@ -17,7 +17,7 @@ const make = (value: Rational.Rational): PowerExact =>
 export const zero = make(Rational.zero);
 
 // Every extractor divides by a module factor, none of which is zero, so the
-// extractors are total via unsafeDivide.
+// extractors are total via divideUnsafe.
 
 export const watts = (r: Rational.Rational) => make(r);
 
@@ -36,19 +36,19 @@ export const inMegawatts = (p: PowerExact) =>
   PrefixExact.toPrefixed("Mega", p.value);
 
 /** One metric horsepower is 735.49875 (exactly 588399/800) watts. */
-const wattsPerMetricHorsepower = Rational.unsafeMake(73549875n, 100000n);
+const wattsPerMetricHorsepower = Rational.makeUnsafe(73549875n, 100000n);
 
 export const metricHorsepower = (r: Rational.Rational) =>
   make(Rational.multiply(r, wattsPerMetricHorsepower));
 
 export const inMetricHorsepower = (p: PowerExact) =>
-  Rational.unsafeDivide(p.value, wattsPerMetricHorsepower);
+  Rational.divideUnsafe(p.value, wattsPerMetricHorsepower);
 
 /**
  * One mechanical horsepower is 550 foot pounds of force per second—exactly
  * 37284993579113511/50000000000000 (745.69987158227022) watts.
  */
-const footPoundsPerSecondPerMechanicalHorsepower = Rational.unsafeMake(550n);
+const footPoundsPerSecondPerMechanicalHorsepower = Rational.makeUnsafe(550n);
 const wattsPerMechanicalHorsepower = Rational.multiply(
   footPoundsPerSecondPerMechanicalHorsepower,
   Rational.multiply(
@@ -61,13 +61,13 @@ export const mechanicalHorsepower = (r: Rational.Rational) =>
   make(Rational.multiply(r, wattsPerMechanicalHorsepower));
 
 export const inMechanicalHorsepower = (p: PowerExact) =>
-  Rational.unsafeDivide(p.value, wattsPerMechanicalHorsepower);
+  Rational.divideUnsafe(p.value, wattsPerMechanicalHorsepower);
 
 /** One electrical horsepower is 746 watts. */
-const wattsPerElectricalHorsepower = Rational.unsafeMake(746n);
+const wattsPerElectricalHorsepower = Rational.makeUnsafe(746n);
 
 export const electricalHorsepower = (r: Rational.Rational) =>
   make(Rational.multiply(r, wattsPerElectricalHorsepower));
 
 export const inElectricalHorsepower = (p: PowerExact) =>
-  Rational.unsafeDivide(p.value, wattsPerElectricalHorsepower);
+  Rational.divideUnsafe(p.value, wattsPerElectricalHorsepower);

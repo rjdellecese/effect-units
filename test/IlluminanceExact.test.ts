@@ -13,7 +13,7 @@ describe("IlluminanceExact", () => {
   ]);
 
   testExactAnchors(IlluminanceExact.inLux, [
-    [IlluminanceExact.footCandles, Rational.unsafeMake(1562500n, 145161n)],
+    [IlluminanceExact.footCandles, Rational.makeUnsafe(1562500n, 145161n)],
   ]);
 
   it("matches the float module bit-for-bit where its factors are exact chains", () => {
@@ -21,7 +21,7 @@ describe("IlluminanceExact", () => {
       [IlluminanceExact.footCandles, Illuminance.footCandles],
     ] as const) {
       assertEquals(
-        Rational.unsafeToNumber(exactCtor(Rational.one).value),
+        Rational.toNumberUnsafe(exactCtor(Rational.one).value),
         floatCtor(1).value,
       );
     }

@@ -21,15 +21,15 @@ describe("SubstanceAmountExact", () => {
   ]);
 
   testExactAnchors(SubstanceAmountExact.inMoles, [
-    [SubstanceAmountExact.picomoles, Rational.unsafeMake(1n, 10n ** 12n)],
-    [SubstanceAmountExact.nanomoles, Rational.unsafeMake(1n, 10n ** 9n)],
-    [SubstanceAmountExact.micromoles, Rational.unsafeMake(1n, 10n ** 6n)],
-    [SubstanceAmountExact.millimoles, Rational.unsafeMake(1n, 1000n)],
-    [SubstanceAmountExact.centimoles, Rational.unsafeMake(1n, 100n)],
-    [SubstanceAmountExact.decimoles, Rational.unsafeMake(1n, 10n)],
-    [SubstanceAmountExact.kilomoles, Rational.unsafeMake(1000n)],
-    [SubstanceAmountExact.megamoles, Rational.unsafeMake(10n ** 6n)],
-    [SubstanceAmountExact.gigamoles, Rational.unsafeMake(10n ** 9n)],
+    [SubstanceAmountExact.picomoles, Rational.makeUnsafe(1n, 10n ** 12n)],
+    [SubstanceAmountExact.nanomoles, Rational.makeUnsafe(1n, 10n ** 9n)],
+    [SubstanceAmountExact.micromoles, Rational.makeUnsafe(1n, 10n ** 6n)],
+    [SubstanceAmountExact.millimoles, Rational.makeUnsafe(1n, 1000n)],
+    [SubstanceAmountExact.centimoles, Rational.makeUnsafe(1n, 100n)],
+    [SubstanceAmountExact.decimoles, Rational.makeUnsafe(1n, 10n)],
+    [SubstanceAmountExact.kilomoles, Rational.makeUnsafe(1000n)],
+    [SubstanceAmountExact.megamoles, Rational.makeUnsafe(10n ** 6n)],
+    [SubstanceAmountExact.gigamoles, Rational.makeUnsafe(10n ** 9n)],
   ]);
 
   it("matches the float module bit-for-bit where its factors are leaves", () => {
@@ -45,7 +45,7 @@ describe("SubstanceAmountExact", () => {
       [SubstanceAmountExact.gigamoles, SubstanceAmount.gigamoles],
     ] as const) {
       assertEquals(
-        Rational.unsafeToNumber(exactCtor(Rational.one).value),
+        Rational.toNumberUnsafe(exactCtor(Rational.one).value),
         floatCtor(1).value,
       );
     }

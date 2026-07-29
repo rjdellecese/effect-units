@@ -19,7 +19,7 @@ const make = (value: Rational.Rational): AccelerationExact =>
 export const zero = make(Rational.zero);
 
 // Every extractor divides by a module factor, none of which is zero, so the
-// extractors are total via unsafeDivide.
+// extractors are total via divideUnsafe.
 
 export const metersPerSecondSquared = (r: Rational.Rational) => make(r);
 
@@ -29,11 +29,11 @@ export const feetPerSecondSquared = (r: Rational.Rational) =>
   make(Rational.multiply(r, ConstantsExact.metersPerFoot));
 
 export const inFeetPerSecondSquared = (a: AccelerationExact) =>
-  Rational.unsafeDivide(a.value, ConstantsExact.metersPerFoot);
+  Rational.divideUnsafe(a.value, ConstantsExact.metersPerFoot);
 
 /** One gee is the standard acceleration due to gravity. */
 export const gees = (r: Rational.Rational) =>
   make(Rational.multiply(r, ConstantsExact.gee));
 
 export const inGees = (a: AccelerationExact) =>
-  Rational.unsafeDivide(a.value, ConstantsExact.gee);
+  Rational.divideUnsafe(a.value, ConstantsExact.gee);

@@ -16,22 +16,22 @@ describe("EnergyExact", () => {
   ]);
 
   testExactAnchors(EnergyExact.inJoules, [
-    [EnergyExact.kilojoules, Rational.unsafeMake(1000n)],
-    [EnergyExact.megajoules, Rational.unsafeMake(1000000n)],
-    [EnergyExact.kilowattHours, Rational.unsafeMake(3600000n)],
+    [EnergyExact.kilojoules, Rational.makeUnsafe(1000n)],
+    [EnergyExact.megajoules, Rational.makeUnsafe(1000000n)],
+    [EnergyExact.kilowattHours, Rational.makeUnsafe(3600000n)],
   ]);
 
   it("relates units exactly", () => {
     assertTrue(
       Equal.equals(
         EnergyExact.inKilojoules(EnergyExact.kilowattHours(Rational.one)),
-        Rational.unsafeMake(3600n),
+        Rational.makeUnsafe(3600n),
       ),
     );
     assertTrue(
       Equal.equals(
         EnergyExact.inMegajoules(EnergyExact.kilowattHours(Rational.one)),
-        Rational.unsafeMake(18n, 5n),
+        Rational.makeUnsafe(18n, 5n),
       ),
     );
   });
@@ -43,7 +43,7 @@ describe("EnergyExact", () => {
       [EnergyExact.kilowattHours, Energy.kilowattHours],
     ] as const) {
       assertEquals(
-        Rational.unsafeToNumber(exactCtor(Rational.one).value),
+        Rational.toNumberUnsafe(exactCtor(Rational.one).value),
         floatCtor(1).value,
       );
     }

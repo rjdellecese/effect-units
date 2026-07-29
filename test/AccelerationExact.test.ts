@@ -24,8 +24,8 @@ describe("AccelerationExact", () => {
   ]);
 
   testExactAnchors(AccelerationExact.inMetersPerSecondSquared, [
-    [AccelerationExact.feetPerSecondSquared, Rational.unsafeMake(381n, 1250n)],
-    [AccelerationExact.gees, Rational.unsafeMake(196133n, 20000n)],
+    [AccelerationExact.feetPerSecondSquared, Rational.makeUnsafe(381n, 1250n)],
+    [AccelerationExact.gees, Rational.makeUnsafe(196133n, 20000n)],
   ]);
 
   it("is the unit of an exact speed-per-duration rate", () => {
@@ -52,7 +52,7 @@ describe("AccelerationExact", () => {
       [AccelerationExact.gees, Acceleration.gees],
     ] as const) {
       assertEquals(
-        Rational.unsafeToNumber(exactCtor(Rational.one).value),
+        Rational.toNumberUnsafe(exactCtor(Rational.one).value),
         floatCtor(1).value,
       );
     }

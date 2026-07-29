@@ -98,7 +98,13 @@ Nearly every unit module has an exact twin (`LengthExact`, `SpeedExact`, `Durati
 ## Install
 
 ```bash
-pnpm add effect-units
+pnpm add effect-units effect
+```
+
+`effect` is a peer dependency. This release targets Effect v4, which is still in beta:
+
+```bash
+pnpm add effect@beta
 ```
 
 ## Modules
@@ -198,19 +204,19 @@ import * as Unit from "effect-units/Unit";
 const Usd = Unit.custom("USD");
 const cents = (r: Rational.Rational) => QuantityExact.make(Usd, r);
 
-const rate = QuantityExact.unsafePer(
-  cents(Rational.unsafeMake(200n)),
-  LengthExact.meters(Rational.unsafeMake(3n)),
+const rate = QuantityExact.perUnsafe(
+  cents(Rational.makeUnsafe(200n)),
+  LengthExact.meters(Rational.makeUnsafe(3n)),
 ); // exactly 200/3 cents per meter
 
 const cost = QuantityExact.at(
   rate,
-  LengthExact.meters(Rational.unsafeMake(3n)),
+  LengthExact.meters(Rational.makeUnsafe(3n)),
 );
 // exactly 200 cents—Equal.equals, not isCloseTo
 ```
 
-Because ℚ has no infinities or NaN, partiality lives in the types instead of sentinel values: `per`, `at_`, `over`, `over_`, `divide`, and `Rational.reciprocal` return `Option` (`Option.none()` exactly when the divisor is zero), each with an `unsafe*` twin that throws. Everything else—`sum`, `subtract`, `multiply`, `times`, `squared`, `cubed`, `at`, `for_`, comparisons—is total and exact. `equals` is decidable, and quantities are safe `HashMap` keys with no NaN or -0 caveats.
+Because ℚ has no infinities or NaN, partiality lives in the types instead of sentinel values: `per`, `at_`, `over`, `over_`, `divide`, and `Rational.reciprocal` return `Option` (`Option.none()` exactly when the divisor is zero), each with a `*Unsafe` twin that throws. Everything else—`sum`, `subtract`, `multiply`, `times`, `squared`, `cubed`, `at`, `for_`, comparisons—is total and exact. `equals` is decidable, and quantities are safe `HashMap` keys with no NaN or -0 caveats.
 
 Rounding happens only at explicitly parameterized boundaries:
 

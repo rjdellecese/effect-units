@@ -81,7 +81,7 @@ const reduce = (numerator: bigint, denominator: bigint): Rational => {
 /**
  * Creates the rational `numerator / denominator`, reduced to lowest terms
  * with the sign carried by the numerator. Returns `Option.none()` on a zero
- * denominator; {@link unsafeMake} is the throwing counterpart for
+ * denominator; {@link makeUnsafe} is the throwing counterpart for
  * developer-written literals.
  */
 export const make = (
@@ -93,12 +93,12 @@ export const make = (
     : Option.some(reduce(numerator, denominator));
 
 /** Throws a `RangeError` on a zero denominator. */
-export const unsafeMake = (
+export const makeUnsafe = (
   numerator: bigint,
   denominator: bigint = 1n,
 ): Rational => {
   if (denominator === 0n) {
-    throw new RangeError("Rational.unsafeMake: zero denominator");
+    throw new RangeError("Rational.makeUnsafe: zero denominator");
   }
   return reduce(numerator, denominator);
 };
@@ -214,7 +214,7 @@ export const reciprocal = (r: Rational): Option.Option<Rational> =>
       );
 
 /** Throws a `RangeError` when the argument is zero. */
-export const unsafeReciprocal = (r: Rational): Rational => {
+export const reciprocalUnsafe = (r: Rational): Rational => {
   if (r.numerator === 0n) {
     throw new RangeError("Division by zero");
   }
@@ -234,12 +234,12 @@ export const divide: {
 );
 
 /** Throws a `RangeError` when the divisor is zero. */
-export const unsafeDivide: {
+export const divideUnsafe: {
   (b: Rational): (a: Rational) => Rational;
   (a: Rational, b: Rational): Rational;
 } = Function.dual(
   2,
-  (a: Rational, b: Rational): Rational => multiply(a, unsafeReciprocal(b)),
+  (a: Rational, b: Rational): Rational => multiply(a, reciprocalUnsafe(b)),
 );
 
 export const sumAll = (collection: Iterable<Rational>): Rational =>
@@ -325,15 +325,15 @@ const dyadic = (mantissa: number, denominator: bigint): Rational =>
     ? reduce(BigInt(mantissa), denominator)
     : dyadic(mantissa * 2, denominator << 1n);
 
-export const unsafeFromNumber = (n: number): Rational => {
+export const fromNumberUnsafe = (n: number): Rational => {
   if (!Number.isFinite(n)) {
-    throw new RangeError(`Rational.unsafeFromNumber: ${n}`);
+    throw new RangeError(`Rational.fromNumberUnsafe: ${n}`);
   }
   return dyadic(n, 1n);
 };
 
 export const fromNumber = (n: number): Option.Option<Rational> =>
-  Number.isFinite(n) ? Option.some(unsafeFromNumber(n)) : Option.none();
+  Number.isFinite(n) ? Option.some(fromNumberUnsafe(n)) : Option.none();
 
 const maxSafeInteger = 9007199254740991n;
 
@@ -434,10 +434,10 @@ export const toNumber = (r: Rational): Option.Option<number> => {
 };
 
 /** Throws a `RangeError` when the nearest double is ±Infinity. */
-export const unsafeToNumber = (r: Rational): number =>
+export const toNumberUnsafe = (r: Rational): number =>
   Option.getOrThrowWith(
     toNumber(r),
-    () => new RangeError(`Rational.unsafeToNumber: ${format(r)} overflows`),
+    () => new RangeError(`Rational.toNumberUnsafe: ${format(r)} overflows`),
   );
 
 export const fromBigDecimal = (bd: BigDecimal.BigDecimal): Rational =>
@@ -551,10 +551,10 @@ export const fromString = (s: string): Option.Option<Rational> =>
   );
 
 /** Throws a `RangeError` on input {@link fromString} would reject. */
-export const unsafeFromString = (s: string): Rational =>
+export const fromStringUnsafe = (s: string): Rational =>
   Option.getOrThrowWith(
     fromString(s),
-    () => new RangeError(`Rational.unsafeFromString: ${JSON.stringify(s)}`),
+    () => new RangeError(`Rational.fromStringUnsafe: ${JSON.stringify(s)}`),
   );
 
 export const RationalFromSelf = Schema.declare(isRational, {
@@ -563,7 +563,7 @@ export const RationalFromSelf = Schema.declare(isRational, {
   toArbitrary: () => (fc) =>
     fc
       .tuple(fc.bigInt(), fc.bigInt({ min: 1n }))
-      .map(([numerator, denominator]) => unsafeMake(numerator, denominator)),
+      .map(([numerator, denominator]) => makeUnsafe(numerator, denominator)),
   toEquivalence: () => Equivalence,
 });
 

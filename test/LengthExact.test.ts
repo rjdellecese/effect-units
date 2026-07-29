@@ -29,45 +29,45 @@ describe("LengthExact", () => {
   ]);
 
   testExactAnchors(LengthExact.inMeters, [
-    [LengthExact.angstroms, Rational.unsafeMake(1n, 10n ** 10n)],
-    [LengthExact.nanometers, Rational.unsafeMake(1n, 10n ** 9n)],
-    [LengthExact.kilometers, Rational.unsafeMake(1000n)],
-    [LengthExact.centimeters, Rational.unsafeMake(1n, 100n)],
-    [LengthExact.thou, Rational.unsafeMake(127n, 5000000n)],
-    [LengthExact.inches, Rational.unsafeMake(127n, 5000n)],
-    [LengthExact.feet, Rational.unsafeMake(381n, 1250n)],
-    [LengthExact.yards, Rational.unsafeMake(1143n, 1250n)],
-    [LengthExact.miles, Rational.unsafeMake(201168n, 125n)],
-    [LengthExact.cssPixels, Rational.unsafeMake(127n, 480000n)],
-    [LengthExact.points, Rational.unsafeMake(127n, 360000n)],
-    [LengthExact.picas, Rational.unsafeMake(127n, 30000n)],
-    [LengthExact.astronomicalUnits, Rational.unsafeMake(149597870700n)],
-    [LengthExact.lightYears, Rational.unsafeMake(9460730472580800n)],
+    [LengthExact.angstroms, Rational.makeUnsafe(1n, 10n ** 10n)],
+    [LengthExact.nanometers, Rational.makeUnsafe(1n, 10n ** 9n)],
+    [LengthExact.kilometers, Rational.makeUnsafe(1000n)],
+    [LengthExact.centimeters, Rational.makeUnsafe(1n, 100n)],
+    [LengthExact.thou, Rational.makeUnsafe(127n, 5000000n)],
+    [LengthExact.inches, Rational.makeUnsafe(127n, 5000n)],
+    [LengthExact.feet, Rational.makeUnsafe(381n, 1250n)],
+    [LengthExact.yards, Rational.makeUnsafe(1143n, 1250n)],
+    [LengthExact.miles, Rational.makeUnsafe(201168n, 125n)],
+    [LengthExact.cssPixels, Rational.makeUnsafe(127n, 480000n)],
+    [LengthExact.points, Rational.makeUnsafe(127n, 360000n)],
+    [LengthExact.picas, Rational.makeUnsafe(127n, 30000n)],
+    [LengthExact.astronomicalUnits, Rational.makeUnsafe(149597870700n)],
+    [LengthExact.lightYears, Rational.makeUnsafe(9460730472580800n)],
   ]);
 
   it("relates units exactly", () => {
     assertTrue(
       Equal.equals(
         LengthExact.inInches(LengthExact.feet(Rational.one)),
-        Rational.unsafeMake(12n),
+        Rational.makeUnsafe(12n),
       ),
     );
     assertTrue(
       Equal.equals(
         LengthExact.inFeet(LengthExact.miles(Rational.one)),
-        Rational.unsafeMake(5280n),
+        Rational.makeUnsafe(5280n),
       ),
     );
     assertTrue(
       Equal.equals(
         LengthExact.inThou(LengthExact.inches(Rational.one)),
-        Rational.unsafeMake(1000n),
+        Rational.makeUnsafe(1000n),
       ),
     );
     assertTrue(
       Equal.equals(
         LengthExact.inCentimeters(LengthExact.inches(Rational.one)),
-        Rational.unsafeMake(127n, 50n),
+        Rational.makeUnsafe(127n, 50n),
       ),
     );
   });
@@ -86,7 +86,7 @@ describe("LengthExact", () => {
       [LengthExact.kilometers, Length.kilometers],
     ] as const) {
       assertEquals(
-        Rational.unsafeToNumber(exactCtor(Rational.one).value),
+        Rational.toNumberUnsafe(exactCtor(Rational.one).value),
         floatCtor(1).value,
       );
     }

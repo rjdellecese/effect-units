@@ -22,28 +22,28 @@ describe("AreaExact", () => {
   ]);
 
   testExactAnchors(AreaExact.inSquareMeters, [
-    [AreaExact.squareMillimeters, Rational.unsafeMake(1n, 10n ** 6n)],
-    [AreaExact.squareCentimeters, Rational.unsafeMake(1n, 10n ** 4n)],
-    [AreaExact.hectares, Rational.unsafeMake(10n ** 4n)],
-    [AreaExact.squareKilometers, Rational.unsafeMake(10n ** 6n)],
-    [AreaExact.squareInches, Rational.unsafeMake(16129n, 25000000n)],
-    [AreaExact.squareFeet, Rational.unsafeMake(145161n, 1562500n)],
-    [AreaExact.squareYards, Rational.unsafeMake(1306449n, 1562500n)],
+    [AreaExact.squareMillimeters, Rational.makeUnsafe(1n, 10n ** 6n)],
+    [AreaExact.squareCentimeters, Rational.makeUnsafe(1n, 10n ** 4n)],
+    [AreaExact.hectares, Rational.makeUnsafe(10n ** 4n)],
+    [AreaExact.squareKilometers, Rational.makeUnsafe(10n ** 6n)],
+    [AreaExact.squareInches, Rational.makeUnsafe(16129n, 25000000n)],
+    [AreaExact.squareFeet, Rational.makeUnsafe(145161n, 1562500n)],
+    [AreaExact.squareYards, Rational.makeUnsafe(1306449n, 1562500n)],
     [
       AreaExact.acres,
       Rational.multiply(
-        Rational.unsafeMake(4840n),
+        Rational.makeUnsafe(4840n),
         Rational.multiply(
-          Rational.unsafeMake(1143n, 1250n),
-          Rational.unsafeMake(1143n, 1250n),
+          Rational.makeUnsafe(1143n, 1250n),
+          Rational.makeUnsafe(1143n, 1250n),
         ),
       ),
     ],
     [
       AreaExact.squareMiles,
       Rational.multiply(
-        Rational.unsafeMake(201168n, 125n),
-        Rational.unsafeMake(201168n, 125n),
+        Rational.makeUnsafe(201168n, 125n),
+        Rational.makeUnsafe(201168n, 125n),
       ),
     ],
   ]);
@@ -52,19 +52,19 @@ describe("AreaExact", () => {
     assertTrue(
       Equal.equals(
         AreaExact.inSquareInches(AreaExact.squareFeet(Rational.one)),
-        Rational.unsafeMake(144n),
+        Rational.makeUnsafe(144n),
       ),
     );
     assertTrue(
       Equal.equals(
         AreaExact.inSquareYards(AreaExact.acres(Rational.one)),
-        Rational.unsafeMake(4840n),
+        Rational.makeUnsafe(4840n),
       ),
     );
     assertTrue(
       Equal.equals(
         AreaExact.inAcres(AreaExact.squareMiles(Rational.one)),
-        Rational.unsafeMake(640n),
+        Rational.makeUnsafe(640n),
       ),
     );
   });
@@ -82,7 +82,7 @@ describe("AreaExact", () => {
       [AreaExact.squareMiles, Area.squareMiles],
     ] as const) {
       assertEquals(
-        Rational.unsafeToNumber(exactCtor(Rational.one).value),
+        Rational.toNumberUnsafe(exactCtor(Rational.one).value),
         floatCtor(1).value,
       );
     }

@@ -28,27 +28,27 @@ describe("TemperatureExact", () => {
   it("relates the Celsius, Fahrenheit, and Kelvin scales exactly", () => {
     assertTrue(
       Equal.equals(
-        TemperatureExact.degreesFahrenheit(Rational.unsafeMake(32n)),
+        TemperatureExact.degreesFahrenheit(Rational.makeUnsafe(32n)),
         TemperatureExact.degreesCelsius(Rational.zero),
       ),
     );
     assertTrue(
       Equal.equals(
-        TemperatureExact.degreesFahrenheit(Rational.unsafeMake(212n)),
-        TemperatureExact.degreesCelsius(Rational.unsafeMake(100n)),
+        TemperatureExact.degreesFahrenheit(Rational.makeUnsafe(212n)),
+        TemperatureExact.degreesCelsius(Rational.makeUnsafe(100n)),
       ),
     );
     assertTrue(
       Equal.equals(
         TemperatureExact.inDegreesFahrenheit(
-          TemperatureExact.degreesCelsius(Rational.unsafeMake(100n)),
+          TemperatureExact.degreesCelsius(Rational.makeUnsafe(100n)),
         ),
-        Rational.unsafeMake(212n),
+        Rational.makeUnsafe(212n),
       ),
     );
     assertTrue(
       Equal.equals(
-        TemperatureExact.degreesCelsius(Rational.unsafeMake(-5463n, 20n)),
+        TemperatureExact.degreesCelsius(Rational.makeUnsafe(-5463n, 20n)),
         TemperatureExact.absoluteZero,
       ),
     );
@@ -72,17 +72,17 @@ describe("TemperatureExact", () => {
     assertTrue(
       Equal.equals(
         TemperatureExact.inCelsiusDegrees(
-          TemperatureExact.fahrenheitDegrees(Rational.unsafeMake(9n)),
+          TemperatureExact.fahrenheitDegrees(Rational.makeUnsafe(9n)),
         ),
-        Rational.unsafeMake(5n),
+        Rational.makeUnsafe(5n),
       ),
     );
   });
 
   it("orders temperatures", () => {
     const cold = TemperatureExact.degreesCelsius(Rational.zero);
-    const warm = TemperatureExact.degreesCelsius(Rational.unsafeMake(20n));
-    const hot = TemperatureExact.degreesCelsius(Rational.unsafeMake(100n));
+    const warm = TemperatureExact.degreesCelsius(Rational.makeUnsafe(20n));
+    const hot = TemperatureExact.degreesCelsius(Rational.makeUnsafe(100n));
 
     assertTrue(TemperatureExact.lessThan(cold, warm));
     assertTrue(TemperatureExact.greaterThan(hot, warm));
@@ -137,7 +137,7 @@ describe("TemperatureExact", () => {
       assertTrue(
         Equal.equals(
           TemperatureExact.inKelvins(Option.getOrThrow(temperature)),
-          Rational.unsafeMake(1n, 2n),
+          Rational.makeUnsafe(1n, 2n),
         ),
       );
     });
@@ -153,10 +153,10 @@ describe("TemperatureExact", () => {
           // One correct rounding out, exact back in.
           assertTrue(
             Equal.equals(
-              Rational.unsafeToNumber(
+              Rational.toNumberUnsafe(
                 TemperatureExact.inKelvins(Option.getOrThrow(back)),
               ),
-              Rational.unsafeToNumber(r),
+              Rational.toNumberUnsafe(r),
             ),
           );
         }),
@@ -165,7 +165,7 @@ describe("TemperatureExact", () => {
 
     it("matches the float module bit-for-bit", () => {
       assertEquals(
-        Rational.unsafeToNumber(
+        Rational.toNumberUnsafe(
           TemperatureExact.fahrenheitDegrees(Rational.one).value,
         ),
         Temperature.fahrenheitDegrees(1).value,

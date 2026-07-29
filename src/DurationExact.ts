@@ -22,7 +22,7 @@ const make = (value: Rational.Rational): DurationExact =>
 export const zero = make(Rational.zero);
 
 // Every extractor divides by a module factor, none of which is zero, so the
-// extractors are total via unsafeDivide.
+// extractors are total via divideUnsafe.
 
 export const seconds = (r: Rational.Rational) => make(r);
 
@@ -38,16 +38,16 @@ export const minutes = (r: Rational.Rational) =>
   make(Rational.multiply(r, ConstantsExact.secondsPerMinute));
 
 export const inMinutes = (d: DurationExact) =>
-  Rational.unsafeDivide(d.value, ConstantsExact.secondsPerMinute);
+  Rational.divideUnsafe(d.value, ConstantsExact.secondsPerMinute);
 
 export const hours = (r: Rational.Rational) =>
   make(Rational.multiply(r, ConstantsExact.secondsPerHour));
 
 export const inHours = (d: DurationExact) =>
-  Rational.unsafeDivide(d.value, ConstantsExact.secondsPerHour);
+  Rational.divideUnsafe(d.value, ConstantsExact.secondsPerHour);
 
 const secondsPerDay = Rational.multiply(
-  Rational.unsafeMake(24n),
+  Rational.makeUnsafe(24n),
   ConstantsExact.secondsPerHour,
 );
 
@@ -55,10 +55,10 @@ export const days = (r: Rational.Rational) =>
   make(Rational.multiply(r, secondsPerDay));
 
 export const inDays = (d: DurationExact) =>
-  Rational.unsafeDivide(d.value, secondsPerDay);
+  Rational.divideUnsafe(d.value, secondsPerDay);
 
 const secondsPerWeek = Rational.multiply(
-  Rational.unsafeMake(7n),
+  Rational.makeUnsafe(7n),
   secondsPerDay,
 );
 
@@ -66,11 +66,11 @@ export const weeks = (r: Rational.Rational) =>
   make(Rational.multiply(r, secondsPerWeek));
 
 export const inWeeks = (d: DurationExact) =>
-  Rational.unsafeDivide(d.value, secondsPerWeek);
+  Rational.divideUnsafe(d.value, secondsPerWeek);
 
 /** One Julian year is exactly 365.25 days. */
 const secondsPerJulianYear = Rational.multiply(
-  Rational.unsafeMake(1461n, 4n),
+  Rational.makeUnsafe(1461n, 4n),
   secondsPerDay,
 );
 
@@ -78,13 +78,13 @@ export const julianYears = (r: Rational.Rational) =>
   make(Rational.multiply(r, secondsPerJulianYear));
 
 export const inJulianYears = (d: DurationExact) =>
-  Rational.unsafeDivide(d.value, secondsPerJulianYear);
+  Rational.divideUnsafe(d.value, secondsPerJulianYear);
 
 // Interop
 
-const nanosecondsPerSecond = Rational.unsafeMake(1_000_000_000n);
+const nanosecondsPerSecond = Rational.makeUnsafe(1_000_000_000n);
 
-const millisecondsPerSecond = Rational.unsafeMake(1000n);
+const millisecondsPerSecond = Rational.makeUnsafe(1000n);
 
 /** The widest epoch millisecond a `Date`, and so a `DateTime`, can hold. */
 const maxEpochMillis = 8_640_000_000_000_000n;
@@ -99,7 +99,7 @@ export const fromDuration = (
   duration: EffectDuration.Duration,
 ): Option.Option<DurationExact> =>
   Option.map(EffectDuration.toNanos(duration), (nanos) =>
-    make(Rational.unsafeMake(nanos, 1_000_000_000n)),
+    make(Rational.makeUnsafe(nanos, 1_000_000_000n)),
   );
 
 /**
@@ -133,7 +133,7 @@ export const between = (
   end: DateTime.DateTime,
 ): DurationExact =>
   make(
-    Rational.unsafeMake(
+    Rational.makeUnsafe(
       // Each endpoint is a safe integer (|epochMillis| <= 8.64e15 < 2^53), so
       // widening before subtracting is exact—subtracting first would round
       // spans wider than 2^53 milliseconds.

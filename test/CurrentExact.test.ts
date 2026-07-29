@@ -13,7 +13,7 @@ describe("CurrentExact", () => {
   ]);
 
   testExactAnchors(CurrentExact.inAmperes, [
-    [CurrentExact.milliamperes, Rational.unsafeMake(1n, 1000n)],
+    [CurrentExact.milliamperes, Rational.makeUnsafe(1n, 1000n)],
   ]);
 
   it("matches the float module bit-for-bit where its factors are leaves", () => {
@@ -21,7 +21,7 @@ describe("CurrentExact", () => {
       [CurrentExact.milliamperes, Current.milliamperes],
     ] as const) {
       assertEquals(
-        Rational.unsafeToNumber(exactCtor(Rational.one).value),
+        Rational.toNumberUnsafe(exactCtor(Rational.one).value),
         floatCtor(1).value,
       );
     }

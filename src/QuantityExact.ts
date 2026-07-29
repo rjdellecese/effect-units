@@ -172,7 +172,7 @@ export const divide: {
 );
 
 /** Throws a `RangeError` when the divisor is zero. */
-export const unsafeDivide: {
+export const divideUnsafe: {
   <U extends Unit.Unit>(
     b: Rational.Rational,
   ): (a: QuantityExact<U>) => QuantityExact<U>;
@@ -186,7 +186,7 @@ export const unsafeDivide: {
     a: QuantityExact<Unit.Unit>,
     b: Rational.Rational,
   ): QuantityExact<Unit.Unit> =>
-    make(a.unit, Rational.unsafeDivide(a.value, b)),
+    make(a.unit, Rational.divideUnsafe(a.value, b)),
 );
 
 export const sum: {
@@ -283,7 +283,7 @@ export const per: {
 );
 
 /** {@link per}, throwing a `RangeError` when the independent quantity is zero. */
-export const unsafePer: {
+export const perUnsafe: {
   <Independent extends Unit.Unit>(
     independent: QuantityExact<Independent>,
   ): <Dependent extends Unit.Unit>(
@@ -301,7 +301,7 @@ export const unsafePer: {
   ): QuantityExact<Unit.Rate<Unit.Unit, Unit.Unit>> =>
     make(
       Unit.rate(dependent.unit, independent.unit),
-      Rational.unsafeDivide(dependent.value, independent.value),
+      Rational.divideUnsafe(dependent.value, independent.value),
     ),
 );
 
@@ -355,7 +355,7 @@ export const at_: {
 );
 
 /** {@link at_}, throwing a `RangeError` when the rate is zero. */
-export const unsafeAt_: {
+export const at_Unsafe: {
   <Dependent extends Unit.Unit, Independent extends Unit.Unit>(
     rate: QuantityExact<Unit.Rate<Dependent, Independent>>,
   ): (dependent: QuantityExact<Dependent>) => QuantityExact<Independent>;
@@ -371,7 +371,7 @@ export const unsafeAt_: {
   ): QuantityExact<Unit.Unit> =>
     make(
       rate.unit.independent,
-      Rational.unsafeDivide(dependent.value, rate.value),
+      Rational.divideUnsafe(dependent.value, rate.value),
     ),
 );
 
@@ -422,7 +422,7 @@ export const over: {
 );
 
 /** {@link over}, throwing a `RangeError` when the divisor is zero. */
-export const unsafeOver: {
+export const overUnsafe: {
   <U2 extends Unit.Unit>(
     b: QuantityExact<U2>,
   ): <U1 extends Unit.Unit>(
@@ -438,7 +438,7 @@ export const unsafeOver: {
     product: QuantityExact<Unit.Product<Unit.Unit, Unit.Unit>>,
     b: QuantityExact<Unit.Unit>,
   ): QuantityExact<Unit.Unit> =>
-    make(product.unit.left, Rational.unsafeDivide(product.value, b.value)),
+    make(product.unit.left, Rational.divideUnsafe(product.value, b.value)),
 );
 
 /**
@@ -467,7 +467,7 @@ export const over_: {
 );
 
 /** {@link over_}, throwing a `RangeError` when the divisor is zero. */
-export const unsafeOver_: {
+export const over_Unsafe: {
   <U1 extends Unit.Unit>(
     b: QuantityExact<U1>,
   ): <U2 extends Unit.Unit>(
@@ -483,7 +483,7 @@ export const unsafeOver_: {
     product: QuantityExact<Unit.Product<Unit.Unit, Unit.Unit>>,
     b: QuantityExact<Unit.Unit>,
   ): QuantityExact<Unit.Unit> =>
-    make(product.unit.right, Rational.unsafeDivide(product.value, b.value)),
+    make(product.unit.right, Rational.divideUnsafe(product.value, b.value)),
 );
 
 // Comparison
@@ -577,9 +577,9 @@ export const fromQuantity = <U extends Unit.Unit>(
   Option.map(Rational.fromNumber(q.value), (value) => make(q.unit, value));
 
 /** Throws a `RangeError` on NaN and ±Infinity values. */
-export const unsafeFromQuantity = <U extends Unit.Unit>(
+export const fromQuantityUnsafe = <U extends Unit.Unit>(
   q: Quantity.Quantity<U>,
-): QuantityExact<U> => make(q.unit, Rational.unsafeFromNumber(q.value));
+): QuantityExact<U> => make(q.unit, Rational.fromNumberUnsafe(q.value));
 
 /**
  * The float quantity nearest the exact one—a single correct rounding.
@@ -593,7 +593,7 @@ export const toQuantity = <U extends Unit.Unit>(
   );
 
 /** Throws a `RangeError` when the value overflows to ±Infinity. */
-export const unsafeToQuantity = <U extends Unit.Unit>(
+export const toQuantityUnsafe = <U extends Unit.Unit>(
   q: QuantityExact<U>,
 ): Quantity.Quantity<U> =>
-  Quantity.make(q.unit, Rational.unsafeToNumber(q.value));
+  Quantity.make(q.unit, Rational.toNumberUnsafe(q.value));

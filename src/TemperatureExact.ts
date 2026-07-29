@@ -89,7 +89,7 @@ export const inKelvins = (t: TemperatureExact) => t.value;
 
 export const absoluteZero = kelvins(Rational.zero);
 
-const zeroCelsiusInKelvins = Rational.unsafeMake(5463n, 20n);
+const zeroCelsiusInKelvins = Rational.makeUnsafe(5463n, 20n);
 
 export const degreesCelsius = (r: Rational.Rational): TemperatureExact =>
   make(Rational.sum(r, zeroCelsiusInKelvins));
@@ -98,20 +98,20 @@ export const inDegreesCelsius = (t: TemperatureExact) =>
   Rational.subtract(t.value, zeroCelsiusInKelvins);
 
 /** The size of a Fahrenheit degree relative to a Celsius degree. */
-const fiveNinths = Rational.unsafeMake(5n, 9n);
+const fiveNinths = Rational.makeUnsafe(5n, 9n);
 
 export const degreesFahrenheit = (r: Rational.Rational): TemperatureExact =>
   degreesCelsius(
     Rational.multiply(
-      Rational.subtract(r, Rational.unsafeMake(32n)),
+      Rational.subtract(r, Rational.makeUnsafe(32n)),
       fiveNinths,
     ),
   );
 
 export const inDegreesFahrenheit = (t: TemperatureExact) =>
   Rational.sum(
-    Rational.unsafeDivide(inDegreesCelsius(t), fiveNinths),
-    Rational.unsafeMake(32n),
+    Rational.divideUnsafe(inDegreesCelsius(t), fiveNinths),
+    Rational.makeUnsafe(32n),
   );
 
 // Deltas
@@ -142,7 +142,7 @@ export const fahrenheitDegrees = (r: Rational.Rational): Delta =>
   celsiusDegrees(Rational.multiply(r, fiveNinths));
 
 export const inFahrenheitDegrees = (d: Delta) =>
-  Rational.unsafeDivide(d.value, fiveNinths);
+  Rational.divideUnsafe(d.value, fiveNinths);
 
 // Arithmetic
 
@@ -221,9 +221,9 @@ export const fromTemperature = (
   Option.map(Rational.fromNumber(t.value), make);
 
 /** Throws a `RangeError` on NaN and ±Infinity values. */
-export const unsafeFromTemperature = (
+export const fromTemperatureUnsafe = (
   t: Temperature.Temperature,
-): TemperatureExact => make(Rational.unsafeFromNumber(t.value));
+): TemperatureExact => make(Rational.fromNumberUnsafe(t.value));
 
 /**
  * The float temperature nearest the exact one—a single correct rounding.
@@ -235,7 +235,7 @@ export const toTemperature = (
   Option.map(Rational.toNumber(t.value), Temperature.kelvins);
 
 /** Throws a `RangeError` when the value overflows to ±Infinity. */
-export const unsafeToTemperature = (
+export const toTemperatureUnsafe = (
   t: TemperatureExact,
 ): Temperature.Temperature =>
-  Temperature.kelvins(Rational.unsafeToNumber(t.value));
+  Temperature.kelvins(Rational.toNumberUnsafe(t.value));

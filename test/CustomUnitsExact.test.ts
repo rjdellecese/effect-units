@@ -35,9 +35,9 @@ const make = (value: Rational.Rational): Money =>
 const cents = (r: Rational.Rational): Money => make(r);
 const inCents = (m: Money): Rational.Rational => m.value;
 const dollars = (r: Rational.Rational): Money =>
-  make(Rational.multiply(r, Rational.unsafeMake(100n)));
+  make(Rational.multiply(r, Rational.makeUnsafe(100n)));
 const inDollars = (m: Money): Rational.Rational =>
-  Rational.unsafeDivide(m.value, Rational.unsafeMake(100n));
+  Rational.divideUnsafe(m.value, Rational.makeUnsafe(100n));
 
 interface DineroSnapshot {
   readonly amount: number;
@@ -64,8 +64,8 @@ const toDinero = (
     Rational.multiply(
       m.value,
       scale >= USD.exponent
-        ? Rational.unsafeMake(10n ** BigInt(scale - USD.exponent))
-        : Rational.unsafeMake(1n, 10n ** BigInt(USD.exponent - scale)),
+        ? Rational.makeUnsafe(10n ** BigInt(scale - USD.exponent))
+        : Rational.makeUnsafe(1n, 10n ** BigInt(USD.exponent - scale)),
     ),
     { mode },
   );
@@ -83,10 +83,10 @@ const fromDinero = (snapshot: DineroSnapshot): Money => {
   }
   return make(
     Rational.multiply(
-      Rational.unsafeMake(BigInt(snapshot.amount)),
+      Rational.makeUnsafe(BigInt(snapshot.amount)),
       snapshot.scale >= USD.exponent
-        ? Rational.unsafeMake(1n, 10n ** BigInt(snapshot.scale - USD.exponent))
-        : Rational.unsafeMake(10n ** BigInt(USD.exponent - snapshot.scale)),
+        ? Rational.makeUnsafe(1n, 10n ** BigInt(snapshot.scale - USD.exponent))
+        : Rational.makeUnsafe(10n ** BigInt(USD.exponent - snapshot.scale)),
     ),
   );
 };
@@ -96,21 +96,21 @@ describe("exact custom units (a consumer-authored USD module)", () => {
     // $2 over 3 meters is exactly 200/3 cents per meter. The float example
     // needs isCloseTo here; this is Equal.equals.
     const pricePerMeter = QuantityExact.per(
-      dollars(Rational.unsafeMake(2n)),
-      LengthExact.meters(Rational.unsafeMake(3n)),
+      dollars(Rational.makeUnsafe(2n)),
+      LengthExact.meters(Rational.makeUnsafe(3n)),
     );
 
     assertTrue(Option.isSome(pricePerMeter));
     const rate = Option.getOrThrow(pricePerMeter);
 
     assertTrue(Unit.equals(rate.unit, Unit.rate(Usd, "Meters")));
-    assertTrue(Equal.equals(rate.value, Rational.unsafeMake(200n, 3n)));
+    assertTrue(Equal.equals(rate.value, Rational.makeUnsafe(200n, 3n)));
 
     // Applying the rate back to 3 meters recovers exactly $2—no lost cent.
     assertTrue(
       Equal.equals(
-        QuantityExact.at(rate, LengthExact.meters(Rational.unsafeMake(3n))),
-        dollars(Rational.unsafeMake(2n)),
+        QuantityExact.at(rate, LengthExact.meters(Rational.makeUnsafe(3n))),
+        dollars(Rational.makeUnsafe(2n)),
       ),
     );
   });
@@ -122,13 +122,13 @@ describe("exact custom units (a consumer-authored USD module)", () => {
   });
 
   it("rounds exactly once at the dinero boundary", () => {
-    const rate = QuantityExact.unsafePer(
-      dollars(Rational.unsafeMake(2n)),
-      LengthExact.meters(Rational.unsafeMake(3n)),
+    const rate = QuantityExact.perUnsafe(
+      dollars(Rational.makeUnsafe(2n)),
+      LengthExact.meters(Rational.makeUnsafe(3n)),
     );
     const cost = QuantityExact.at(rate, LengthExact.meters(Rational.one));
 
-    assertTrue(Equal.equals(inCents(cost), Rational.unsafeMake(200n, 3n)));
+    assertTrue(Equal.equals(inCents(cost), Rational.makeUnsafe(200n, 3n)));
     deepStrictEqual(toDinero(cost, 2, "half-even"), {
       amount: 67,
       currency: USD,
@@ -142,7 +142,7 @@ describe("exact custom units (a consumer-authored USD module)", () => {
   });
 
   it("dinero snapshots roundtrip exactly at any scale", () => {
-    const money = dollars(Rational.unsafeMake(9n, 2n));
+    const money = dollars(Rational.makeUnsafe(9n, 2n));
 
     deepStrictEqual(toDinero(money, 2, "half-even"), {
       amount: 450,
@@ -155,14 +155,14 @@ describe("exact custom units (a consumer-authored USD module)", () => {
     assertTrue(
       Equal.equals(
         fromDinero({ amount: 4500, currency: USD, scale: 3 }),
-        cents(Rational.unsafeMake(450n)),
+        cents(Rational.makeUnsafe(450n)),
       ),
     );
   });
 
   it("rejects amounts outside the dinero-safe integer range", () => {
     throws(() =>
-      toDinero(cents(Rational.unsafeMake(2n ** 53n)), 2, "half-even"),
+      toDinero(cents(Rational.makeUnsafe(2n ** 53n)), 2, "half-even"),
     );
     throws(() =>
       fromDinero({
@@ -175,14 +175,14 @@ describe("exact custom units (a consumer-authored USD module)", () => {
 
   it("bridges float money exactly", () => {
     const floatMoney = Quantity.make(Usd, 450);
-    const exact = QuantityExact.unsafeFromQuantity(floatMoney);
+    const exact = QuantityExact.fromQuantityUnsafe(floatMoney);
 
-    assertTrue(Equal.equals(exact, cents(Rational.unsafeMake(450n))));
-    assertTrue(Equal.equals(QuantityExact.unsafeToQuantity(exact), floatMoney));
+    assertTrue(Equal.equals(exact, cents(Rational.makeUnsafe(450n))));
+    assertTrue(Equal.equals(QuantityExact.toQuantityUnsafe(exact), floatMoney));
   });
 
   it("roundtrips through the schema, freezing the wire format", () => {
-    const thirds = cents(Rational.unsafeMake(200n, 3n));
+    const thirds = cents(Rational.makeUnsafe(200n, 3n));
     const encoded = Schema.encodeSync(Money)(thirds);
 
     deepStrictEqual(encoded, { unit: "[USD]", value: "200/3" });
@@ -193,7 +193,7 @@ describe("exact custom units (a consumer-authored USD module)", () => {
     // Summing thirds of a cent 300 times is exactly one dollar—floats
     // would have accumulated error; rationals cannot.
     const total = Array.reduce(
-      Array.makeBy(300, () => cents(Rational.unsafeMake(1n, 3n))),
+      Array.makeBy(300, () => cents(Rational.makeUnsafe(1n, 3n))),
       cents(Rational.zero),
       (a: Money, b: Money) => QuantityExact.sum(a, b),
     );

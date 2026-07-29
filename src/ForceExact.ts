@@ -17,7 +17,7 @@ const make = (value: Rational.Rational): ForceExact =>
 export const zero = make(Rational.zero);
 
 // Every extractor divides by a module factor, none of which is zero, so the
-// extractors are total via unsafeDivide.
+// extractors are total via divideUnsafe.
 
 export const newtons = (r: Rational.Rational) => make(r);
 
@@ -41,7 +41,7 @@ export const pounds = (r: Rational.Rational) =>
   make(Rational.multiply(r, newtonsPerPound));
 
 export const inPounds = (f: ForceExact) =>
-  Rational.unsafeDivide(f.value, newtonsPerPound);
+  Rational.divideUnsafe(f.value, newtonsPerPound);
 
 /**
  * One kip is 1000 pounds of force—exactly 8896443230521/2000000000
@@ -49,11 +49,11 @@ export const inPounds = (f: ForceExact) =>
  */
 const newtonsPerKip = Rational.multiply(
   newtonsPerPound,
-  Rational.unsafeMake(1000n),
+  Rational.makeUnsafe(1000n),
 );
 
 export const kips = (r: Rational.Rational) =>
   make(Rational.multiply(r, newtonsPerKip));
 
 export const inKips = (f: ForceExact) =>
-  Rational.unsafeDivide(f.value, newtonsPerKip);
+  Rational.divideUnsafe(f.value, newtonsPerKip);

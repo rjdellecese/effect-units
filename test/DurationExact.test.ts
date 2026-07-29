@@ -23,12 +23,12 @@ describe("DurationExact", () => {
   ]);
 
   testExactAnchors(DurationExact.inSeconds, [
-    [DurationExact.milliseconds, Rational.unsafeMake(1n, 1000n)],
-    [DurationExact.minutes, Rational.unsafeMake(60n)],
-    [DurationExact.hours, Rational.unsafeMake(3600n)],
-    [DurationExact.days, Rational.unsafeMake(86400n)],
-    [DurationExact.weeks, Rational.unsafeMake(604800n)],
-    [DurationExact.julianYears, Rational.unsafeMake(31557600n)],
+    [DurationExact.milliseconds, Rational.makeUnsafe(1n, 1000n)],
+    [DurationExact.minutes, Rational.makeUnsafe(60n)],
+    [DurationExact.hours, Rational.makeUnsafe(3600n)],
+    [DurationExact.days, Rational.makeUnsafe(86400n)],
+    [DurationExact.weeks, Rational.makeUnsafe(604800n)],
+    [DurationExact.julianYears, Rational.makeUnsafe(31557600n)],
   ]);
 
   it("matches the float module bit-for-bit", () => {
@@ -41,7 +41,7 @@ describe("DurationExact", () => {
       [DurationExact.julianYears, Duration.julianYears],
     ] as const) {
       assertEquals(
-        Rational.unsafeToNumber(exactCtor(Rational.one).value),
+        Rational.toNumberUnsafe(exactCtor(Rational.one).value),
         floatCtor(1).value,
       );
     }
@@ -55,7 +55,7 @@ describe("DurationExact", () => {
       assertTrue(
         Equal.equals(
           DurationExact.inSeconds(Option.getOrThrow(duration)),
-          Rational.unsafeMake(1n, 1_000_000_000n),
+          Rational.makeUnsafe(1n, 1_000_000_000n),
         ),
       );
     });
@@ -86,7 +86,7 @@ describe("DurationExact", () => {
     });
 
     it("toDuration rounds to nanoseconds under the given mode", () => {
-      const third = DurationExact.seconds(Rational.unsafeMake(1n, 3n));
+      const third = DurationExact.seconds(Rational.makeUnsafe(1n, 3n));
 
       assertEquals(
         Option.getOrThrow(
@@ -112,7 +112,7 @@ describe("DurationExact", () => {
       assertTrue(
         Option.isNone(
           DurationExact.toDuration(
-            DurationExact.seconds(Rational.unsafeMake(-1n)),
+            DurationExact.seconds(Rational.makeUnsafe(-1n)),
           ),
         ),
       );
@@ -125,13 +125,13 @@ describe("DurationExact", () => {
       assertTrue(
         Equal.equals(
           DurationExact.inSeconds(DurationExact.between(start, end)),
-          Rational.unsafeMake(90n),
+          Rational.makeUnsafe(90n),
         ),
       );
       assertTrue(
         Equal.equals(
           DurationExact.inSeconds(DurationExact.between(end, start)),
-          Rational.unsafeMake(-90n),
+          Rational.makeUnsafe(-90n),
         ),
       );
     });
@@ -145,7 +145,7 @@ describe("DurationExact", () => {
       assertTrue(
         Equal.equals(
           DurationExact.inSeconds(DurationExact.between(start, end)),
-          Rational.unsafeMake(17_279_999_999_999_999n, 1000n),
+          Rational.makeUnsafe(17_279_999_999_999_999n, 1000n),
         ),
       );
     });
@@ -158,7 +158,7 @@ describe("DurationExact", () => {
           Option.getOrThrow(
             DurationExact.addTo(
               start,
-              DurationExact.seconds(Rational.unsafeMake(3n, 2n)),
+              DurationExact.seconds(Rational.makeUnsafe(3n, 2n)),
             ),
           ),
         ),
@@ -169,7 +169,7 @@ describe("DurationExact", () => {
           Option.getOrThrow(
             DurationExact.addTo(
               start,
-              DurationExact.seconds(Rational.unsafeMake(-3n, 2n)),
+              DurationExact.seconds(Rational.makeUnsafe(-3n, 2n)),
             ),
           ),
         ),
@@ -180,7 +180,7 @@ describe("DurationExact", () => {
           Option.getOrThrow(
             DurationExact.addTo(
               start,
-              DurationExact.seconds(Rational.unsafeMake(1n, 3n)),
+              DurationExact.seconds(Rational.makeUnsafe(1n, 3n)),
               { mode: "ceil" },
             ),
           ),
@@ -197,7 +197,7 @@ describe("DurationExact", () => {
         Option.isNone(
           DurationExact.addTo(
             start,
-            DurationExact.days(Rational.unsafeMake(10n ** 12n)),
+            DurationExact.days(Rational.makeUnsafe(10n ** 12n)),
           ),
         ),
       );
@@ -207,7 +207,7 @@ describe("DurationExact", () => {
           DurationExact.addTo(
             start,
             DurationExact.milliseconds(
-              Rational.unsafeMake(8_640_000_000_000_000n),
+              Rational.makeUnsafe(8_640_000_000_000_000n),
             ),
           ),
         ),
@@ -217,7 +217,7 @@ describe("DurationExact", () => {
           DurationExact.addTo(
             start,
             DurationExact.milliseconds(
-              Rational.unsafeMake(8_640_000_000_000_001n),
+              Rational.makeUnsafe(8_640_000_000_000_001n),
             ),
           ),
         ),
@@ -237,7 +237,7 @@ describe("DurationExact", () => {
         Option.isNone(
           DurationExact.addTo(
             zoned,
-            DurationExact.days(Rational.unsafeMake(10n ** 12n)),
+            DurationExact.days(Rational.makeUnsafe(10n ** 12n)),
           ),
         ),
       );
@@ -249,7 +249,7 @@ describe("DurationExact", () => {
       const shifted = Option.getOrThrow(
         DurationExact.addTo(
           zoned,
-          DurationExact.seconds(Rational.unsafeMake(90n)),
+          DurationExact.seconds(Rational.makeUnsafe(90n)),
         ),
       );
 
@@ -268,7 +268,7 @@ describe("DurationExact", () => {
           Option.getOrThrow(
             DurationExact.addTo(
               start,
-              DurationExact.milliseconds(Rational.unsafeMake(offset)),
+              DurationExact.milliseconds(Rational.makeUnsafe(offset)),
             ),
           ),
         ),
