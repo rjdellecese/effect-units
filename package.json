@@ -2,6 +2,10 @@
   "name": "effect-units",
   "description": "Typed quantities and unit conversions for Effect",
   "version": "0.0.0",
+  "author": "RJ Dellecese <rj@rjdellecese.com>",
+  "bugs": {
+    "url": "https://github.com/rjdellecese/effect-units/issues"
+  },
   "devDependencies": {
     "@changesets/cli": "2.31.0",
     "@changesets/config": "3.1.4",
@@ -22,18 +26,36 @@
     "node": ">=22"
   },
   "exports": {
+    "./package.json": "./package.json",
     "./*": {
       "types": "./dist/*.d.ts",
       "import": "./dist/*.js",
       "default": "./dist/*.js"
     }
   },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "homepage": "https://github.com/rjdellecese/effect-units#readme",
+  "keywords": [
+    "dimensional-analysis",
+    "effect",
+    "elm-units",
+    "measurement",
+    "quantities",
+    "typescript",
+    "unit-conversion",
+    "units"
+  ],
   "license": "BSD-3-Clause",
   "packageManager": "pnpm@11.10.0",
   "peerDependencies": {
     "effect": "^3.21.4"
   },
-  "private": true,
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/rjdellecese/effect-units.git"
