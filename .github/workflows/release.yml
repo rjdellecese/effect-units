@@ -1,3 +1,9 @@
+# Publishes to npm with trusted publishing (OIDC): `pnpm publish` exchanges the
+# workflow's OIDC token for a short-lived registry token, so there is no npm
+# token anywhere in this repo. npm's trusted publisher config for the package
+# pins this file's name, so renaming it breaks publishing. `id-token: write`
+# below is what lets the runner mint the OIDC token; provenance attestations
+# come along automatically with it.
 name: Release
 
 on:
@@ -20,8 +26,6 @@ jobs:
       - uses: actions/checkout@v7
 
       - uses: ./.github/actions/setup
-        with:
-          registry-url: "https://registry.npmjs.org"
 
       - name: Create release pull request or publish
         uses: changesets/action@v1

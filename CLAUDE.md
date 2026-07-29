@@ -24,4 +24,8 @@ The package is built with tsdown (JavaScript output; `dts: false` delegates decl
 
 ## Versioning and Publishing
 
-Versioning and changelogs are managed with Changesets. Use `pnpm changeset` to create a changeset before merging a PR with user-facing changes; the Release workflow opens/updates a "Version Packages" PR and tags releases when it merges. The package is currently `private`, so `changeset publish` tags releases without publishing to npm.
+Versioning and changelogs are managed with Changesets. Use `pnpm changeset` to create a changeset before merging a PR with user-facing changes; the Release workflow opens/updates a "Version Packages" PR, and merging that PR publishes to npm, tags the release, and creates the GitHub release.
+
+Publishing uses npm trusted publishing (OIDC): `.github/workflows/release.yml` requests an `id-token` and `pnpm publish` exchanges it for a short-lived registry token, so there is no npm token in the repo or in Actions secrets. npm's trusted publisher config for the package pins the workflow filename, so `release.yml` cannot be renamed without updating it at https://www.npmjs.com/package/effect-units/access. Provenance attestations are generated automatically as part of trusted publishing.
+
+The published tarball is the `files` allowlist in `package.json` (`dist` plus `src`, so declaration maps resolve to sources) with `LICENSE`, `README.md`, and `package.json`. `dist` is gitignored but still ships, because `files` takes precedence. Verify a change to packaging with `CI=1 pnpm pack`.
