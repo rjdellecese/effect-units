@@ -18,32 +18,50 @@ export const TypeId = Symbol.for("effect-units/Quantity");
 export type TypeId = typeof TypeId;
 
 /**
- * The identity schema: a `Quantity` on both sides, decoded from itself.
- * {@link QuantityFromStruct} is the codec that reads and writes the
- * `{ unit, value }` wire format.
- */
-export const Quantity = <const U extends Unit.Unit>(unit: U) =>
-  Schema.declare(hasUnit(unit));
-
-/**
+ * The single definition of the `{ unit, value }` wire format, shared by
+ * {@link QuantityFromStruct} and by the `toCodecJson` annotation on
+ * {@link Quantity}, so the two can never drift apart.
+ *
  * Note that the wire format only admits finite values: NaN and ±Infinity
  * (which in-memory arithmetic produces under IEEE semantics) fail loudly at
  * encode rather than corrupting silently through JSON (where they would
  * become `null`).
  */
-export const QuantityFromStruct = <const U extends Unit.Unit>(unit: U) =>
-  Schema.Struct({
+const wire = <const U extends Unit.Unit>(unit: U) => {
+  const struct = Schema.Struct({
     unit: Schema.Literal(Unit.encode(unit)),
     value: Schema.Finite,
-  }).pipe(
-    Schema.decodeTo(
-      Quantity(unit),
-      SchemaTransformation.transform({
-        decode: ({ value }) => make(unit, value),
-        encode: ({ value }) => ({ unit: Unit.encode(unit), value }),
-      }),
-    ),
-  );
+  });
+  return {
+    struct,
+    transformation: SchemaTransformation.transform({
+      decode: ({ value }: typeof struct.Type) => make(unit, value),
+      encode: ({ value }: Quantity<U>) => ({ unit: Unit.encode(unit), value }),
+    }),
+  };
+};
+
+/**
+ * The identity schema: a `Quantity` on both sides, decoded from itself.
+ *
+ * It carries the wire format as its canonical JSON representation, so
+ * `Schema.toCodecJson` derives that codec on demand—including when a
+ * quantity is nested inside a larger schema of your own.
+ * {@link QuantityFromStruct} is the same codec named directly, with a
+ * precise `{ unit, value }` encoded type rather than `Json`.
+ */
+export const Quantity = <const U extends Unit.Unit>(unit: U) =>
+  Schema.declare(hasUnit(unit), {
+    toCodecJson: () => {
+      const { struct, transformation } = wire(unit);
+      return Schema.link<Quantity<U>>()(struct, transformation);
+    },
+  });
+
+export const QuantityFromStruct = <const U extends Unit.Unit>(unit: U) => {
+  const { struct, transformation } = wire(unit);
+  return struct.pipe(Schema.decodeTo(Quantity(unit), transformation));
+};
 
 /**
  * A quantity is a plain 64-bit float tagged with a unit tree. Arithmetic

@@ -18,6 +18,19 @@ This package's schema names follow Effect v4's flipped convention, where the bar
 - `Quantity.QuantityFromSelf(unit)` → `Quantity.Quantity(unit)`; the old `{ unit, value }` codec → `Quantity.QuantityFromStruct(unit)`, and likewise for `QuantityExact`
 - Every unit module's `XFromSelf` → `X`, and its old `X` codec → `XFromStruct` (`Length.LengthFromStruct`, `Speed.SpeedFromStruct`, …). Same for `Temperature` and `TemperatureExact`.
 
+Every value type now carries its wire format as a `toCodecJson` annotation, so `Schema.toCodecJson` derives the JSON codec — including when a quantity, unit, rational, or temperature is nested inside a schema of your own:
+
+```ts
+const Trip = Schema.Struct({ name: Schema.String, distance: Length.Length });
+Schema.encodeSync(Schema.toCodecJson(Trip))({
+  name: "commute",
+  distance: Length.meters(5),
+});
+// { name: "commute", distance: { unit: "Meters", value: 5 } }
+```
+
+Previously this threw `Expected JSON value` at runtime, because a declaration with no JSON lowering falls back to `Json`. The named `XFromStruct` / `XFromString` codecs are unchanged and still give the precise encoded type; both are built from one definition per module.
+
 Comparison predicates take the `is` prefix that Effect v4 adopted for its own:
 
 - `lessThan` → `isLessThan`, `lessThanOrEqualTo` → `isLessThanOrEqualTo`, `greaterThan` → `isGreaterThan`, `greaterThanOrEqualTo` → `isGreaterThanOrEqualTo` on `Quantity`, `QuantityExact`, `Rational`, `Temperature`, and `TemperatureExact`

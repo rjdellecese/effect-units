@@ -255,27 +255,40 @@ export const decode = (input: string): Option.Option<Unit> =>
   );
 
 /**
+ * The single definition of the canonical string encoding, shared by
+ * {@link UnitFromString} and by the `toCodecJson` annotation on
+ * {@link Unit}, so the two can never drift apart.
+ */
+const stringTransformation = {
+  decode: SchemaGetter.transformOrFail((input: string) =>
+    Option.match(decode(input), {
+      onNone: () =>
+        Effect.fail(
+          new SchemaIssue.InvalidValue(Option.some(input), {
+            message: "not a canonical unit encoding",
+          }),
+        ),
+      onSome: Effect.succeed,
+    }),
+  ),
+  encode: SchemaGetter.transform(encode),
+};
+
+/**
  * The identity schema: a `Unit` on both sides, decoded from itself.
- * {@link UnitFromString} is the codec for the canonical string encoding.
+ *
+ * It carries the canonical string encoding as its JSON representation, so
+ * `Schema.toCodecJson` derives that codec on demand—including when a unit
+ * is nested inside a larger schema of your own. {@link UnitFromString} is
+ * the same codec named directly, with a precise `string` encoded type
+ * rather than `Json`.
  */
 export const Unit = Schema.declare(isUnit, {
   identifier: "Unit",
   description: "a unit tree",
+  toCodecJson: () => Schema.link<Unit>()(Schema.String, stringTransformation),
 });
 
 export const UnitFromString = Schema.String.pipe(
-  Schema.decodeTo(Unit, {
-    decode: SchemaGetter.transformOrFail((input: string) =>
-      Option.match(decode(input), {
-        onNone: () =>
-          Effect.fail(
-            new SchemaIssue.InvalidValue(Option.some(input), {
-              message: "not a canonical unit encoding",
-            }),
-          ),
-        onSome: Effect.succeed,
-      }),
-    ),
-    encode: SchemaGetter.transform(encode),
-  }),
+  Schema.decodeTo(Unit, stringTransformation),
 ).annotate({ identifier: "UnitFromString" });

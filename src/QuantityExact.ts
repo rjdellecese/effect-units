@@ -17,31 +17,53 @@ export const TypeId = Symbol.for("effect-units/QuantityExact");
 export type TypeId = typeof TypeId;
 
 /**
- * The identity schema: a `QuantityExact` on both sides, decoded from
- * itself. {@link QuantityExactFromStruct} is the codec that reads and
- * writes the `{ unit, value }` wire format.
- */
-export const QuantityExact = <const U extends Unit.Unit>(unit: U) =>
-  Schema.declare(hasUnit(unit));
-
-/**
+ * The single definition of the wire format, shared by
+ * {@link QuantityExactFromStruct} and by the `toCodecJson` annotation on
+ * {@link QuantityExact}, so the two can never drift apart.
+ *
  * The wire format is `{ unit, value }` with the value in the canonical
  * rational encoding (`"3/2"`, `"-3/2"`, `"3"`)—exact on the wire, with no
  * width or precision ceiling.
  */
-export const QuantityExactFromStruct = <const U extends Unit.Unit>(unit: U) =>
-  Schema.Struct({
+const wire = <const U extends Unit.Unit>(unit: U) => {
+  const struct = Schema.Struct({
     unit: Schema.Literal(Unit.encode(unit)),
     value: Rational.RationalFromString,
-  }).pipe(
-    Schema.decodeTo(
-      QuantityExact(unit),
-      SchemaTransformation.transform({
-        decode: ({ value }) => make(unit, value),
-        encode: ({ value }) => ({ unit: Unit.encode(unit), value }),
+  });
+  return {
+    struct,
+    transformation: SchemaTransformation.transform({
+      decode: ({ value }: typeof struct.Type) => make(unit, value),
+      encode: ({ value }: QuantityExact<U>) => ({
+        unit: Unit.encode(unit),
+        value,
       }),
-    ),
-  );
+    }),
+  };
+};
+
+/**
+ * The identity schema: a `QuantityExact` on both sides, decoded from
+ * itself.
+ *
+ * It carries the wire format as its canonical JSON representation, so
+ * `Schema.toCodecJson` derives that codec on demand—including when an exact
+ * quantity is nested inside a larger schema of your own.
+ * {@link QuantityExactFromStruct} is the same codec named directly, with a
+ * precise `{ unit, value }` encoded type rather than `Json`.
+ */
+export const QuantityExact = <const U extends Unit.Unit>(unit: U) =>
+  Schema.declare(hasUnit(unit), {
+    toCodecJson: () => {
+      const { struct, transformation } = wire(unit);
+      return Schema.link<QuantityExact<U>>()(struct, transformation);
+    },
+  });
+
+export const QuantityExactFromStruct = <const U extends Unit.Unit>(unit: U) => {
+  const { struct, transformation } = wire(unit);
+  return struct.pipe(Schema.decodeTo(QuantityExact(unit), transformation));
+};
 
 /**
  * An exact quantity is an arbitrary-precision rational tagged with a unit

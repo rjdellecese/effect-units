@@ -57,33 +57,48 @@ export const equals = (a: TemperatureExact, b: TemperatureExact): boolean =>
   Rational.equals(a.value, b.value);
 
 /**
- * The identity schema: a `TemperatureExact` on both sides, decoded from
- * itself. {@link TemperatureExactFromStruct} is the codec for the
- * `{ unit, value }` wire format.
- */
-export const TemperatureExact = Schema.declare(isTemperatureExact, {
-  identifier: "TemperatureExact",
-  description: "an exact absolute temperature",
-});
-
-/**
+ * The single definition of the wire format, shared by
+ * {@link TemperatureExactFromStruct} and by the `toCodecJson` annotation on
+ * {@link TemperatureExact}, so the two can never drift apart.
+ *
  * The wire format carries a `unit: "Kelvins"` discriminator so persisted
  * temperatures are self-describing, matching the `{ unit, value }`
  * convention of `QuantityExact` schemas, with the value in the canonical
  * rational encoding (`"3/2"`, `"-3/2"`, `"3"`)—exact on the wire, with no
  * width or precision ceiling.
  */
-export const TemperatureExactFromStruct = Schema.Struct({
+const wireStruct = Schema.Struct({
   unit: Schema.Literal("Kelvins"),
   value: Rational.RationalFromString,
-}).pipe(
-  Schema.decodeTo(
-    TemperatureExact,
-    SchemaTransformation.transform({
-      decode: ({ value }) => make(value),
-      encode: ({ value }) => ({ unit: "Kelvins" as const, value }),
-    }),
-  ),
+});
+
+const wireTransformation = SchemaTransformation.transform({
+  decode: ({ value }: typeof wireStruct.Type) => make(value),
+  encode: ({ value }: TemperatureExact) => ({
+    unit: "Kelvins" as const,
+    value,
+  }),
+});
+
+/**
+ * The identity schema: a `TemperatureExact` on both sides, decoded from
+ * itself.
+ *
+ * It carries the wire format as its canonical JSON representation, so
+ * `Schema.toCodecJson` derives that codec on demand—including when an exact
+ * temperature is nested inside a larger schema of your own.
+ * {@link TemperatureExactFromStruct} is the same codec named directly, with
+ * a precise `{ unit, value }` encoded type rather than `Json`.
+ */
+export const TemperatureExact = Schema.declare(isTemperatureExact, {
+  identifier: "TemperatureExact",
+  description: "an exact absolute temperature",
+  toCodecJson: () =>
+    Schema.link<TemperatureExact>()(wireStruct, wireTransformation),
+});
+
+export const TemperatureExactFromStruct = wireStruct.pipe(
+  Schema.decodeTo(TemperatureExact, wireTransformation),
 );
 
 // Absolute temperatures

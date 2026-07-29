@@ -560,9 +560,33 @@ export const fromStringUnsafe = (s: string): Rational =>
   );
 
 /**
+ * The single definition of the canonical string encoding, shared by
+ * {@link RationalFromString} and by the `toCodecJson` annotation on
+ * {@link Rational}, so the two can never drift apart.
+ */
+const stringTransformation = {
+  decode: SchemaGetter.transformOrFail((s: string) =>
+    Option.match(fromString(s), {
+      onNone: () =>
+        Effect.fail(
+          new SchemaIssue.InvalidValue(Option.some(s), {
+            message: "not a canonical rational encoding",
+          }),
+        ),
+      onSome: Effect.succeed,
+    }),
+  ),
+  encode: SchemaGetter.transform(format),
+};
+
+/**
  * The identity schema: a `Rational` on both sides, decoded from itself.
- * {@link RationalFromString} is the codec for the canonical string
- * encoding.
+ *
+ * It carries the canonical string encoding as its JSON representation, so
+ * `Schema.toCodecJson` derives that codec on demand—including when a
+ * rational is nested inside a larger schema of your own.
+ * {@link RationalFromString} is the same codec named directly, with a
+ * precise `string` encoded type rather than `Json`.
  */
 export const Rational = Schema.declare(isRational, {
   identifier: "Rational",
@@ -572,25 +596,12 @@ export const Rational = Schema.declare(isRational, {
       .tuple(fc.bigInt(), fc.bigInt({ min: 1n }))
       .map(([numerator, denominator]) => makeUnsafe(numerator, denominator)),
   toEquivalence: () => Equivalence,
+  toCodecJson: () =>
+    Schema.link<Rational>()(Schema.String, stringTransformation),
 });
 
 export const RationalFromString = Schema.String.annotate({
   description: "a string to be decoded into a Rational",
 })
-  .pipe(
-    Schema.decodeTo(Rational, {
-      decode: SchemaGetter.transformOrFail((s: string) =>
-        Option.match(fromString(s), {
-          onNone: () =>
-            Effect.fail(
-              new SchemaIssue.InvalidValue(Option.some(s), {
-                message: "not a canonical rational encoding",
-              }),
-            ),
-          onSome: Effect.succeed,
-        }),
-      ),
-      encode: SchemaGetter.transform(format),
-    }),
-  )
+  .pipe(Schema.decodeTo(Rational, stringTransformation))
   .annotate({ identifier: "RationalFromString" });

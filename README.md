@@ -76,6 +76,20 @@ Schema.encodeSync(Speed.SpeedFromStruct)(speed);
 // { unit: "(Meters/Seconds)", value: 1.34112 }
 ```
 
+That wire format is also each type's canonical JSON representation, so quantities serialize correctly when they're nested inside a schema of your own—no wrapper codec to remember:
+
+```ts
+const Trip = Schema.Struct({ name: Schema.String, distance: Length.Length });
+
+Schema.encodeSync(Schema.toCodecJson(Trip))({
+  name: "commute",
+  distance: Length.meters(5),
+});
+// { name: "commute", distance: { unit: "Meters", value: 5 } }
+```
+
+Reach for `XFromStruct` when you want the precise `{ unit, value }` encoded type; reach for `Schema.toCodecJson` when the quantity is part of a larger structure (its encoded type is `Json`).
+
 `Duration` interoperates with `effect/Duration` and `effect/DateTime`, and `Rational` follows the `effect/BigDecimal` idiom.
 
 ### Exact arithmetic, when a lost cent is a bug

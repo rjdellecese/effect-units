@@ -55,32 +55,42 @@ export const equals = (a: Temperature, b: Temperature): boolean =>
   valueEquals(a.value, b.value);
 
 /**
- * The identity schema: a `Temperature` on both sides, decoded from itself.
- * {@link TemperatureFromStruct} is the codec for the `{ unit, value }`
- * wire format.
- */
-export const Temperature = Schema.declare(isTemperature, {
-  identifier: "Temperature",
-  description: "an absolute temperature",
-});
-
-/**
+ * The single definition of the wire format, shared by
+ * {@link TemperatureFromStruct} and by the `toCodecJson` annotation on
+ * {@link Temperature}, so the two can never drift apart.
+ *
  * The wire format carries a `unit: "Kelvins"` discriminator so persisted
  * temperatures are self-describing, matching the `{ unit, value }`
  * convention of `Quantity` schemas. As with quantities, only finite values
  * are admitted.
  */
-export const TemperatureFromStruct = Schema.Struct({
+const wireStruct = Schema.Struct({
   unit: Schema.Literal("Kelvins"),
   value: Schema.Finite,
-}).pipe(
-  Schema.decodeTo(
-    Temperature,
-    SchemaTransformation.transform({
-      decode: ({ value }) => make(value),
-      encode: ({ value }) => ({ unit: "Kelvins" as const, value }),
-    }),
-  ),
+});
+
+const wireTransformation = SchemaTransformation.transform({
+  decode: ({ value }: typeof wireStruct.Type) => make(value),
+  encode: ({ value }: Temperature) => ({ unit: "Kelvins" as const, value }),
+});
+
+/**
+ * The identity schema: a `Temperature` on both sides, decoded from itself.
+ *
+ * It carries the wire format as its canonical JSON representation, so
+ * `Schema.toCodecJson` derives that codec on demand—including when a
+ * temperature is nested inside a larger schema of your own.
+ * {@link TemperatureFromStruct} is the same codec named directly, with a
+ * precise `{ unit, value }` encoded type rather than `Json`.
+ */
+export const Temperature = Schema.declare(isTemperature, {
+  identifier: "Temperature",
+  description: "an absolute temperature",
+  toCodecJson: () => Schema.link<Temperature>()(wireStruct, wireTransformation),
+});
+
+export const TemperatureFromStruct = wireStruct.pipe(
+  Schema.decodeTo(Temperature, wireTransformation),
 );
 
 // Absolute temperatures
