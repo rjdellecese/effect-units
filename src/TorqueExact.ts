@@ -23,7 +23,7 @@ export const newtonMeters = (r: Rational.Rational) => make(r);
 export const inNewtonMeters = (t: TorqueExact) => t.value;
 
 /**
- * One pound foot is one pound of force times one foot — exactly
+ * One pound foot is one pound of force times one foot—exactly
  * 3389544870828501/2500000000000000 (1.3558179483314004) newton meters.
  */
 const newtonMetersPerPoundFoot = Rational.multiply(

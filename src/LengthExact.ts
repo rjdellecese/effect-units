@@ -141,7 +141,7 @@ export const inPicas = (l: LengthExact) =>
 
 // Astronomical
 //
-// NOTE: no parsecs — one parsec is 648,000/π astronomical units, and π has
+// NOTE: no parsecs—one parsec is 648,000/π astronomical units, and π has
 // no exact rational representation. Use Length.parsecs on the float side.
 
 const metersPerAstronomicalUnit = Rational.unsafeMake(149597870700n);

@@ -30,7 +30,7 @@ export const kilogramsPerCubicMeter = (r: Rational.Rational) => make(r);
 export const inKilogramsPerCubicMeter = (d: DensityExact) => d.value;
 
 /**
- * A gram is a milli-kilogram; a cubic centimeter is a centi-meter cubed —
+ * A gram is a milli-kilogram; a cubic centimeter is a centi-meter cubed—
  * exactly 1000 kilograms per cubic meter.
  */
 const kilogramsPerCubicMeterPerGramPerCubicCentimeter = Rational.unsafeDivide(

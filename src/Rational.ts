@@ -23,7 +23,7 @@ export type TypeId = typeof TypeId;
 
 /**
  * An arbitrary-precision rational number: a reduced fraction of bigints.
- * Unlike floats, arithmetic on rationals is exact — sums, products, and
+ * Unlike floats, arithmetic on rationals is exact—sums, products, and
  * quotients lose no information. Unlike `BigDecimal`, rationals are closed
  * under division (1/3 is a value, not a rounding), which is what makes them
  * the right value type for exact quantities and their rate algebra.
@@ -68,7 +68,7 @@ const ofReduced = (numerator: bigint, denominator: bigint): Rational =>
 /**
  * Reduces a fraction to lowest terms with the sign carried by the
  * numerator. Total on a non-zero denominator, which every caller
- * establishes first — internal arithmetic derives denominators as products
+ * establishes first—internal arithmetic derives denominators as products
  * of positive denominators, so they are never zero.
  */
 const reduce = (numerator: bigint, denominator: bigint): Rational => {
@@ -122,7 +122,7 @@ export const isPositive = (r: Rational): boolean => r.numerator > 0n;
 
 // Equality and order
 
-/** Field-wise equality — sound because every rational is stored reduced. */
+/** Field-wise equality—sound because every rational is stored reduced. */
 export const equals: {
   (b: Rational): (a: Rational) => boolean;
   (a: Rational, b: Rational): boolean;
@@ -136,7 +136,7 @@ export const Equivalence: Equivalence_.Equivalence<Rational> =
   Equivalence_.make(equals);
 
 /**
- * Cross-multiplication comparison — denominators are always positive, so no
+ * Cross-multiplication comparison—denominators are always positive, so no
  * sign flip is needed.
  */
 export const Order: order.Order<Rational> = order.make((a, b) => {
@@ -224,7 +224,7 @@ export const unsafeReciprocal = (r: Rational): Rational => {
     : ofReduced(r.denominator, r.numerator);
 };
 
-/** Returns `Option.none()` when the divisor is zero — ℚ has no infinities. */
+/** Returns `Option.none()` when the divisor is zero—ℚ has no infinities. */
 export const divide: {
   (b: Rational): (a: Rational) => Option.Option<Rational>;
   (a: Rational, b: Rational): Option.Option<Rational>;
@@ -255,7 +255,7 @@ export const multiplyAll = (collection: Iterable<Rational>): Rational =>
  * Rounds to the nearest bigint under the given mode (the `RoundingMode`
  * vocabulary of `effect/BigDecimal`; the default, `"half-from-zero"`, is
  * BigDecimal's default). Returns a bigint rather than a Rational because
- * every boundary that rounds — money amounts, nanoseconds, milliseconds —
+ * every boundary that rounds—money amounts, nanoseconds, milliseconds—
  * wants an integer.
  */
 export const round: {
@@ -315,12 +315,12 @@ export const round: {
 // Conversions
 
 /**
- * The exact rational value of a finite double — every finite double is a
+ * The exact rational value of a finite double—every finite double is a
  * dyadic rational. Throws a `RangeError` on NaN and ±Infinity.
  */
 // Doubling a finite non-integral double is always exact (its magnitude is
 // below 2^53), so this recursion terminates with the exact scaled mantissa
-// — at most 1075 steps, for the smallest subnormal.
+//—at most 1075 steps, for the smallest subnormal.
 const dyadic = (mantissa: number, denominator: bigint): Rational =>
   Number.isInteger(mantissa)
     ? reduce(BigInt(mantissa), denominator)
@@ -447,7 +447,7 @@ export const fromBigDecimal = (bd: BigDecimal.BigDecimal): Rational =>
     : fromBigInt(bd.value * 10n ** BigInt(-bd.scale));
 
 /**
- * Rounds to a `BigDecimal` at the given scale — exactly one rounding, made
+ * Rounds to a `BigDecimal` at the given scale—exactly one rounding, made
  * explicit. For a lossless conversion when one exists, use
  * {@link toBigDecimalExact}.
  */
@@ -490,7 +490,7 @@ export const toBigDecimal: {
 );
 
 /**
- * The exact `BigDecimal` equal to the rational, when one exists — i.e. when
+ * The exact `BigDecimal` equal to the rational, when one exists—i.e. when
  * the denominator is a product of twos and fives, so the decimal expansion
  * terminates. `Option.none()` otherwise (e.g. 1/3).
  */

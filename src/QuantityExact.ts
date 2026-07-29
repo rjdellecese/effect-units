@@ -20,7 +20,7 @@ export const QuantityExactFromSelf = <const U extends Unit.Unit>(unit: U) =>
 
 /**
  * The wire format is `{ unit, value }` with the value in the canonical
- * rational encoding (`"3/2"`, `"-3/2"`, `"3"`) — exact on the wire, with no
+ * rational encoding (`"3/2"`, `"-3/2"`, `"3"`)—exact on the wire, with no
  * width or precision ceiling.
  */
 export const QuantityExact = <const U extends Unit.Unit>(unit: U) =>
@@ -87,7 +87,7 @@ export const make = <U extends Unit.Unit>(
 
 /**
  * Exact equality: equal rational values and structurally equal units.
- * Unlike the float module, this is decidable with no caveats — equivalent
+ * Unlike the float module, this is decidable with no caveats—equivalent
  * fractions are one value, and there is no NaN.
  */
 export const equals = <U extends Unit.Unit>(
@@ -97,7 +97,7 @@ export const equals = <U extends Unit.Unit>(
 
 /**
  * Tolerance-based equality: whether `a` and `b` differ by no more than
- * `tolerance` (a quantity in the same units). Exact and total — kept for
+ * `tolerance` (a quantity in the same units). Exact and total—kept for
  * domain logic that genuinely wants a tolerance, not as a float workaround.
  */
 export const equalsWithin: {
@@ -153,7 +153,7 @@ export const multiply: {
       : make(a.unit, Rational.multiply(a.value, b as Rational.Rational)),
 );
 
-/** Returns `Option.none()` when the divisor is zero — ℚ has no infinities. */
+/** Returns `Option.none()` when the divisor is zero—ℚ has no infinities. */
 export const divide: {
   <U extends Unit.Unit>(
     b: Rational.Rational,
@@ -258,7 +258,7 @@ export const cubed = <U extends Unit.Unit>(
  * Divides one quantity by another, producing a rate: `per(dependent,
  * independent)` is the rate of change of `dependent` per unit of
  * `independent` (e.g. `per(length, duration)` is a speed). Returns
- * `Option.none()` when the independent quantity is zero — ℚ has no
+ * `Option.none()` when the independent quantity is zero—ℚ has no
  * infinities to divide into.
  */
 export const per: {
@@ -376,7 +376,7 @@ export const unsafeAt_: {
 );
 
 /**
- * `for_(duration, speed)` is the length covered at `speed` for `duration` —
+ * `for_(duration, speed)` is the length covered at `speed` for `duration`—
  * {@link at} with its arguments flipped. (Named `for_` because `for` is a
  * reserved word.)
  */
@@ -567,7 +567,7 @@ export const max: {
 // is one correct rounding.
 
 /**
- * The exact image of a float quantity — lossless, since every finite double
+ * The exact image of a float quantity—lossless, since every finite double
  * is a dyadic rational. Returns `Option.none()` for NaN and ±Infinity,
  * which have no rational image.
  */
@@ -582,7 +582,7 @@ export const unsafeFromQuantity = <U extends Unit.Unit>(
 ): QuantityExact<U> => make(q.unit, Rational.unsafeFromNumber(q.value));
 
 /**
- * The float quantity nearest the exact one — a single correct rounding.
+ * The float quantity nearest the exact one—a single correct rounding.
  * Returns `Option.none()` when the value overflows to ±Infinity.
  */
 export const toQuantity = <U extends Unit.Unit>(

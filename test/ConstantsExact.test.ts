@@ -90,7 +90,7 @@ describe("exact prefixes agree with Prefix", () => {
       // float side deliberately divides by the toBase factor (for roundtrip
       // stability), and dividing 1 by a correctly rounded 10^k is itself one
       // rounding, which for a few negative exponents misses the true power
-      // of ten by one ulp. The exact side has no such artifact — unit
+      // of ten by one ulp. The exact side has no such artifact—unit
       // modules only bake in toBase factors, which match exactly.
       assertTrue(
         isCloseTo(

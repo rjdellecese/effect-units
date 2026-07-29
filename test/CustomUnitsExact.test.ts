@@ -53,7 +53,7 @@ const USD = { code: "USD", base: 10, exponent: 2 } as const;
 
 /**
  * Exactly one rounding, at the boundary, with the mode named at the call
- * site — the value stays a lossless rational until this moment.
+ * site—the value stays a lossless rational until this moment.
  */
 const toDinero = (
   m: Money,
@@ -92,7 +92,7 @@ const fromDinero = (snapshot: DineroSnapshot): Money => {
 };
 
 describe("exact custom units (a consumer-authored USD module)", () => {
-  it("keeps a USD/meter rate exact — the headline contrast with floats", () => {
+  it("keeps a USD/meter rate exact—the headline contrast with floats", () => {
     // $2 over 3 meters is exactly 200/3 cents per meter. The float example
     // needs isCloseTo here; this is Equal.equals.
     const pricePerMeter = QuantityExact.per(
@@ -106,7 +106,7 @@ describe("exact custom units (a consumer-authored USD module)", () => {
     assertTrue(Unit.equals(rate.unit, Unit.rate(Usd, "Meters")));
     assertTrue(Equal.equals(rate.value, Rational.unsafeMake(200n, 3n)));
 
-    // Applying the rate back to 3 meters recovers exactly $2 — no lost cent.
+    // Applying the rate back to 3 meters recovers exactly $2—no lost cent.
     assertTrue(
       Equal.equals(
         QuantityExact.at(rate, LengthExact.meters(Rational.unsafeMake(3n))),
@@ -190,7 +190,7 @@ describe("exact custom units (a consumer-authored USD module)", () => {
   });
 
   it("supports sub-cent bookkeeping without drift", () => {
-    // Summing thirds of a cent 300 times is exactly one dollar — floats
+    // Summing thirds of a cent 300 times is exactly one dollar—floats
     // would have accumulated error; rationals cannot.
     const total = Array.reduce(
       Array.makeBy(300, () => cents(Rational.unsafeMake(1n, 3n))),

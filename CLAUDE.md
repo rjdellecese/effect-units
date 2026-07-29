@@ -11,14 +11,14 @@ The package is built with tsdown (JavaScript output; `dts: false` delegates decl
 - `pnpm build` - Build `dist/` (tsdown JavaScript + tsc declarations)
 - `pnpm test` - Run the Vitest suite (includes type-level tests and coverage)
 - `pnpm typecheck` - Typecheck sources and tests via `tsc -b`
-- `pnpm lint` / `pnpm lint:fix` - Lint (Oxlint + Syncpack); `lint:fix` writes fixes
-- `pnpm format` / `pnpm format:check` - Format (Oxfmt + Syncpack); `format` writes, `format:check` only checks
+- `pnpm lint`/`pnpm lint:fix` - Lint (Oxlint + Syncpack); `lint:fix` writes fixes
+- `pnpm format`/`pnpm format:check` - Format (Oxfmt + Syncpack); `format` writes, `format:check` only checks
 - `pnpm circular` - Fail on runtime import cycles (dpdm; type-only cycles are ignored)
 - `pnpm clean` - Remove dist, coverage, and node_modules
 
 ## Conventions
 
-- Import Effect modules from their submodule paths (e.g. `import * as Schema from "effect/Schema"`), not from bare `"effect"` — enforced for value imports by Oxlint's `no-restricted-imports` (type-only imports are exempt from the lint rule, but follow the convention anyway).
+- Import Effect modules from their submodule paths (e.g. `import * as Schema from "effect/Schema"`), not from bare `"effect"`—enforced for value imports by Oxlint's `no-restricted-imports` (type-only imports are exempt from the lint rule, but follow the convention anyway).
 - Tests live in `test/*.test.ts` and use `@effect/vitest`; shared test helpers live alongside them in `test/` (excluded from the build and coverage).
 - Source modules are PascalCase (one module per unit/quantity); helpers are camelCase.
 

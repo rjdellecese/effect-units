@@ -45,7 +45,7 @@ export const inMetricHorsepower = (p: PowerExact) =>
   Rational.unsafeDivide(p.value, wattsPerMetricHorsepower);
 
 /**
- * One mechanical horsepower is 550 foot pounds of force per second — exactly
+ * One mechanical horsepower is 550 foot pounds of force per second—exactly
  * 37284993579113511/50000000000000 (745.69987158227022) watts.
  */
 const footPoundsPerSecondPerMechanicalHorsepower = Rational.unsafeMake(550n);

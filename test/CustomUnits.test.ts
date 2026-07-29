@@ -33,12 +33,12 @@ const dollars = (n: number): Money => make(n * 100);
 const inDollars = (m: Money): number => m.value / 100;
 
 // The structural shape of a dinero.js v2 snapshot ({ amount, currency,
-// scale }); dinero itself is intentionally not a dependency — conversion
+// scale }); dinero itself is intentionally not a dependency—conversion
 // happens at the boundary, and the quantity's value stays a number.
 //
 // Precision contract: quantity arithmetic is IEEE 754 (Quantity.per/at
 // divide and multiply freely), while dinero amounts must be integers that
-// float64 represents exactly — i.e. within Number.MAX_SAFE_INTEGER. So the
+// float64 represents exactly—i.e. within Number.MAX_SAFE_INTEGER. So the
 // boundary rounds explicitly on the way out and rejects amounts float64
 // cannot hold exactly (e.g. from dinero's bigint calculator) on the way in,
 // rather than degrading silently.
@@ -150,7 +150,7 @@ describe("custom units (a consumer-authored USD module)", () => {
 
   it("rounds computed (non-integer) values explicitly on the way out", () => {
     // Rate math is IEEE 754: $2 over 3 meters, priced for 1 meter, is a
-    // repeating fraction (66.666... cents) — a valid measurement, but not a
+    // repeating fraction (66.666... cents)—a valid measurement, but not a
     // valid dinero amount until it is rounded.
     const cost = Quantity.at(
       Quantity.per(dollars(2), Length.meters(3)),
@@ -168,8 +168,8 @@ describe("custom units (a consumer-authored USD module)", () => {
   });
 
   it("rejects amounts float64 cannot represent exactly", () => {
-    // Beyond Number.MAX_SAFE_INTEGER (2^53 - 1), integer amounts — e.g.
-    // from dinero's bigint calculator — silently lose precision as floats,
+    // Beyond Number.MAX_SAFE_INTEGER (2^53 - 1), integer amounts—e.g.
+    // from dinero's bigint calculator—silently lose precision as floats,
     // so the boundary refuses them instead.
     throws(() =>
       fromDinero({

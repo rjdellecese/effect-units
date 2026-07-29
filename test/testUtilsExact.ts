@@ -10,7 +10,7 @@ import * as Rational from "../src/Rational.ts";
 /**
  * Bounded rational arbitrary: numerators within ±2^64, denominators within
  * 1..2^32. Bounded to keep property runs fast, not because anything
- * overflows — exact arithmetic has no range limits.
+ * overflows—exact arithmetic has no range limits.
  */
 export const rational = FastCheck.tuple(
   FastCheck.bigInt({ min: -(2n ** 64n), max: 2n ** 64n }),
@@ -23,7 +23,7 @@ export const nonZeroRational = rational.filter((r) => !Rational.isZero(r));
 
 /**
  * Registers a property test asserting that a constructor/extractor pair
- * roundtrips exactly — `Equal.equals` identity, no tolerance. Call inside a
+ * roundtrips exactly—`Equal.equals` identity, no tolerance. Call inside a
  * `describe` block.
  */
 export const testExactRoundtrip = <Q>(
@@ -54,7 +54,7 @@ export const testExactRoundtrips = <Q>(
 /**
  * Registers a test anchoring each constructor's conversion factor to an
  * independently stated reference rational: `toBase(there(one))` must EQUAL
- * `expected` — exactly, not approximately. State `expected` as a literal
+ * `expected`—exactly, not approximately. State `expected` as a literal
  * rational, not by importing the source constant, so a mistyped constant is
  * caught.
  */

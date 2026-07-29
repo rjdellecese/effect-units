@@ -30,7 +30,7 @@ export const kilogramsPerCubicMeter = (n: number) => make(n);
 export const inKilogramsPerCubicMeter = (d: Density) => d.value;
 
 /**
- * A gram is a milli-kilogram; a cubic centimeter is a centi-meter cubed —
+ * A gram is a milli-kilogram; a cubic centimeter is a centi-meter cubed—
  * exactly 1000 kg/m^3. A literal rather than a prefix-factor quotient,
  * which evaluates to 999.9999999999999.
  */
@@ -45,7 +45,7 @@ export const inGramsPerCubicCentimeter = (d: Density) =>
 /**
  * Exactly 56,699,046,250/2,048,383 kg/m^3 (the pound and cubed-inch
  * definitions combined into one reduced fraction), written as one division
- * of exact integers so the factor is correctly rounded — chaining the
+ * of exact integers so the factor is correctly rounded—chaining the
  * already-rounded constants would land one ulp off.
  */
 const kilogramsPerCubicMeterPerPoundPerCubicInch = 56_699_046_250 / 2_048_383;
