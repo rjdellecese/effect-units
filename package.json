@@ -1,7 +1,7 @@
 {
   "name": "effect-units",
   "description": "Typed quantities and unit conversions for Effect",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": "RJ Dellecese <rj@rjdellecese.com>",
   "bugs": {
     "url": "https://github.com/rjdellecese/effect-units/issues"
