@@ -6,6 +6,7 @@ import {
   deepStrictEqual,
   throws,
 } from "@effect/vitest/utils";
+import * as Array from "effect/Array";
 import * as Result from "effect/Result";
 import * as Equal from "effect/Equal";
 import * as FastCheck from "effect/testing/FastCheck";
@@ -272,6 +273,42 @@ describe("dimensionless", () => {
 
     assertTrue(Rational.equals(squared.value, Rational.makeUnsafe(1n, 9n)));
     assertTrue(Rational.equals(cubed.value, Rational.makeUnsafe(1n, 27n)));
+  });
+
+  it("undoes the fold when a generic product is peeled apart", () => {
+    // The float module's test of the same name explains the shape; the
+    // exact track has four peeling functions to keep honest instead of two.
+    const compose = <U1 extends Unit.Unit, U2 extends Unit.Unit>(
+      a: QuantityExact.QuantityExact<U1>,
+      b: QuantityExact.QuantityExact<U2>,
+    ): QuantityExact.QuantityExact<Unit.Product<U1, U2>> =>
+      QuantityExact.times(a, b);
+
+    const foldedLeft = compose(DimensionlessExact.one, meters(three));
+    const foldedRight = compose(meters(three), DimensionlessExact.one);
+
+    const left = QuantityExact.over(foldedLeft, meters(three));
+    const leftUnsafe: QuantityExact.QuantityExact<"Unitless"> =
+      QuantityExact.overUnsafe(foldedLeft, meters(three));
+    const right = QuantityExact.over_(foldedRight, meters(three));
+    const rightUnsafe: QuantityExact.QuantityExact<"Unitless"> =
+      QuantityExact.over_Unsafe(foldedRight, meters(three));
+
+    assertTrue(Option.isSome(left));
+    assertTrue(Option.isSome(right));
+
+    Array.forEach(
+      [
+        Option.getOrThrow(left),
+        leftUnsafe,
+        Option.getOrThrow(right),
+        rightUnsafe,
+      ],
+      (peeled) => {
+        assertTrue(Equal.equals(peeled, DimensionlessExact.one));
+        assertEquals(Unit.encode(peeled.unit), "Unitless");
+      },
+    );
   });
 
   it("division by zero is None, and the unsafe forms throw", () => {

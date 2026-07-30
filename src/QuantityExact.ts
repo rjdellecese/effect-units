@@ -8,6 +8,11 @@ import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 
+import {
+  isUnitless,
+  leftFactorOf,
+  rightFactorOf,
+} from "./internal/dimensionless.ts";
 import { ValueObjectProto } from "./internal/valueObject.ts";
 import * as Quantity from "./Quantity.ts";
 import * as Rational from "./Rational.ts";
@@ -87,12 +92,9 @@ const hasUnit =
   (u: unknown): u is QuantityExact<U> =>
     isQuantityExact(u) && Unit.equals(u.unit, unit);
 
-/**
- * `Unitless` is the identity of the unit algebra—see `Quantity`'s note of
- * the same name for how the overloads and the runtime line up, and where
- * they part company.
- */
-const isUnitless = (unit: Unit.Unit): unit is "Unitless" => unit === "Unitless";
+// `Unitless` is the identity of the unit algebra—see `Quantity`'s note of
+// the same name for how the overloads and the runtime line up, and where
+// they part company.
 
 const Proto = {
   ...ValueObjectProto,
@@ -505,12 +507,7 @@ export const over: {
     b: QuantityExact<Unit.Unit>,
   ): Option.Option<QuantityExact<Unit.Unit>> =>
     Option.map(Rational.divide(a.value, b.value), (value) =>
-      make(
-        isUnitless(b.unit)
-          ? a.unit
-          : (a.unit as Unit.Product<Unit.Unit, Unit.Unit>).left,
-        value,
-      ),
+      make(isUnitless(b.unit) ? a.unit : leftFactorOf(a.unit), value),
     ),
 );
 
@@ -539,9 +536,7 @@ export const overUnsafe: {
     b: QuantityExact<Unit.Unit>,
   ): QuantityExact<Unit.Unit> =>
     make(
-      isUnitless(b.unit)
-        ? a.unit
-        : (a.unit as Unit.Product<Unit.Unit, Unit.Unit>).left,
+      isUnitless(b.unit) ? a.unit : leftFactorOf(a.unit),
       Rational.divideUnsafe(a.value, b.value),
     ),
 );
@@ -580,12 +575,7 @@ export const over_: {
     b: QuantityExact<Unit.Unit>,
   ): Option.Option<QuantityExact<Unit.Unit>> =>
     Option.map(Rational.divide(a.value, b.value), (value) =>
-      make(
-        isUnitless(b.unit)
-          ? a.unit
-          : (a.unit as Unit.Product<Unit.Unit, Unit.Unit>).right,
-        value,
-      ),
+      make(isUnitless(b.unit) ? a.unit : rightFactorOf(a.unit), value),
     ),
 );
 
@@ -614,9 +604,7 @@ export const over_Unsafe: {
     b: QuantityExact<Unit.Unit>,
   ): QuantityExact<Unit.Unit> =>
     make(
-      isUnitless(b.unit)
-        ? a.unit
-        : (a.unit as Unit.Product<Unit.Unit, Unit.Unit>).right,
+      isUnitless(b.unit) ? a.unit : rightFactorOf(a.unit),
       Rational.divideUnsafe(a.value, b.value),
     ),
 );

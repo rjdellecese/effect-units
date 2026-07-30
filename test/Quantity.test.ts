@@ -310,6 +310,41 @@ describe("dimensionless", () => {
     assertEquals(product.value, 6);
   });
 
+  it("undoes the fold when a generic product is peeled apart", () => {
+    // Code generic in its units selects the general overload, so `times` is
+    // typed Product<U1, U2> while the runtime folds the dimensionless factor
+    // away. Peeling that apart has to undo the fold rather than reach for a
+    // factor the unit tree does not have—which would leave `unit` undefined
+    // and blow up in `Unit.encode`, `Hash`, and every schema.
+    const compose = <U1 extends Unit.Unit, U2 extends Unit.Unit>(
+      a: Quantity.Quantity<U1>,
+      b: Quantity.Quantity<U2>,
+    ): Quantity.Quantity<Unit.Product<U1, U2>> => Quantity.times(a, b);
+
+    const foldedLeft = compose(Dimensionless.one, Length.meters(3));
+    const foldedRight = compose(Length.meters(3), Dimensionless.one);
+
+    assertTrue(Unit.equals(foldedLeft.unit, Length.Meters));
+    assertTrue(Unit.equals(foldedRight.unit, Length.Meters));
+
+    // over drops the right factor, leaving the folded left one, and over_
+    // mirrors it—each landing on the Unitless the type already promised.
+    const left: Quantity.Quantity<"Unitless"> = Quantity.over(
+      foldedLeft,
+      Length.meters(3),
+    );
+    const right: Quantity.Quantity<"Unitless"> = Quantity.over_(
+      foldedRight,
+      Length.meters(3),
+    );
+
+    Array.forEach([left, right], (peeled) => {
+      assertTrue(Unit.equals(peeled.unit, "Unitless"));
+      assertEquals(Dimensionless.inFraction(peeled), 1);
+      assertEquals(Unit.encode(peeled.unit), "Unitless");
+    });
+  });
+
   it("keeps the general overloads reducible in generic code", () => {
     // The dimensionless overloads must not push callers into a deferred
     // conditional type: code generic in its units still gets a plain

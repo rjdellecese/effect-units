@@ -8,6 +8,11 @@ import * as Schema from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 
 import {
+  isUnitless,
+  leftFactorOf,
+  rightFactorOf,
+} from "./internal/dimensionless.ts";
+import {
   normalizeZero,
   ValueObjectProto,
   valueEquals,
@@ -83,22 +88,20 @@ const hasUnit =
   (u: unknown): u is Quantity<U> =>
     isQuantity(u) && Unit.equals(u.unit, unit);
 
-/**
- * `Unitless` is the identity of the unit algebra, so `times`, `over`,
- * `over_`, `squared`, and `cubed` fold a dimensionless operand away rather
- * than composing with it: the algebra never produces a `Product` with a
- * `Unitless` factor. Each of those carries an overload for the dimensionless
- * case ahead of its general one, so the static type follows the runtime.
- *
- * The exception is a quantity whose static unit has already widened to
- * `Unit.Unit`: the compiler can no longer tell whether it is dimensionless
- * and offers the general (`Product`) overload, while the runtime still
- * applies the identity. Keep units precise and the two agree.
- *
- * A `Unit.custom("Unitless")` is a different unit entirely—a custom leaf,
- * encoded `"[Unitless]"`—and is not folded away.
- */
-const isUnitless = (unit: Unit.Unit): unit is "Unitless" => unit === "Unitless";
+// `Unitless` is the identity of the unit algebra, so `times`, `over`,
+// `over_`, `squared`, and `cubed` fold a dimensionless operand away rather
+// than composing with it: the algebra never produces a `Product` with a
+// `Unitless` factor. Each carries an overload for the dimensionless case
+// ahead of its general one, so at any call site whose units are known the
+// static type follows the runtime.
+//
+// Where the two part company is code generic in its units: a `Quantity<U2>`
+// whose `U2` is still a type variable selects the general overload even when
+// `U2` is later instantiated with `"Unitless"`, so `times` is typed
+// `Product<U1, U2>` while the runtime folds. The type overstates the
+// structure; the value stays coherent, because `over` and `over_` undo the
+// fold instead of trusting the type (see `leftFactorOf`). Keep units precise
+// and the two agree.
 
 const Proto = {
   ...ValueObjectProto,
@@ -401,10 +404,7 @@ export const over: {
   (a: Quantity<Unit.Unit>, b: Quantity<Unit.Unit>): Quantity<Unit.Unit> =>
     isUnitless(b.unit)
       ? make(a.unit, a.value / b.value)
-      : make(
-          (a.unit as Unit.Product<Unit.Unit, Unit.Unit>).left,
-          a.value / b.value,
-        ),
+      : make(leftFactorOf(a.unit), a.value / b.value),
 );
 
 /**
@@ -437,10 +437,7 @@ export const over_: {
   (a: Quantity<Unit.Unit>, b: Quantity<Unit.Unit>): Quantity<Unit.Unit> =>
     isUnitless(b.unit)
       ? make(a.unit, a.value / b.value)
-      : make(
-          (a.unit as Unit.Product<Unit.Unit, Unit.Unit>).right,
-          a.value / b.value,
-        ),
+      : make(rightFactorOf(a.unit), a.value / b.value),
 );
 
 // Dimensionless quantities
