@@ -254,29 +254,25 @@ export const times: {
 );
 
 // squared and cubed are `times` specialized to one argument, so they honor
-// the same identity. Their implementations are cast to the overloaded type:
-// a single implementation signature can never be assignable to an overload
-// set, which is why `times` and `over` need no cast (`Function.dual` carries
-// the annotation) and these two do.
-
-const squaredImpl = (a: Quantity<Unit.Unit>): Quantity<Unit.Unit> =>
-  isUnitless(a.unit)
-    ? make(a.unit, a.value * a.value)
-    : make(Unit.squared(a.unit), a.value * a.value);
+// the same identity. Each is cast to its overloaded type: a single
+// implementation signature can never be assignable to an overload set,
+// which is why `times` and `over` need no cast (`Function.dual` carries the
+// annotation) and these two do.
 
 /** Squaring a dimensionless quantity leaves it dimensionless. */
-export const squared = squaredImpl as {
+export const squared = ((a: Quantity<Unit.Unit>): Quantity<Unit.Unit> =>
+  isUnitless(a.unit)
+    ? make(a.unit, a.value * a.value)
+    : make(Unit.squared(a.unit), a.value * a.value)) as {
   (a: Quantity<"Unitless">): Quantity<"Unitless">;
   <U extends Unit.Unit>(a: Quantity<U>): Quantity<Unit.Squared<U>>;
 };
 
-const cubedImpl = (a: Quantity<Unit.Unit>): Quantity<Unit.Unit> =>
+/** Cubing a dimensionless quantity leaves it dimensionless. */
+export const cubed = ((a: Quantity<Unit.Unit>): Quantity<Unit.Unit> =>
   isUnitless(a.unit)
     ? make(a.unit, a.value * a.value * a.value)
-    : make(Unit.cubed(a.unit), a.value * a.value * a.value);
-
-/** Cubing a dimensionless quantity leaves it dimensionless. */
-export const cubed = cubedImpl as {
+    : make(Unit.cubed(a.unit), a.value * a.value * a.value)) as {
   (a: Quantity<"Unitless">): Quantity<"Unitless">;
   <U extends Unit.Unit>(a: Quantity<U>): Quantity<Unit.Cubed<U>>;
 };
