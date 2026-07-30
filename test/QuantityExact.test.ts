@@ -6,6 +6,7 @@ import {
   deepStrictEqual,
   throws,
 } from "@effect/vitest/utils";
+import * as Array from "effect/Array";
 import * as Result from "effect/Result";
 import * as Equal from "effect/Equal";
 import * as FastCheck from "effect/testing/FastCheck";
@@ -15,6 +16,7 @@ import * as Schema from "effect/Schema";
 import { nonZeroRational, rational } from "./testUtilsExact.ts";
 import { double } from "./testUtils.ts";
 import * as QuantityExact from "../src/QuantityExact.ts";
+import * as DimensionlessExact from "../src/DimensionlessExact.ts";
 import * as Length from "../src/Length.ts";
 import * as Quantity from "../src/Quantity.ts";
 import * as Rational from "../src/Rational.ts";
@@ -79,6 +81,27 @@ describe("arithmetic", () => {
 
         assertTrue(Option.isSome(right));
         assertTrue(Equal.equals(Option.getOrThrow(right), kilograms(b)));
+      }),
+    );
+  });
+
+  it("the unsafe over forms peel the same factors as their Option twins", () => {
+    FastCheck.assert(
+      FastCheck.property(nonZeroRational, nonZeroRational, (a, b) => {
+        const product = QuantityExact.times(meters(a), kilograms(b));
+
+        assertTrue(
+          Equal.equals(
+            QuantityExact.overUnsafe(product, kilograms(b)),
+            meters(a),
+          ),
+        );
+        assertTrue(
+          Equal.equals(
+            QuantityExact.over_Unsafe(product, meters(a)),
+            kilograms(b),
+          ),
+        );
       }),
     );
   });
@@ -177,6 +200,127 @@ describe("rates", () => {
         kilograms(Rational.zero),
       ),
     );
+  });
+});
+
+describe("dimensionless", () => {
+  const third = Rational.makeUnsafe(1n, 3n);
+  const three = Rational.makeUnsafe(3n);
+  const ten = Rational.makeUnsafe(10n);
+
+  it("ratio collapses same-unit division to Unitless exactly", () => {
+    FastCheck.assert(
+      FastCheck.property(rational, nonZeroRational, (a, b) => {
+        const r = QuantityExact.ratioUnsafe(meters(a), meters(b));
+
+        assertTrue(Unit.equals(r.unit, "Unitless"));
+        assertTrue(Rational.equals(r.value, Rational.divideUnsafe(a, b)));
+      }),
+    );
+  });
+
+  it("ratio erases the units it came from", () => {
+    assertTrue(
+      Equal.equals(
+        QuantityExact.ratioUnsafe(meters(Rational.one), meters(three)),
+        QuantityExact.ratioUnsafe(kilograms(Rational.one), kilograms(three)),
+      ),
+    );
+  });
+
+  it("times and over are exact inverses through a dimensionless factor", () => {
+    FastCheck.assert(
+      FastCheck.property(rational, nonZeroRational, (n, f) => {
+        const factor = DimensionlessExact.fraction(f);
+        const scaled: QuantityExact.QuantityExact<"Meters"> =
+          QuantityExact.times(meters(n), factor);
+        const recovered = QuantityExact.over(scaled, factor);
+
+        assertTrue(Option.isSome(recovered));
+        assertTrue(Equal.equals(Option.getOrThrow(recovered), meters(n)));
+        assertTrue(
+          Equal.equals(QuantityExact.over_(scaled, factor), recovered),
+        );
+
+        // Either argument may be the dimensionless one.
+        const flipped: QuantityExact.QuantityExact<"Meters"> =
+          QuantityExact.times(factor, meters(n));
+        assertTrue(Equal.equals(flipped, scaled));
+      }),
+    );
+  });
+
+  it("scales by a third with nothing lost", () => {
+    // The float track cannot do this: 10 * (1/3) * 3 is not 10.
+    const factor = DimensionlessExact.fraction(third);
+
+    assertTrue(
+      Equal.equals(
+        QuantityExact.times(meters(ten), factor).pipe(
+          QuantityExact.over(factor),
+        ),
+        Option.some(meters(ten)),
+      ),
+    );
+  });
+
+  it("squared and cubed leave a dimensionless quantity dimensionless", () => {
+    const factor = DimensionlessExact.fraction(third);
+    const squared: DimensionlessExact.DimensionlessExact =
+      QuantityExact.squared(factor);
+    const cubed: DimensionlessExact.DimensionlessExact =
+      QuantityExact.cubed(factor);
+
+    assertTrue(Rational.equals(squared.value, Rational.makeUnsafe(1n, 9n)));
+    assertTrue(Rational.equals(cubed.value, Rational.makeUnsafe(1n, 27n)));
+  });
+
+  it("undoes the fold when a generic product is peeled apart", () => {
+    // The float module's test of the same name explains the shape; the
+    // exact track has four peeling functions to keep honest instead of two.
+    const compose = <U1 extends Unit.Unit, U2 extends Unit.Unit>(
+      a: QuantityExact.QuantityExact<U1>,
+      b: QuantityExact.QuantityExact<U2>,
+    ): QuantityExact.QuantityExact<Unit.Product<U1, U2>> =>
+      QuantityExact.times(a, b);
+
+    const foldedLeft = compose(DimensionlessExact.one, meters(three));
+    const foldedRight = compose(meters(three), DimensionlessExact.one);
+
+    const left = QuantityExact.over(foldedLeft, meters(three));
+    const leftUnsafe: QuantityExact.QuantityExact<"Unitless"> =
+      QuantityExact.overUnsafe(foldedLeft, meters(three));
+    const right = QuantityExact.over_(foldedRight, meters(three));
+    const rightUnsafe: QuantityExact.QuantityExact<"Unitless"> =
+      QuantityExact.over_Unsafe(foldedRight, meters(three));
+
+    assertTrue(Option.isSome(left));
+    assertTrue(Option.isSome(right));
+
+    Array.forEach(
+      [
+        Option.getOrThrow(left),
+        leftUnsafe,
+        Option.getOrThrow(right),
+        rightUnsafe,
+      ],
+      (peeled) => {
+        assertTrue(Equal.equals(peeled, DimensionlessExact.one));
+        assertEquals(Unit.encode(peeled.unit), "Unitless");
+      },
+    );
+  });
+
+  it("division by zero is None, and the unsafe forms throw", () => {
+    const one = meters(Rational.one);
+
+    assertTrue(Option.isNone(QuantityExact.ratio(one, meters(Rational.zero))));
+    assertTrue(Option.isNone(QuantityExact.over(one, DimensionlessExact.zero)));
+    assertTrue(Option.isSome(QuantityExact.ratio(one, one)));
+
+    throws(() => QuantityExact.ratioUnsafe(one, meters(Rational.zero)));
+    throws(() => QuantityExact.overUnsafe(one, DimensionlessExact.zero));
+    throws(() => QuantityExact.over_Unsafe(one, DimensionlessExact.zero));
   });
 });
 

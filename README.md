@@ -47,6 +47,28 @@ Quantity.at(speed, Length.meters(5)); // ✗ compile error: a speed applies to a
 
 The derived quantities you'd reach for—`Area`, `Speed`, `Force`, `Energy`, `Power`, `Pressure`, and many more—are names for exactly these compositions, each with its own module of conversions (see [Modules](#modules)).
 
+### Percentages are quantities too
+
+A bare `number` never says which scale it's on—`0.5` or `50`?—so percentages get a unit of their own, and the operations that put quantities into and out of it:
+
+```ts
+import * as Dimensionless from "effect-units/Dimensionless";
+
+const shrinkage = Dimensionless.percent(10); // Quantity<"Unitless">
+Dimensionless.inBasisPoints(shrinkage); // 1000
+
+const shrunk = Quantity.times(
+  Length.meters(200),
+  Dimensionless.complement(shrinkage),
+);
+Length.inMeters(shrunk); // 180 — still a Length, not a Product
+
+const progress = Quantity.ratio(Length.meters(30), Length.kilometers(1));
+Dimensionless.inPercent(progress); // 3 — dimensionless, whatever it was measured in
+```
+
+See [Dimensionless quantities](#dimensionless-quantities).
+
 ### Custom units compose like built-in ones
 
 The built-in base units cover physics, but a custom unit—`USD`, tiles in a game, requests—is a first-class leaf of the unit tree and participates in all the same algebra:
@@ -123,7 +145,7 @@ pnpm add effect-units effect@beta
 
 | Module | Role |
 | --- | --- |
-| `effect-units/Quantity` | Typed quantity values with arithmetic and unit algebra (`times`, `squared`, `cubed`, `per`, `at`, `over`, …) |
+| `effect-units/Quantity` | Typed quantity values with arithmetic and unit algebra (`times`, `squared`, `cubed`, `per`, `at`, `over`, `ratio`, …) |
 | `effect-units/QuantityExact` | The exact counterpart of `Quantity`: rational-valued, same algebra, division returns `Option` |
 | `effect-units/Rational` | Arbitrary-precision rationals (reduced bigint fractions) in the `effect/BigDecimal` idiom |
 | `effect-units/Unit` | Unit trees: base units (built-in or custom) composed with `Product` and `Rate` |
@@ -164,6 +186,7 @@ pnpm add effect-units effect@beta
 | `effect-units/Molarity` | `Rate<Moles, CubicMeters>` |
 | `effect-units/Pixels` | `Pixels` (screen space), plus pixel rates and areas |
 | `effect-units/Temperature` | Absolute `Temperature` (kelvins) and relative `Delta` (`CelsiusDegrees`) |
+| `effect-units/Dimensionless` | `Unitless` (percentages, per mille, basis points, parts per million and billion) |
 
 ### Exact units
 
@@ -201,6 +224,48 @@ inDollars(cost); // 15
 Ids must match `/^[A-Za-z][A-Za-z0-9]*$/` (`Unit.custom` throws otherwise), and encode in bracketed form—`"[USD]"`, `"([USD]/Meters)"`—so they can never collide with built-in names on the wire. A custom unit is always distinct from a built-in base unit with the same name: `Unit.custom("Meters")` is not `"Meters"`.
 
 Precision: integer minor units are exact in float64 up to `Number.MAX_SAFE_INTEGER` (2^53 − 1) cents, but rate arithmetic (`per`, `at`, …) is ordinary IEEE 754 division and multiplication—measurement semantics, not accounting semantics. Keep your money library as the system of record: round explicitly when converting a computed quantity back (or raise the dinero `scale` to keep sub-minor-unit precision), and reject amounts beyond the safe-integer range at the boundary rather than letting them degrade silently—`test/CustomUnits.test.ts` shows a boundary that does both. Or use `QuantityExact` for money instead, where none of these caveats apply (see below).
+
+## Dimensionless quantities
+
+Percentages, ratios, efficiencies, and error margins have no dimension—but a bare `number` doesn't record which scale it's on, and 0.5 versus 50 is the oldest bug in the genre. `Dimensionless` gives the pure number a unit of its own (`Unitless`, the SI unit one) and names the scale at every boundary. Values are stored as fractions, so `one` is 100%, 1,000‰, and 10,000 basis points alike:
+
+```ts
+import * as Dimensionless from "effect-units/Dimensionless";
+
+const rate = Dimensionless.percent(2.5); // Quantity<"Unitless">
+
+Dimensionless.inFraction(rate); // 0.025
+Dimensionless.inBasisPoints(rate); // 250
+Dimensionless.inPercent(Dimensionless.complement(rate)); // 97.5
+```
+
+Constructors and extractors pair up as everywhere else in the library—`fraction`, `percent`, `perMille`, `basisPoints`, `partsPerMillion`, `partsPerBillion`—alongside `zero`, `one`, and `complement` (the rest of the whole).
+
+`Unitless` is the identity of the unit algebra, so the ordinary arithmetic already knows what to do with it: `times`, `over`, `over_`, `squared`, and `cubed` fold a dimensionless operand away instead of composing with it, and never produce a `Product` with a `Unitless` factor. Only the way _in_ needs its own operation—`ratio`, which divides two quantities in the same units and gives you the pure number rather than the `Rate<Meters, Meters>` that `per` would build:
+
+```ts
+import * as Length from "effect-units/Length";
+import * as Quantity from "effect-units/Quantity";
+
+// ratio collapses same-unit division to a dimensionless quantity
+const progress = Quantity.ratio(Length.meters(30), Length.kilometers(1));
+Dimensionless.inPercent(progress); // 3
+
+// times and over scale without leaving the units
+const remaining = Quantity.times(
+  Length.kilometers(1),
+  Dimensionless.complement(progress),
+); // a Length — 970 meters
+
+Quantity.over(remaining, Dimensionless.percent(50)); // a Length — 1940 meters
+Quantity.times(Length.meters(2), Length.meters(3)); // still an Area — nothing folded away
+```
+
+Either argument may be the dimensionless one, and two dimensionless factors compose into a third, since the result's units are whatever the scaled quantity started with—`Unitless` included. Because that result is a quantity rather than a number, it keeps everything quantities have: `Equal`/`Hash`, the comparison combinators, and the `{ unit: "Unitless", value }` wire format.
+
+The one place to be careful is code generic in its units: with `U2` still a type variable, the compiler picks the general overload even when `U2` is later instantiated with `Unitless`, so the result is typed `Product<U1, U2>` while the runtime folds. The type overstates the structure, but the value stays coherent—peeling such a product back apart with `over` or `over_` undoes the fold and lands on the `Unitless` the type promised, rather than reaching for a factor the unit tree doesn't have. Keep units precise and the two agree. (A `Unit.custom("Unitless")` is a different unit entirely—a custom leaf, encoded `"[Unitless]"`—and is never folded away.)
+
+`DimensionlessExact` is the exact twin. Every scale here is a power of ten, so `percent` is exactly 1/100, and a third of a whole stays 1/3 instead of 0.3333333333333333—which matters as soon as a percentage is applied to money (see [Exact quantities](#exact-quantities) below).
 
 ## Exact quantities
 
