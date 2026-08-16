@@ -1,4 +1,4 @@
-import { describe, it } from "@effect/vitest";
+import { describe, expectTypeOf, it } from "@effect/vitest";
 import {
   assertEquals,
   assertFalse,
@@ -6,6 +6,7 @@ import {
   deepStrictEqual,
   throws,
 } from "@effect/vitest/utils";
+import * as Array from "effect/Array";
 import * as Either from "effect/Either";
 import * as Equal from "effect/Equal";
 import * as Schema from "effect/Schema";
@@ -113,6 +114,24 @@ describe("custom units (a consumer-authored USD module)", () => {
     );
 
     assertTrue(isCloseTo(Length.inMeters(affordable), 10));
+  });
+
+  it("preserves a rate unit when sum is passed to Array.reduce", () => {
+    type Count = Unit.Custom<"Count">;
+    const Count: Count = Unit.custom("Count");
+    type UsdPerCount = Quantity.Quantity<Unit.Rate<Usd, Count>>;
+    const UsdPerCount = Unit.rate(Usd, Count);
+    const rates: Array<UsdPerCount> = [
+      Quantity.make(UsdPerCount, 2),
+      Quantity.make(UsdPerCount, 3),
+    ];
+    const zero: UsdPerCount = Quantity.make(UsdPerCount, 0);
+
+    const total = Array.reduce(rates, zero, Quantity.sum);
+
+    expectTypeOf(total).toEqualTypeOf<UsdPerCount>();
+    assertEquals(total.value, 5);
+    assertTrue(Unit.equals(total.unit, UsdPerCount));
   });
 
   it("roundtrips through the schema, freezing the wire format", () => {

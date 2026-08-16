@@ -160,8 +160,10 @@ export const divide: {
 );
 
 export const sum: {
-  <U extends Unit.Unit>(b: Quantity<U>): (a: Quantity<U>) => Quantity<U>;
   <U extends Unit.Unit>(a: Quantity<U>, b: Quantity<U>): Quantity<U>;
+  <Q>(
+    b: Q & { readonly [TypeId]: TypeId },
+  ): [Q] extends [Quantity<infer U>] ? (a: Quantity<U>) => Quantity<U> : never;
 } = Function.dual(
   2,
   (a: Quantity<Unit.Unit>, b: Quantity<Unit.Unit>): Quantity<Unit.Unit> =>
