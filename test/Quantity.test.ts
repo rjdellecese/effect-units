@@ -1,4 +1,4 @@
-import { describe, it } from "@effect/vitest";
+import { describe, expectTypeOf, it } from "@effect/vitest";
 import {
   assertEquals,
   assertFalse,
@@ -19,6 +19,74 @@ import * as Quantity from "../src/Quantity.ts";
 import * as Unit from "../src/Unit.ts";
 
 const nonZeroDouble = double.filter((n) => n !== 0);
+const CustomRate = Unit.rate(Unit.custom("USD"), Unit.custom("Count"));
+type CustomRate = Quantity.Quantity<typeof CustomRate>;
+const customRate = (value: number): CustomRate =>
+  Quantity.make(CustomRate, value);
+
+describe("point-free reducers", () => {
+  it("preserves accumulator units for same-unit operations", () => {
+    const rates = [customRate(1), customRate(2)];
+
+    const zero = customRate(0);
+    const total = Array.reduce(rates, zero, Quantity.sum);
+    const difference = Array.reduce(rates, zero, Quantity.subtract);
+    const minimum = Array.reduce(rates, zero, Quantity.min);
+    const maximum = Array.reduce(rates, zero, Quantity.max);
+
+    expectTypeOf(total).toEqualTypeOf<CustomRate>();
+    expectTypeOf(difference).toEqualTypeOf<CustomRate>();
+    expectTypeOf(minimum).toEqualTypeOf<CustomRate>();
+    expectTypeOf(maximum).toEqualTypeOf<CustomRate>();
+  });
+
+  it("preserves accumulator units for scalar operations", () => {
+    const scalars = [2, 3];
+    const initial = customRate(1);
+
+    const product = Array.reduce(scalars, initial, Quantity.multiply);
+    const quotient = Array.reduce(scalars, initial, Quantity.divide);
+
+    expectTypeOf(product).toEqualTypeOf<CustomRate>();
+    expectTypeOf(quotient).toEqualTypeOf<CustomRate>();
+  });
+
+  it("preserves accumulator units for dimensionless operations", () => {
+    const factors = [Dimensionless.fraction(2), Dimensionless.fraction(3)];
+    const initial = customRate(1);
+
+    const product = Array.reduce(factors, initial, Quantity.times);
+    const quotient = Array.reduce(factors, initial, Quantity.over);
+    const flippedQuotient = Array.reduce(factors, initial, Quantity.over_);
+
+    expectTypeOf(product).toEqualTypeOf<CustomRate>();
+    expectTypeOf(quotient).toEqualTypeOf<CustomRate>();
+    expectTypeOf(flippedQuotient).toEqualTypeOf<CustomRate>();
+  });
+
+  it("preserves explicit unit arguments for data-last calls", () => {
+    const addOne = Quantity.sum<Length.Meters>(Length.meters(1));
+
+    expectTypeOf(addOne).toEqualTypeOf<
+      (a: Quantity.Quantity<Length.Meters>) => Quantity.Quantity<Length.Meters>
+    >();
+  });
+
+  it("rejects incomplete quantities and mixed units", () => {
+    const brandedOnly: { readonly [Quantity.TypeId]: Quantity.TypeId } = {
+      [Quantity.TypeId]: Quantity.TypeId,
+    };
+
+    if (globalThis.Boolean(false)) {
+      // @ts-expect-error A TypeId without the Quantity fields is not a quantity.
+      Quantity.multiply(brandedOnly, 2);
+      // @ts-expect-error The data-last overload also requires a complete quantity.
+      Quantity.sum(brandedOnly);
+      // @ts-expect-error Same-unit operations cannot combine different units.
+      Quantity.sum(Length.meters(1), Mass.kilograms(1));
+    }
+  });
+});
 
 describe("multiply", () => {
   const baseQuantities = [
