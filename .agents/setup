@@ -49,7 +49,7 @@ install_node() {
   esac
 
   local base_url="https://nodejs.org/dist/latest-v22.x"
-  local checksums filename checksum archive extract_dir
+  local checksums filename checksum
   checksums="$(curl -fsSL "$base_url/SHASUMS256.txt")"
   filename="$(awk -v arch="$architecture" '$2 ~ ("^node-v[0-9.]+-linux-" arch "\\.tar\\.gz$") { print $2 }' <<<"$checksums")"
   if [[ -z "$filename" ]]; then
@@ -58,17 +58,18 @@ install_node() {
   fi
   checksum="$(awk -v file="$filename" '$2 == file { print $1 }' <<<"$checksums")"
 
-  archive="$(mktemp)"
-  extract_dir="$(mktemp -d)"
-  trap 'rm -f "${archive:-}"; rm -rf "${extract_dir:-}"' RETURN
-  curl -fsSL "$base_url/$filename" -o "$archive"
-  printf '%s  %s\n' "$checksum" "$archive" | sha256sum --check --status
-  tar -xzf "$archive" -C "$extract_dir" --strip-components=1
-  rm -rf "$node_root"
-  mkdir -p "$(dirname "$node_root")"
-  mv "$extract_dir" "$node_root"
-  rm -f "$archive"
-  trap - RETURN
+  (
+    local archive extract_dir
+    archive="$(mktemp)"
+    extract_dir="$(mktemp -d)"
+    trap 'rm -f "$archive"; rm -rf "$extract_dir"' EXIT
+    curl -fsSL "$base_url/$filename" -o "$archive"
+    printf '%s  %s\n' "$checksum" "$archive" | sha256sum --check --status
+    tar -xzf "$archive" -C "$extract_dir" --strip-components=1
+    rm -rf "$node_root"
+    mkdir -p "$(dirname "$node_root")"
+    mv "$extract_dir" "$node_root"
+  )
 }
 
 configure_login_shell() {

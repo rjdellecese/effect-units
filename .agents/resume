@@ -8,6 +8,6 @@ cd "$repo_root"
 
 [[ "$(node -p 'process.versions.node.split(".")[0]')" == 22 ]]
 [[ "$(pnpm --version)" == 11.10.0 ]]
-[[ -d node_modules ]]
+cmp -s pnpm-lock.yaml node_modules/.pnpm/lock.yaml
 
 printf 'Orb ready: Node %s, pnpm %s\n' "$(node --version)" "$(pnpm --version)"
