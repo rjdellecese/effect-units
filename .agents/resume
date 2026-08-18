@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export PATH="$HOME/.local/share/effect-units/node-22/bin:$PATH"
+
+cd "$repo_root"
+
+[[ "$(node -p 'process.versions.node.split(".")[0]')" == 22 ]]
+[[ "$(pnpm --version)" == 11.10.0 ]]
+[[ -d node_modules ]]
+
+printf 'Orb ready: Node %s, pnpm %s\n' "$(node --version)" "$(pnpm --version)"
