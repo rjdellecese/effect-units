@@ -313,6 +313,7 @@ Equality is two-tier:
 
 - `Equal.equals`/`Quantity.equals` is **exact**—identical value (NaN equals itself; -0 is normalized to 0) and structurally equal units. This is identity, suitable for `HashMap` keys, not for comparing computed measurements.
 - `Quantity.equalsWithin(a, b, tolerance)` is the domain-level comparison—the tolerance is itself a quantity in the same units, e.g. `Quantity.equalsWithin(a, b, Length.millimeters(1))`. Identical values—including two equal infinities—are equal within any tolerance; NaN is never equal to anything.
+- `Quantity.equalsWithinRelative(a, b, tolerance)` compares two measurements against a unitless relative tolerance, e.g. `Quantity.equalsWithinRelative(a, b, Dimensionless.percent(1))`. It divides their absolute difference by their mean magnitude, with two zeroes considered equal. Identical infinities are equal; NaN and unequal infinities are not.
 
 The ordering predicates (`isLessThan`, `isGreaterThan`, …) follow IEEE NaN semantics: any comparison involving NaN is false. `min` and `max` propagate NaN deterministically, like `Math.min`/`Math.max`.
 
