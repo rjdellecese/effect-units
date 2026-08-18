@@ -2,4 +2,4 @@
 "effect-units": patch
 ---
 
-Preserve concrete units when passing compatible quantity operations directly to `Array.reduce`.
+Preserve concrete units when using compatible quantity operations point-free, including as `Array.reduce` callbacks.
