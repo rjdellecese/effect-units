@@ -80,6 +80,9 @@ export interface Quantity<U extends Unit.Unit>
   readonly value: number;
 }
 
+type QuantityUnit<Q> = [Q] extends [Quantity<infer U>] ? U : never;
+type QuantityInput<Q> = Q & Quantity<Unit.Unit>;
+
 const isQuantity = (u: unknown): u is Quantity<Unit.Unit> =>
   Predicate.hasProperty(u, TypeId);
 
@@ -176,6 +179,7 @@ export const multiply: {
 
   <U extends Unit.Unit>(b: Quantity<U>): (a: number) => Quantity<U>;
   <U extends Unit.Unit>(a: number, b: Quantity<U>): Quantity<U>;
+  <Q>(a: QuantityInput<Q>, b: number): Quantity<QuantityUnit<Q>>;
 } = Function.dual(
   2,
   (
@@ -194,6 +198,7 @@ export const multiply: {
 export const divide: {
   <U extends Unit.Unit>(b: number): (a: Quantity<U>) => Quantity<U>;
   <U extends Unit.Unit>(a: Quantity<U>, b: number): Quantity<U>;
+  <Q>(a: QuantityInput<Q>, b: number): Quantity<QuantityUnit<Q>>;
 } = Function.dual(
   2,
   (a: Quantity<Unit.Unit>, b: number): Quantity<Unit.Unit> =>
@@ -201,8 +206,11 @@ export const divide: {
 );
 
 export const sum: {
+  <U extends Unit.Unit>(a: Quantity<U>, b: Quantity<NoInfer<U>>): Quantity<U>;
   <U extends Unit.Unit>(b: Quantity<U>): (a: Quantity<U>) => Quantity<U>;
-  <U extends Unit.Unit>(a: Quantity<U>, b: Quantity<U>): Quantity<U>;
+  <Q>(
+    b: QuantityInput<Q>,
+  ): [Q] extends [Quantity<infer U>] ? (a: Quantity<U>) => Quantity<U> : never;
 } = Function.dual(
   2,
   (a: Quantity<Unit.Unit>, b: Quantity<Unit.Unit>): Quantity<Unit.Unit> =>
@@ -210,8 +218,11 @@ export const sum: {
 );
 
 export const subtract: {
+  <U extends Unit.Unit>(a: Quantity<U>, b: Quantity<NoInfer<U>>): Quantity<U>;
   <U extends Unit.Unit>(b: Quantity<U>): (a: Quantity<U>) => Quantity<U>;
-  <U extends Unit.Unit>(a: Quantity<U>, b: Quantity<U>): Quantity<U>;
+  <Q>(
+    b: QuantityInput<Q>,
+  ): [Q] extends [Quantity<infer U>] ? (a: Quantity<U>) => Quantity<U> : never;
 } = Function.dual(
   2,
   (a: Quantity<Unit.Unit>, b: Quantity<Unit.Unit>): Quantity<Unit.Unit> =>
@@ -246,6 +257,10 @@ export const times: {
     a: Quantity<U1>,
     b: Quantity<U2>,
   ): Quantity<Unit.Product<U1, U2>>;
+  <Q>(
+    a: QuantityInput<Q>,
+    factor: Quantity<"Unitless">,
+  ): Quantity<QuantityUnit<Q>>;
 } = Function.dual(
   2,
   (a: Quantity<Unit.Unit>, b: Quantity<Unit.Unit>): Quantity<Unit.Unit> =>
@@ -399,6 +414,10 @@ export const over: {
     product: Quantity<Unit.Product<U1, U2>>,
     b: Quantity<U2>,
   ): Quantity<U1>;
+  <Q>(
+    a: QuantityInput<Q>,
+    factor: Quantity<"Unitless">,
+  ): Quantity<QuantityUnit<Q>>;
 } = Function.dual(
   2,
   (a: Quantity<Unit.Unit>, b: Quantity<Unit.Unit>): Quantity<Unit.Unit> =>
@@ -432,6 +451,10 @@ export const over_: {
     product: Quantity<Unit.Product<U1, U2>>,
     b: Quantity<U1>,
   ): Quantity<U2>;
+  <Q>(
+    a: QuantityInput<Q>,
+    factor: Quantity<"Unitless">,
+  ): Quantity<QuantityUnit<Q>>;
 } = Function.dual(
   2,
   (a: Quantity<Unit.Unit>, b: Quantity<Unit.Unit>): Quantity<Unit.Unit> =>
@@ -515,8 +538,11 @@ export const isGreaterThanOrEqualTo: {
 
 /** Propagates NaN: if either argument is NaN, the NaN quantity is returned. */
 export const min: {
+  <U extends Unit.Unit>(a: Quantity<U>, b: Quantity<NoInfer<U>>): Quantity<U>;
   <U extends Unit.Unit>(b: Quantity<U>): (a: Quantity<U>) => Quantity<U>;
-  <U extends Unit.Unit>(a: Quantity<U>, b: Quantity<U>): Quantity<U>;
+  <Q>(
+    b: QuantityInput<Q>,
+  ): [Q] extends [Quantity<infer U>] ? (a: Quantity<U>) => Quantity<U> : never;
 } = Function.dual(
   2,
   (a: Quantity<Unit.Unit>, b: Quantity<Unit.Unit>): Quantity<Unit.Unit> =>
@@ -531,8 +557,11 @@ export const min: {
 
 /** Propagates NaN: if either argument is NaN, the NaN quantity is returned. */
 export const max: {
+  <U extends Unit.Unit>(a: Quantity<U>, b: Quantity<NoInfer<U>>): Quantity<U>;
   <U extends Unit.Unit>(b: Quantity<U>): (a: Quantity<U>) => Quantity<U>;
-  <U extends Unit.Unit>(a: Quantity<U>, b: Quantity<U>): Quantity<U>;
+  <Q>(
+    b: QuantityInput<Q>,
+  ): [Q] extends [Quantity<infer U>] ? (a: Quantity<U>) => Quantity<U> : never;
 } = Function.dual(
   2,
   (a: Quantity<Unit.Unit>, b: Quantity<Unit.Unit>): Quantity<Unit.Unit> =>

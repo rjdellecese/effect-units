@@ -84,6 +84,9 @@ export interface QuantityExact<U extends Unit.Unit>
   readonly value: Rational.Rational;
 }
 
+type QuantityExactUnit<Q> = [Q] extends [QuantityExact<infer U>] ? U : never;
+type QuantityExactInput<Q> = Q & QuantityExact<Unit.Unit>;
+
 const isQuantityExact = (u: unknown): u is QuantityExact<Unit.Unit> =>
   Predicate.hasProperty(u, TypeId);
 
@@ -175,6 +178,10 @@ export const multiply: {
     a: Rational.Rational,
     b: QuantityExact<U>,
   ): QuantityExact<U>;
+  <Q>(
+    a: QuantityExactInput<Q>,
+    b: Rational.Rational,
+  ): QuantityExact<QuantityExactUnit<Q>>;
 } = Function.dual(
   2,
   (
@@ -216,6 +223,10 @@ export const divideUnsafe: {
     a: QuantityExact<U>,
     b: Rational.Rational,
   ): QuantityExact<U>;
+  <Q>(
+    a: QuantityExactInput<Q>,
+    b: Rational.Rational,
+  ): QuantityExact<QuantityExactUnit<Q>>;
 } = Function.dual(
   2,
   (
@@ -227,12 +238,17 @@ export const divideUnsafe: {
 
 export const sum: {
   <U extends Unit.Unit>(
+    a: QuantityExact<U>,
+    b: QuantityExact<NoInfer<U>>,
+  ): QuantityExact<U>;
+  <U extends Unit.Unit>(
     b: QuantityExact<U>,
   ): (a: QuantityExact<U>) => QuantityExact<U>;
-  <U extends Unit.Unit>(
-    a: QuantityExact<U>,
-    b: QuantityExact<U>,
-  ): QuantityExact<U>;
+  <Q>(
+    b: QuantityExactInput<Q>,
+  ): [Q] extends [QuantityExact<infer U>]
+    ? (a: QuantityExact<U>) => QuantityExact<U>
+    : never;
 } = Function.dual(
   2,
   (
@@ -243,12 +259,17 @@ export const sum: {
 
 export const subtract: {
   <U extends Unit.Unit>(
+    a: QuantityExact<U>,
+    b: QuantityExact<NoInfer<U>>,
+  ): QuantityExact<U>;
+  <U extends Unit.Unit>(
     b: QuantityExact<U>,
   ): (a: QuantityExact<U>) => QuantityExact<U>;
-  <U extends Unit.Unit>(
-    a: QuantityExact<U>,
-    b: QuantityExact<U>,
-  ): QuantityExact<U>;
+  <Q>(
+    b: QuantityExactInput<Q>,
+  ): [Q] extends [QuantityExact<infer U>]
+    ? (a: QuantityExact<U>) => QuantityExact<U>
+    : never;
 } = Function.dual(
   2,
   (
@@ -287,6 +308,10 @@ export const times: {
     a: QuantityExact<U1>,
     b: QuantityExact<U2>,
   ): QuantityExact<Unit.Product<U1, U2>>;
+  <Q>(
+    a: QuantityExactInput<Q>,
+    factor: QuantityExact<"Unitless">,
+  ): QuantityExact<QuantityExactUnit<Q>>;
 } = Function.dual(
   2,
   (
@@ -529,6 +554,10 @@ export const overUnsafe: {
     product: QuantityExact<Unit.Product<U1, U2>>,
     b: QuantityExact<U2>,
   ): QuantityExact<U1>;
+  <Q>(
+    a: QuantityExactInput<Q>,
+    factor: QuantityExact<"Unitless">,
+  ): QuantityExact<QuantityExactUnit<Q>>;
 } = Function.dual(
   2,
   (
@@ -597,6 +626,10 @@ export const over_Unsafe: {
     product: QuantityExact<Unit.Product<U1, U2>>,
     b: QuantityExact<U1>,
   ): QuantityExact<U2>;
+  <Q>(
+    a: QuantityExactInput<Q>,
+    factor: QuantityExact<"Unitless">,
+  ): QuantityExact<QuantityExactUnit<Q>>;
 } = Function.dual(
   2,
   (
@@ -706,12 +739,17 @@ export const isGreaterThanOrEqualTo: {
 
 export const min: {
   <U extends Unit.Unit>(
+    a: QuantityExact<U>,
+    b: QuantityExact<NoInfer<U>>,
+  ): QuantityExact<U>;
+  <U extends Unit.Unit>(
     b: QuantityExact<U>,
   ): (a: QuantityExact<U>) => QuantityExact<U>;
-  <U extends Unit.Unit>(
-    a: QuantityExact<U>,
-    b: QuantityExact<U>,
-  ): QuantityExact<U>;
+  <Q>(
+    b: QuantityExactInput<Q>,
+  ): [Q] extends [QuantityExact<infer U>]
+    ? (a: QuantityExact<U>) => QuantityExact<U>
+    : never;
 } = Function.dual(
   2,
   (
@@ -723,12 +761,17 @@ export const min: {
 
 export const max: {
   <U extends Unit.Unit>(
+    a: QuantityExact<U>,
+    b: QuantityExact<NoInfer<U>>,
+  ): QuantityExact<U>;
+  <U extends Unit.Unit>(
     b: QuantityExact<U>,
   ): (a: QuantityExact<U>) => QuantityExact<U>;
-  <U extends Unit.Unit>(
-    a: QuantityExact<U>,
-    b: QuantityExact<U>,
-  ): QuantityExact<U>;
+  <Q>(
+    b: QuantityExactInput<Q>,
+  ): [Q] extends [QuantityExact<infer U>]
+    ? (a: QuantityExact<U>) => QuantityExact<U>
+    : never;
 } = Function.dual(
   2,
   (
