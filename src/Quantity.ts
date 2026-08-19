@@ -109,27 +109,6 @@ export const arbitraryOnGrid = <const U extends Unit.Unit>(
     );
   }
 
-  const toGridIndex = (bound: number, round: (n: number) => number) => {
-    const quotient = bound / step;
-    const nearest = Math.round(quotient);
-    const tolerance = Number.EPSILON * Math.max(1, Math.abs(quotient)) * 4;
-    return Math.abs(quotient - nearest) <= tolerance
-      ? nearest
-      : round(quotient);
-  };
-  const minimum = toGridIndex(min, Math.ceil);
-  const maximum = toGridIndex(max, Math.floor);
-
-  if (
-    !Number.isSafeInteger(minimum) ||
-    !Number.isSafeInteger(maximum) ||
-    minimum > maximum
-  ) {
-    throw new RangeError(
-      "Quantity.arbitraryOnGrid: bounds must contain a grid value with a safe integer index",
-    );
-  }
-
   const [coefficient = "", exponentText] = globalThis.String(step).split("e");
   const fractionDigits = coefficient.split(".")[1]?.length ?? 0;
   const exponent = exponentText === undefined ? 0 : Number(exponentText);
@@ -142,11 +121,36 @@ export const arbitraryOnGrid = <const U extends Unit.Unit>(
     );
   }
 
+  const valueAt = (index: number) => (index * increment) / scale;
+  let minimum = Math.ceil(min / step);
+  let maximum = Math.floor(max / step);
+
+  if (valueAt(minimum - 1) >= min) {
+    minimum -= 1;
+  } else if (valueAt(minimum) < min) {
+    minimum += 1;
+  }
+  if (valueAt(maximum + 1) <= max) {
+    maximum += 1;
+  } else if (valueAt(maximum) > max) {
+    maximum -= 1;
+  }
+
+  if (
+    !Number.isSafeInteger(minimum) ||
+    !Number.isSafeInteger(maximum) ||
+    minimum > maximum
+  ) {
+    throw new RangeError(
+      "Quantity.arbitraryOnGrid: bounds must contain a grid value with a safe integer index",
+    );
+  }
+
   return {
     toArbitrary: () => (fc) =>
       fc
         .integer({ min: minimum, max: maximum })
-        .map((n) => make(unit, (n * increment) / scale)),
+        .map((n) => make(unit, valueAt(n))),
   };
 };
 

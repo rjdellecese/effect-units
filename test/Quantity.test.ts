@@ -504,6 +504,19 @@ describe("schema", () => {
         assertEquals(value, 0.3);
       }),
     );
+
+    const RoundedBoundary = Length.Length.annotate(
+      Quantity.arbitraryOnGrid(Length.Meters, {
+        step: 0.1,
+        min: 0.1 + 0.2,
+        max: 0.4,
+      }),
+    );
+    FastCheck.assert(
+      FastCheck.property(Schema.toArbitrary(RoundedBoundary), ({ value }) => {
+        assertEquals(value, 0.4);
+      }),
+    );
   });
 
   it("encodes and decodes a base-unit quantity", () => {
