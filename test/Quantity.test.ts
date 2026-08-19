@@ -470,6 +470,42 @@ describe("dimensionless", () => {
 });
 
 describe("schema", () => {
+  it("derives grid-constrained quantities from annotations", () => {
+    const MeasuredLength = Length.Length.annotate(
+      Quantity.arbitraryOnGrid(Length.Meters, {
+        step: 0.1,
+        min: -0.35,
+        max: 0.75,
+      }),
+    );
+    expectTypeOf(MeasuredLength.Type).toEqualTypeOf<Length.Length>();
+
+    const samples = FastCheck.sample(Schema.toArbitrary(MeasuredLength), 100);
+
+    assertTrue(
+      samples.every(
+        ({ unit, value }) =>
+          Unit.equals(unit, Length.Meters) &&
+          value >= -0.3 &&
+          value <= 0.7 &&
+          value === Number(value.toFixed(1)),
+      ),
+    );
+
+    const SingleValue = Length.Length.annotate(
+      Quantity.arbitraryOnGrid(Length.Meters, {
+        step: 0.1,
+        min: 0.3,
+        max: 0.3,
+      }),
+    );
+    FastCheck.assert(
+      FastCheck.property(Schema.toArbitrary(SingleValue), ({ value }) => {
+        assertEquals(value, 0.3);
+      }),
+    );
+  });
+
   it("encodes and decodes a base-unit quantity", () => {
     FastCheck.assert(
       FastCheck.property(double, (n) => {

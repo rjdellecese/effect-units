@@ -68,6 +68,88 @@ export const QuantityFromStruct = <const U extends Unit.Unit>(unit: U) => {
   return struct.pipe(Schema.decodeTo(Quantity(unit), transformation));
 };
 
+export interface ArbitraryOnGridOptions {
+  /** The distance between adjacent generated values. Must be positive. */
+  readonly step: number;
+  /** The inclusive lower bound, expressed as a quantity value. */
+  readonly min: number;
+  /** The inclusive upper bound, expressed as a quantity value. */
+  readonly max: number;
+}
+
+/**
+ * Schema annotations for quantities constrained to a human-input grid.
+ *
+ * Generated values are multiples of `step` between `min` and `max`,
+ * inclusive. Generation starts from integers so shrinking stays on the grid;
+ * decimal steps are applied as integer ratios to avoid introducing artifacts
+ * such as `0.7000000000000001` for a tenths grid.
+ *
+ * @example
+ * ```ts
+ * const MeasuredLength = Quantity(Meters).annotate(
+ *   arbitraryOnGrid(Meters, {
+ *     step: 0.01,
+ *     min: 0,
+ *     max: 100,
+ *   }),
+ * )
+ * ```
+ */
+export const arbitraryOnGrid = <const U extends Unit.Unit>(
+  unit: U,
+  { step, min, max }: ArbitraryOnGridOptions,
+): Schema.Annotations.Declaration<Quantity<U>> => {
+  if (!Number.isFinite(step) || step <= 0) {
+    throw new RangeError("Quantity.arbitraryOnGrid: step must be positive");
+  }
+  if (!Number.isFinite(min) || !Number.isFinite(max) || min > max) {
+    throw new RangeError(
+      "Quantity.arbitraryOnGrid: min and max must be finite and min must not exceed max",
+    );
+  }
+
+  const toGridIndex = (bound: number, round: (n: number) => number) => {
+    const quotient = bound / step;
+    const nearest = Math.round(quotient);
+    const tolerance = Number.EPSILON * Math.max(1, Math.abs(quotient)) * 4;
+    return Math.abs(quotient - nearest) <= tolerance
+      ? nearest
+      : round(quotient);
+  };
+  const minimum = toGridIndex(min, Math.ceil);
+  const maximum = toGridIndex(max, Math.floor);
+
+  if (
+    !Number.isSafeInteger(minimum) ||
+    !Number.isSafeInteger(maximum) ||
+    minimum > maximum
+  ) {
+    throw new RangeError(
+      "Quantity.arbitraryOnGrid: bounds must contain a grid value with a safe integer index",
+    );
+  }
+
+  const [coefficient = "", exponentText] = globalThis.String(step).split("e");
+  const fractionDigits = coefficient.split(".")[1]?.length ?? 0;
+  const exponent = exponentText === undefined ? 0 : Number(exponentText);
+  const scale = 10 ** Math.max(0, fractionDigits - exponent);
+  const increment = step * scale;
+
+  if (!Number.isFinite(scale) || !Number.isInteger(increment)) {
+    throw new RangeError(
+      "Quantity.arbitraryOnGrid: step has unsupported precision",
+    );
+  }
+
+  return {
+    toArbitrary: () => (fc) =>
+      fc
+        .integer({ min: minimum, max: maximum })
+        .map((n) => make(unit, (n * increment) / scale)),
+  };
+};
+
 /**
  * A quantity is a plain 64-bit float tagged with a unit tree. Arithmetic
  * follows IEEE 754 semantics: division by zero yields ±Infinity, and invalid

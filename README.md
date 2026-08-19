@@ -112,6 +112,20 @@ Schema.encodeSync(Schema.toCodecJson(Trip))({
 
 Reach for `XFromStruct` when you want the precise `{ unit, value }` encoded type; reach for `Schema.toCodecJson` when the quantity is part of a larger structure (its encoded type is `Json`).
 
+For property tests over values people actually enter, annotate a quantity schema with an integer-backed grid. Bounds are inclusive quantity values, and generated values remain exact multiples of `step` while shrinking:
+
+```ts
+import * as Quantity from "effect-units/Quantity";
+
+const MeasuredLength = Length.Length.annotate(
+  Quantity.arbitraryOnGrid(Length.Meters, {
+    step: 0.01,
+    min: 0,
+    max: 100,
+  }),
+);
+```
+
 `Duration` interoperates with `effect/Duration` and `effect/DateTime`, and `Rational` follows the `effect/BigDecimal` idiom.
 
 ### Exact arithmetic, when a lost cent is a bug
