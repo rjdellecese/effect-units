@@ -1,4 +1,4 @@
-import { describe, it } from "@effect/vitest";
+import { describe, expectTypeOf, it } from "@effect/vitest";
 import {
   assertEquals,
   assertFalse,
@@ -25,8 +25,86 @@ import * as Unit from "../src/Unit.ts";
 const meters = (r: Rational.Rational) => QuantityExact.make("Meters", r);
 const seconds = (r: Rational.Rational) => QuantityExact.make("Seconds", r);
 const kilograms = (r: Rational.Rational) => QuantityExact.make("Kilograms", r);
+const CustomRate = Unit.rate(Unit.custom("USD"), Unit.custom("Count"));
+type CustomRate = QuantityExact.QuantityExact<typeof CustomRate>;
+const customRate = (value: Rational.Rational): CustomRate =>
+  QuantityExact.make(CustomRate, value);
 
 describe("arithmetic", () => {
+  it("preserves accumulator units for point-free same-unit reducers", () => {
+    const rates = [
+      customRate(Rational.one),
+      customRate(Rational.makeUnsafe(2n)),
+    ];
+
+    const zero = customRate(Rational.zero);
+    const total = Array.reduce(rates, zero, QuantityExact.sum);
+    const difference = Array.reduce(rates, zero, QuantityExact.subtract);
+    const minimum = Array.reduce(rates, zero, QuantityExact.min);
+    const maximum = Array.reduce(rates, zero, QuantityExact.max);
+
+    expectTypeOf(total).toEqualTypeOf<CustomRate>();
+    expectTypeOf(difference).toEqualTypeOf<CustomRate>();
+    expectTypeOf(minimum).toEqualTypeOf<CustomRate>();
+    expectTypeOf(maximum).toEqualTypeOf<CustomRate>();
+  });
+
+  it("preserves accumulator units for point-free scalar reducers", () => {
+    const scalars = [Rational.makeUnsafe(2n), Rational.makeUnsafe(3n)];
+    const initial = customRate(Rational.one);
+
+    const product = Array.reduce(scalars, initial, QuantityExact.multiply);
+    const quotient = Array.reduce(scalars, initial, QuantityExact.divideUnsafe);
+
+    expectTypeOf(product).toEqualTypeOf<CustomRate>();
+    expectTypeOf(quotient).toEqualTypeOf<CustomRate>();
+  });
+
+  it("preserves accumulator units for point-free dimensionless reducers", () => {
+    const factors = [
+      DimensionlessExact.fraction(Rational.makeUnsafe(2n)),
+      DimensionlessExact.fraction(Rational.makeUnsafe(3n)),
+    ];
+    const initial = customRate(Rational.one);
+
+    const product = Array.reduce(factors, initial, QuantityExact.times);
+    const quotient = Array.reduce(factors, initial, QuantityExact.overUnsafe);
+    const flippedQuotient = Array.reduce(
+      factors,
+      initial,
+      QuantityExact.over_Unsafe,
+    );
+
+    expectTypeOf(product).toEqualTypeOf<CustomRate>();
+    expectTypeOf(quotient).toEqualTypeOf<CustomRate>();
+    expectTypeOf(flippedQuotient).toEqualTypeOf<CustomRate>();
+  });
+
+  it("preserves explicit unit arguments for data-last sum calls", () => {
+    const addOne = QuantityExact.sum<"Meters">(meters(Rational.one));
+
+    expectTypeOf(addOne).toEqualTypeOf<
+      (
+        a: QuantityExact.QuantityExact<"Meters">,
+      ) => QuantityExact.QuantityExact<"Meters">
+    >();
+  });
+
+  it("rejects incomplete quantities and mixed units", () => {
+    const brandedOnly: {
+      readonly [QuantityExact.TypeId]: QuantityExact.TypeId;
+    } = { [QuantityExact.TypeId]: QuantityExact.TypeId };
+
+    if (globalThis.Boolean(false)) {
+      // @ts-expect-error A TypeId without the QuantityExact fields is not a quantity.
+      QuantityExact.multiply(brandedOnly, Rational.one);
+      // @ts-expect-error The data-last overload also requires a complete quantity.
+      QuantityExact.sum(brandedOnly);
+      // @ts-expect-error Same-unit operations cannot combine different units.
+      QuantityExact.sum(meters(Rational.one), seconds(Rational.one));
+    }
+  });
+
   it("sum and subtract are exact inverses", () => {
     FastCheck.assert(
       FastCheck.property(rational, rational, (a, b) => {
