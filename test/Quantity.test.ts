@@ -4,11 +4,13 @@ import {
   assertFalse,
   assertTrue,
   deepStrictEqual,
+  throws,
 } from "@effect/vitest/utils";
 import * as Array from "effect/Array";
 import * as Result from "effect/Result";
 import * as Equal from "effect/Equal";
 import * as FastCheck from "effect/testing/FastCheck";
+import * as Function from "effect/Function";
 import * as Schema from "effect/Schema";
 
 import { isCloseTo, double } from "./testUtils.ts";
@@ -480,15 +482,15 @@ describe("schema", () => {
     );
     expectTypeOf(MeasuredLength.Type).toEqualTypeOf<Length.Length>();
 
-    const samples = FastCheck.sample(Schema.toArbitrary(MeasuredLength), 100);
-
-    assertTrue(
-      samples.every(
-        ({ unit, value }) =>
-          Unit.equals(unit, Length.Meters) &&
-          value >= -0.3 &&
-          value <= 0.7 &&
-          value === Number(value.toFixed(1)),
+    FastCheck.assert(
+      FastCheck.property(
+        Schema.toArbitrary(MeasuredLength),
+        ({ unit, value }) => {
+          assertTrue(Unit.equals(unit, Length.Meters));
+          assertTrue(value >= -0.3);
+          assertTrue(value <= 0.7);
+          assertEquals(value, Number(value.toFixed(1)));
+        },
       ),
     );
 
@@ -515,6 +517,90 @@ describe("schema", () => {
     FastCheck.assert(
       FastCheck.property(Schema.toArbitrary(RoundedBoundary), ({ value }) => {
         assertEquals(value, 0.4);
+      }),
+    );
+
+    const Tenths = Length.Length.annotate(
+      Quantity.arbitraryOnGrid(Length.Meters, {
+        step: 0.1,
+        min: 0.7,
+        max: 0.7,
+      }),
+    );
+    FastCheck.assert(
+      FastCheck.property(Schema.toArbitrary(Tenths), ({ value }) => {
+        assertEquals(value, 0.7);
+      }),
+    );
+
+    const Piped = Length.Length.annotate(
+      Function.pipe(
+        Length.Meters,
+        Quantity.arbitraryOnGrid({
+          step: 1e-2,
+          min: 0,
+          max: 0.02,
+        }),
+      ),
+    );
+    expectTypeOf(Piped.Type).toEqualTypeOf<Length.Length>();
+    const pipedValues = FastCheck.sample(Schema.toArbitrary(Piped), 50);
+    assertTrue(
+      Array.every(
+        pipedValues,
+        ({ value }) => value === 0 || value === 0.01 || value === 0.02,
+      ),
+    );
+  });
+
+  it("rejects invalid grid options", () => {
+    throws(() =>
+      Quantity.arbitraryOnGrid(Length.Meters, {
+        step: 0,
+        min: 0,
+        max: 1,
+      }),
+    );
+    throws(() =>
+      Quantity.arbitraryOnGrid(Length.Meters, {
+        step: -0.1,
+        min: 0,
+        max: 1,
+      }),
+    );
+    throws(() =>
+      Quantity.arbitraryOnGrid(Length.Meters, {
+        step: Number.NaN,
+        min: 0,
+        max: 1,
+      }),
+    );
+    throws(() =>
+      Quantity.arbitraryOnGrid(Length.Meters, {
+        step: 0.1,
+        min: Number.POSITIVE_INFINITY,
+        max: 1,
+      }),
+    );
+    throws(() =>
+      Quantity.arbitraryOnGrid(Length.Meters, {
+        step: 0.1,
+        min: 0,
+        max: Number.POSITIVE_INFINITY,
+      }),
+    );
+    throws(() =>
+      Quantity.arbitraryOnGrid(Length.Meters, {
+        step: 0.1,
+        min: 1,
+        max: 0,
+      }),
+    );
+    throws(() =>
+      Quantity.arbitraryOnGrid(Length.Meters, {
+        step: 0.1,
+        min: 0.11,
+        max: 0.19,
       }),
     );
   });
