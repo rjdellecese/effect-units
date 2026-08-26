@@ -3,6 +3,7 @@ import * as Equal from "effect/Equal";
 import * as Function from "effect/Function";
 import * as Hash from "effect/Hash";
 import type * as Inspectable from "effect/Inspectable";
+import * as Option from "effect/Option";
 import type * as Pipeable from "effect/Pipeable";
 import * as Predicate from "effect/Predicate";
 import * as Result from "effect/Result";
@@ -98,10 +99,17 @@ const isPositiveFinite = (n: number): boolean => Number.isFinite(n) && n > 0;
  */
 const valueOnGrid =
   (step: Rational.Rational) =>
-  (index: number): number =>
-    Rational.toNumberUnsafe(
-      Rational.multiply(step, Rational.fromBigInt(globalThis.BigInt(index))),
+  (index: number): number => {
+    const value = Rational.multiply(
+      step,
+      Rational.fromBigInt(globalThis.BigInt(index)),
     );
+    return Option.getOrElse(Rational.toNumber(value), () =>
+      Rational.isLessThan(value, Rational.zero)
+        ? Number.NEGATIVE_INFINITY
+        : Number.POSITIVE_INFINITY,
+    );
+  };
 
 const snapLowerIndex = (
   valueAt: (index: number) => number,
@@ -154,16 +162,20 @@ const grid = ({
       BigDecimal.fromNumberUnsafe(positiveStep),
     );
     const valueAt = valueOnGrid(stepRational);
-    const minimum = snapLowerIndex(
-      valueAt,
-      finiteMin,
-      Math.ceil(finiteMin / positiveStep),
-    );
-    const maximum = snapUpperIndex(
-      valueAt,
-      finiteMax,
-      Math.floor(finiteMax / positiveStep),
-    );
+    const lowerCandidate = Math.ceil(finiteMin / positiveStep);
+    const upperCandidate = Math.floor(finiteMax / positiveStep);
+
+    if (
+      !Number.isSafeInteger(lowerCandidate) ||
+      !Number.isSafeInteger(upperCandidate)
+    ) {
+      return yield* Result.fail(
+        gridError("bounds must contain a grid value with a safe integer index"),
+      );
+    }
+
+    const minimum = snapLowerIndex(valueAt, finiteMin, lowerCandidate);
+    const maximum = snapUpperIndex(valueAt, finiteMax, upperCandidate);
 
     if (
       !Number.isSafeInteger(minimum) ||

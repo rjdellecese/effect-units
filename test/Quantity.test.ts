@@ -520,6 +520,21 @@ describe("schema", () => {
       }),
     );
 
+    for (const value of [-Number.MAX_VALUE, Number.MAX_VALUE]) {
+      const Extreme = Length.Length.annotate(
+        Quantity.arbitraryOnGrid(Length.Meters, {
+          step: Number.MAX_VALUE,
+          min: value,
+          max: value,
+        }),
+      );
+      FastCheck.assert(
+        FastCheck.property(Schema.toArbitrary(Extreme), (quantity) => {
+          assertEquals(quantity.value, value);
+        }),
+      );
+    }
+
     const Tenths = Length.Length.annotate(
       Quantity.arbitraryOnGrid(Length.Meters, {
         step: 0.1,
