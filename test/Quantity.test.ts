@@ -578,6 +578,20 @@ describe("schema", () => {
     throws(() =>
       Quantity.arbitraryOnGrid(Length.Meters, {
         step: 0.1,
+        min: Number.POSITIVE_INFINITY,
+        max: 1,
+      }),
+    );
+    throws(() =>
+      Quantity.arbitraryOnGrid(Length.Meters, {
+        step: 0.1,
+        min: 0,
+        max: Number.POSITIVE_INFINITY,
+      }),
+    );
+    throws(() =>
+      Quantity.arbitraryOnGrid(Length.Meters, {
+        step: 0.1,
         min: 1,
         max: 0,
       }),

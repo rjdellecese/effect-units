@@ -151,14 +151,8 @@ const grid = ({
     );
 
     const stepRational = Rational.fromBigDecimal(
-      yield* Result.fromOption(BigDecimal.fromNumber(positiveStep), () =>
-        gridError("step has unsupported precision"),
-      ),
+      BigDecimal.fromNumberUnsafe(positiveStep),
     );
-    if (Rational.toNumberUnsafe(stepRational) !== positiveStep) {
-      return yield* Result.fail(gridError("step has unsupported precision"));
-    }
-
     const valueAt = valueOnGrid(stepRational);
     const minimum = snapLowerIndex(
       valueAt,
