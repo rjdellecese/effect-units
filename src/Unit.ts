@@ -116,10 +116,20 @@ export const rate = <Dependent extends Unit, Independent extends Unit>(
 const validCustomId = /^[A-Za-z][A-Za-z0-9]*$/;
 
 /**
- * Creates a {@link Custom} base unit. The id must match
- * `/^[A-Za-z][A-Za-z0-9]*$/`—the charset keeps ids trivially safe inside
- * the canonical encoding's grammar. Ids are expected to be developer-written
- * literals, so an invalid id throws (a defect, not a recoverable error).
+ * Creates a {@link Custom} base unit. The ID must match
+ * `/^[A-Za-z][A-Za-z0-9]*$/`—the charset keeps IDs trivially safe inside
+ * the canonical encoding's grammar. IDs are expected to be developer-written
+ * literals, so an invalid ID throws (a defect, not a recoverable error).
+ *
+ * The argument is a persistent identity, not a display name: it is encoded
+ * as `"[ID]"` in quantity wire formats, including derived products and rates.
+ * Choose it like a database column name. `const Count = Unit.custom("Units")`
+ * can replace a binding named `Units` without changing stored identity;
+ * its type alias can likewise be renamed while keeping `Custom<"Units">`.
+ * Changing the ID makes old payloads fail the new unit's schema. Changing
+ * what one base unit means (for example, cents to dollars) under the same ID
+ * silently reinterprets stored values. Either change requires an explicit
+ * wire migration, including derived units; keep display labels separately.
  *
  * A custom unit is always distinct from a {@link BaseUnit} with the same
  * name: `Unit.custom("Meters")` encodes as `"[Meters]"` and never equals

@@ -85,7 +85,7 @@ const price = Quantity.per(cents(300), Length.meters(2));
 const cost = Quantity.at(price, Length.meters(10)); // 1500 cents
 ```
 
-See [Custom units](#custom-units) for the full pattern, including a lossless boundary with money libraries like dinero.js.
+See [Custom units](#custom-units) for the persistent-ID contract and the distinction between dimensional safety and exact arithmetic. This float example illustrates unit algebra, not safe accounting arithmetic.
 
 ### Effect-native, wire-ready
 
@@ -206,38 +206,112 @@ pnpm add effect-units effect@beta
 
 Nearly every unit module above has an exact twin named with an `Exact` suffix (`effect-units/LengthExact`, `effect-units/SpeedExact`, `effect-units/TemperatureExact`, …), taking and returning `Rational` values with lossless conversions. The rule for what gets a twin: **if a conversion factor involves π, it stays float-only.** That excludes `Angle`, `AngularSpeed`, `AngularAcceleration`, and `SolidAngle` entirely, plus `parsecs` within `LengthExact` and `footLamberts` within `LuminanceExact`. Everything else converts exactly: a US liquid gallon is _exactly_ 231 cubic inches, and 212 °F is _exactly_ 100 °C.
 
-## Custom units
+## Schema boundaries
 
-The built-in base units are a closed set, but you can define your own with `Unit.custom`—a custom unit is a leaf of the unit tree, just like `"Meters"`, and composes freely with `Product` and `Rate`. Write a module for it the same way the library's own unit modules are written:
+Use `Quantity.QuantityFromValue(unit)` when an existing wire format stores only a number and fixes the unit elsewhere. It decodes and encodes finite numbers, rejecting NaN and ±Infinity in both directions. The unit and its base scale are an out-of-band storage contract; this codec does not change the identity schema's canonical `{ unit, value }` JSON representation.
 
 ```ts
+import * as Schema from "effect/Schema";
 import * as Length from "effect-units/Length";
+import * as Quantity from "effect-units/Quantity";
+
+const PositiveMeters = Quantity.positive(Quantity.QuantityFromValue("Meters"));
+const NonNegativeLength = Quantity.nonNegative(Length.LengthFromStruct);
+const AtLeastOneMeter = PositiveMeters.check(
+  Quantity.greaterThanOrEqualTo(Length.meters(1)),
+);
+
+Schema.decodeSync(AtLeastOneMeter)(2); // Length.meters(2)
+Schema.encodeSync(AtLeastOneMeter)(Length.meters(2)); // 2
+Schema.encodeSync(NonNegativeLength)(Length.meters(0));
+// { unit: "Meters", value: 0 }
+```
+
+`positive(schema, annotations?)` and `nonNegative(schema, annotations?)` preserve the input schema's encoded form and existing checks. `greaterThanOrEqualTo(bound, annotations?)` supplies an inclusive, same-unit check for `.check(...)`. These are value constraints, not arithmetic invariants or finiteness checks: identity schemas can still accept positive infinity, while the wire codecs reject it.
+
+To reuse an existing input codec, compose Effect's `Schema.decodeTo` directly. Its original wire format, validation, and error messages remain at the boundary rather than being recreated in a wrapper API:
+
+```ts
+import * as Schema from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
+import * as Quantity from "effect-units/Quantity";
+
+const ExistingMeters = Schema.NumberFromString.check(
+  Schema.isFinite(),
+  Schema.isGreaterThan(0, { expected: "a positive distance in meters" }),
+);
+const Distance = ExistingMeters.pipe(
+  Schema.decodeTo(
+    Quantity.Quantity("Meters"),
+    SchemaTransformation.transform({
+      decode: (value) => Quantity.make("Meters", value),
+      encode: (quantity) => quantity.value,
+    }),
+  ),
+);
+
+Schema.decodeSync(Distance)("2"); // Quantity.make("Meters", 2)
+Schema.encodeSync(Distance)(Quantity.make("Meters", 2)); // "2"
+```
+
+## Decimal boundaries
+
+`Quantity.fromBigDecimal(unit, decimal)` (also `fromBigDecimal(unit)(decimal)`) rounds a decimal in base units to a double once. `Quantity.toBigDecimal(quantity)` returns an `Option` containing the double's shortest round-tripping decimal, or `None` for NaN and ±Infinity. Overflow can produce infinity; underflow can produce zero. Inputs with at most 15 significant decimal digits round-trip **numerically** when their nonzero magnitude is in the finite normal double range—not for subnormals. This does not preserve trailing zeros or make later float arithmetic exact; use `QuantityExact` for accounting.
+
+Shift decimal scales before crossing into floats, rather than multiplying a converted float by 100. For a cents-backed USD unit, dollars become cents by subtracting two from the decimal scale; the inverse shift happens after converting back:
+
+```ts
+import * as BigDecimal from "effect/BigDecimal";
+import * as Option from "effect/Option";
 import * as Quantity from "effect-units/Quantity";
 import * as Unit from "effect-units/Unit";
 
-type Usd = Unit.Custom<"USD">;
-const Usd: Usd = Unit.custom("USD");
-
-type Money = Quantity.Quantity<Usd>;
-const Money = Quantity.Quantity(Usd); // identity schema
-const MoneyFromStruct = Quantity.QuantityFromStruct(Usd); // wire format { unit: "[USD]", value: n }
-
-// Store minor units (cents), so money libraries like dinero.js—which
-// represent amounts as integer minor units—convert losslessly at the
-// boundary. The quantity's value is always a number.
-const cents = (n: number): Money => Quantity.make(Usd, n);
-const dollars = (n: number): Money => cents(n * 100);
-const inDollars = (m: Money): number => m.value / 100;
-
-const pricePerMeter = Quantity.per(dollars(3), Length.meters(2)); // Quantity<Rate<Custom<"USD">, "Meters">>
-
-const cost = Quantity.at(pricePerMeter, Length.meters(10)); // Quantity<Custom<"USD">>
-inDollars(cost); // 15
+const Usd = Unit.custom("USD");
+const input = BigDecimal.fromStringUnsafe("4.25");
+const amount = Quantity.fromBigDecimal(
+  Usd,
+  BigDecimal.make(input.value, input.scale - 2),
+); // 425 cents
+const output = Quantity.toBigDecimal(amount).pipe(
+  Option.map((bd) => BigDecimal.make(bd.value, bd.scale + 2)),
+); // Some(decimal 4.25 dollars)
 ```
 
-Ids must match `/^[A-Za-z][A-Za-z0-9]*$/` (`Unit.custom` throws otherwise), and encode in bracketed form—`"[USD]"`, `"([USD]/Meters)"`—so they can never collide with built-in names on the wire. A custom unit is always distinct from a built-in base unit with the same name: `Unit.custom("Meters")` is not `"Meters"`.
+The scale shifts are exact on the decimal side; conversion to a float can still lose precision outside the round-trip guarantee above. There is no scale option on the conversion API.
 
-Precision: integer minor units are exact in float64 up to `Number.MAX_SAFE_INTEGER` (2^53 − 1) cents, but rate arithmetic (`per`, `at`, …) is ordinary IEEE 754 division and multiplication—measurement semantics, not accounting semantics. Keep your money library as the system of record: round explicitly when converting a computed quantity back (or raise the dinero `scale` to keep sub-minor-unit precision), and reject amounts beyond the safe-integer range at the boundary rather than letting them degrade silently—`test/CustomUnits.test.ts` shows a boundary that does both. Or use `QuantityExact` for money instead, where none of these caveats apply (see below).
+## Custom units
+
+The built-in base units are a closed set, but you can define your own with `Unit.custom`—a custom unit is a leaf of the unit tree, just like `"Meters"`, and composes freely with `Product` and `Rate`.
+
+### Persistent identity, not a display name
+
+**The argument to `Unit.custom` is already a persistent ID.** Choose it like a database column name, not a UI label. IDs must match `/^[A-Za-z][A-Za-z0-9]*$/` (`Unit.custom` throws otherwise), and encode in bracketed form—`"[USD]"`, `"([USD]/Meters)"`—so they can never collide with built-in names on the wire. A custom unit is always distinct from a built-in base unit with the same name: `Unit.custom("Meters")` is not `"Meters"`.
+
+You can rename a code binding or type alias without changing the ID. For example, replace a binding named `Units` with `Count`, but keep the literal `"Units"`:
+
+```ts
+import * as Schema from "effect/Schema";
+import * as Quantity from "effect-units/Quantity";
+import * as Unit from "effect-units/Unit";
+
+type Count = Unit.Custom<"Units">;
+const Count: Count = Unit.custom("Units");
+const CountFromStruct = Quantity.QuantityFromStruct(Count);
+
+const count = Schema.decodeSync(CountFromStruct)({
+  unit: "[Units]",
+  value: 3,
+});
+Schema.encodeSync(CountFromStruct)(count); // { unit: "[Units]", value: 3 }
+```
+
+Keep display labels in your application. Changing the literal to `"Count"` changes identity: the new `QuantityFromStruct` schema rejects old `"[Units]"` payloads. The same contract applies to exact quantities and derived units such as `"([USD]/[Units])"` or `"([Units]*Meters)"`.
+
+The meaning of one base unit is also a wire contract. If `"[USD]"` counts cents, redefining it to count dollars silently changes the meaning of every stored value even though decoding still succeeds. Changing either an ID or a base scale needs an explicit migration: expand readers to accept the old and new contracts, convert and backfill stored values and tags, switch writers, then retire the old contract. Include derived products and rates: changing a numerator's scale affects its values differently from changing a denominator's scale, and repeated factors also matter. If changing scale, use a distinct versioned ID or an external payload version so readers can distinguish the representations; the unit string carries no scale metadata.
+
+### Dimensional safety versus exact arithmetic
+
+Custom units supply dimensional safety, not numerical exactness. `Quantity` arithmetic can lose precision even when its inputs and final result are safe integers, so boundary checks cannot establish that a monetary calculation is correct. Use [QuantityExact](#exact-quantities) for exact arithmetic; converting its results to payable cents still requires an explicit application-owned rounding policy.
 
 ## Dimensionless quantities
 
@@ -319,7 +393,7 @@ The wire format is `{ unit, value }` with the value as a canonical fraction stri
 
 ## Numbers, precision, and equality
 
-The library is two-track: `Quantity` values are plain 64-bit floats (as in `elm-units`) with measurement semantics, and `QuantityExact` values are arbitrary-precision rationals with accounting/algebraic semantics. The two tracks agree at every conversion factor: each float factor is the correctly rounded float of its exact defining rational, asserted bit-for-bit against the exact modules in the test suite. No float module imports any bigint code, so using only the float track loads no rational arithmetic. Where the tracks differ is _arithmetic on runtime values_: the float `Temperature.degreesFahrenheit` rounds at every operation, as any float affine map must, while `TemperatureExact` is exact.
+The library is two-track: `Quantity` values are plain 64-bit floats (as in `elm-units`) with measurement semantics, and `QuantityExact` values are arbitrary-precision rationals with accounting/algebraic semantics. The two tracks agree at every conversion factor: each float factor is the correctly rounded float of its exact defining rational, asserted bit-for-bit against the exact modules in the test suite. `Quantity` uses Effect's `BigDecimal` for decimal boundaries and `Rational` for grid generation, but its ordinary arithmetic remains number-based. Where the tracks differ is _arithmetic on runtime values_: the float `Temperature.degreesFahrenheit` rounds at every operation, as any float affine map must, while `TemperatureExact` is exact.
 
 On the float track, arithmetic follows IEEE 754 semantics: division by zero yields ±Infinity, invalid operations yield NaN, and every operation carries ordinary float rounding (~15-16 significant digits). Check results with `Quantity.isNaN`, `isInfinite`, and `isFinite`.
 

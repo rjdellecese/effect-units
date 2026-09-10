@@ -156,6 +156,19 @@ describe("Unit", () => {
   });
 
   describe("custom units", () => {
+    it("uses the persistent id rather than binding or type-alias names", () => {
+      type Units = Unit.Custom<"Units">;
+      const Units: Units = Unit.custom("Units");
+      type Count = Unit.Custom<"Units">;
+      const Count: Count = Unit.custom("Units");
+
+      assertTrue(Unit.equals(Units, Count));
+      assertEquals(Unit.encode(Units), "[Units]");
+      assertEquals(Unit.encode(Count), "[Units]");
+      assertTrue(Unit.equals(Option.getOrThrow(Unit.decode("[Units]")), Count));
+      assertFalse(Unit.equals(Count, Unit.custom("Count")));
+    });
+
     it("support Equal and Hash", () => {
       assertTrue(Equal.equals(Unit.custom("USD"), Unit.custom("USD")));
       assertFalse(Equal.equals(Unit.custom("USD"), Unit.custom("EUR")));

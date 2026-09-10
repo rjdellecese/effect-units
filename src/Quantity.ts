@@ -67,6 +67,12 @@ export const Quantity = <const U extends Unit.Unit>(unit: U) =>
     },
   });
 
+/**
+ * Encodes a quantity as `{ unit, value }`, with a finite numeric value.
+ * A custom unit's ID is part of this storage contract, including inside
+ * products and rates. Renaming that ID requires migrating persisted data;
+ * renaming a variable or type alias while retaining the ID does not.
+ */
 export const QuantityFromStruct = <const U extends Unit.Unit>(unit: U) => {
   const { struct, transformation } = wire(unit);
   return struct.pipe(Schema.decodeTo(Quantity(unit), transformation));
@@ -237,6 +243,78 @@ export const arbitraryOnGrid: {
 );
 
 /**
+ * Encodes only the finite numeric value; the unit is supplied by the schema.
+ * Use when an existing wire format already fixes the unit out of band.
+ * Changing that unit or its base scale changes the meaning of stored data.
+ * The identity schema's canonical JSON representation remains `{ unit, value }`.
+ */
+export const QuantityFromValue = <const U extends Unit.Unit>(unit: U) =>
+  Schema.Finite.pipe(
+    Schema.decodeTo(
+      Quantity(unit),
+      SchemaTransformation.transform({
+        decode: (value) => make(unit, value),
+        encode: (quantity) => quantity.value,
+      }),
+    ),
+  );
+
+/**
+ * Checks a quantity against an inclusive bound in the same units.
+ * Use with a quantity schema's `.check(...)`. NaN fails; infinities follow
+ * the comparison predicates and are still rejected by the wire codecs.
+ */
+export const greaterThanOrEqualTo = <U extends Unit.Unit>(
+  bound: Quantity<U>,
+  annotations?: Schema.Annotations.Filter,
+) =>
+  Schema.makeFilter<Quantity<U>>(
+    (quantity) =>
+      Unit.equals(quantity.unit, bound.unit) &&
+      isGreaterThanOrEqualTo(quantity, bound),
+    {
+      expected: `a quantity greater than or equal to ${bound.value} ${Unit.encode(bound.unit)}`,
+      ...annotations,
+    },
+  );
+
+/**
+ * Adds a strictly-positive check without changing a schema's encoded form,
+ * services, or existing checks. NaN fails; positive infinity passes this
+ * check but cannot be encoded by the finite wire codecs.
+ */
+export const positive = <S extends Schema.Schema<Quantity<Unit.Unit>>>(
+  schema: S,
+  annotations?: Schema.Annotations.Filter,
+): S["Rebuild"] =>
+  schema.check(
+    Schema.makeFilter<Quantity<Unit.Unit>>(
+      (quantity) =>
+        isGreaterThan(quantity, make(quantity.unit, 0)) ||
+        (annotations?.message ??
+          annotations?.expected ??
+          `Expected a positive quantity in ${Unit.encode(quantity.unit)}`),
+      annotations,
+    ),
+  );
+
+/** Adds a non-negative check, preserving the schema just like {@link positive}. */
+export const nonNegative = <S extends Schema.Schema<Quantity<Unit.Unit>>>(
+  schema: S,
+  annotations?: Schema.Annotations.Filter,
+): S["Rebuild"] =>
+  schema.check(
+    Schema.makeFilter<Quantity<Unit.Unit>>(
+      (quantity) =>
+        isGreaterThanOrEqualTo(quantity, make(quantity.unit, 0)) ||
+        (annotations?.message ??
+          annotations?.expected ??
+          `Expected a non-negative quantity in ${Unit.encode(quantity.unit)}`),
+      annotations,
+    ),
+  );
+
+/**
  * A quantity is a plain 64-bit float tagged with a unit tree. Arithmetic
  * follows IEEE 754 semantics: division by zero yields ±Infinity, and invalid
  * operations yield NaN—check with {@link isNaN} and {@link isInfinite}.
@@ -302,6 +380,44 @@ export const make = <U extends Unit.Unit>(
     unit,
     value: normalizeZero(value),
   });
+
+/**
+ * Converts a decimal in the quantity's base units to the nearest double,
+ * rounding once via Effect's decimal-to-number conversion. Overflow yields
+ * ±Infinity; underflow can yield zero, following the float track's semantics.
+ * Shift a decimal's scale before this boundary, not by multiplying the float.
+ *
+ * A decimal with at most 15 significant digits whose nonzero magnitude is
+ * in the normal finite double range round-trips numerically through
+ * {@link toBigDecimal}. This does not preserve trailing zeros or make
+ * subsequent quantity arithmetic exact. Subnormal values have no such guarantee.
+ */
+export function fromBigDecimal<U extends Unit.Unit>(
+  unit: U,
+): (value: BigDecimal.BigDecimal) => Quantity<U>;
+export function fromBigDecimal<U extends Unit.Unit>(
+  unit: U,
+  value: BigDecimal.BigDecimal,
+): Quantity<U>;
+export function fromBigDecimal<U extends Unit.Unit>(
+  unit: U,
+  value?: BigDecimal.BigDecimal,
+): Quantity<U> | ((value: BigDecimal.BigDecimal) => Quantity<U>) {
+  return value === undefined
+    ? (decimal) => make(unit, BigDecimal.toNumberUnsafe(decimal))
+    : make(unit, BigDecimal.toNumberUnsafe(value));
+}
+
+/**
+ * Reads the double's shortest round-tripping decimal representation.
+ * Returns `None` for NaN and ±Infinity. This recovers decimal input under
+ * {@link fromBigDecimal}'s conditions, not the exact binary fraction stored
+ * in the double. For that, use `QuantityExact.fromQuantity` instead.
+ */
+export const toBigDecimal = <U extends Unit.Unit>(
+  quantity: Quantity<U>,
+): Option.Option<BigDecimal.BigDecimal> =>
+  BigDecimal.fromNumber(quantity.value);
 
 /**
  * Exact equality: identical values (with NaN equal to itself, so equality is
