@@ -2,7 +2,7 @@
   "$schema": "../node_modules/@changesets/config/schema.json",
   "changelog": "@changesets/cli/changelog",
   "commit": false,
-  "format": false,
+  "format": "oxfmt",
   "fixed": [],
   "linked": [],
   "access": "public",
