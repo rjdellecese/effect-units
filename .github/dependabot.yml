@@ -4,3 +4,6 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "changesets/action"
+        update-types: ["version-update:semver-major"]
