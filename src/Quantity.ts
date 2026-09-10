@@ -69,9 +69,9 @@ export const Quantity = <const U extends Unit.Unit>(unit: U) =>
 
 /**
  * Encodes a quantity as `{ unit, value }`, with a finite numeric value.
- * A custom unit's id is part of this storage contract, including inside
- * products and rates. Renaming that id requires migrating persisted data;
- * renaming a variable or type alias while retaining the id does not.
+ * A custom unit's ID is part of this storage contract, including inside
+ * products and rates. Renaming that ID requires migrating persisted data;
+ * renaming a variable or type alias while retaining the ID does not.
  */
 export const QuantityFromStruct = <const U extends Unit.Unit>(unit: U) => {
   const { struct, transformation } = wire(unit);

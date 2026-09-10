@@ -288,7 +288,7 @@ The built-in base units are a closed set, but you can define your own with `Unit
 
 ### Persistent identity, not a display name
 
-**The argument to `Unit.custom` is already a persistent ID.** Choose it like a database column name, not a UI label. Ids must match `/^[A-Za-z][A-Za-z0-9]*$/` (`Unit.custom` throws otherwise), and encode in bracketed form—`"[USD]"`, `"([USD]/Meters)"`—so they can never collide with built-in names on the wire. A custom unit is always distinct from a built-in base unit with the same name: `Unit.custom("Meters")` is not `"Meters"`.
+**The argument to `Unit.custom` is already a persistent ID.** Choose it like a database column name, not a UI label. IDs must match `/^[A-Za-z][A-Za-z0-9]*$/` (`Unit.custom` throws otherwise), and encode in bracketed form—`"[USD]"`, `"([USD]/Meters)"`—so they can never collide with built-in names on the wire. A custom unit is always distinct from a built-in base unit with the same name: `Unit.custom("Meters")` is not `"Meters"`.
 
 You can rename a code binding or type alias without changing the ID. For example, replace a binding named `Units` with `Count`, but keep the literal `"Units"`:
 
