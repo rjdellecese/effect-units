@@ -85,7 +85,7 @@ const price = Quantity.per(cents(300), Length.meters(2));
 const cost = Quantity.at(price, Length.meters(10)); // 1500 cents
 ```
 
-See [Custom units](#custom-units) for the persistent-ID contract and checked minor-unit boundaries. This float example illustrates unit algebra, not safe accounting arithmetic.
+See [Custom units](#custom-units) for the persistent-ID contract and the distinction between dimensional safety and exact arithmetic. This float example illustrates unit algebra, not safe accounting arithmetic.
 
 ### Effect-native, wire-ready
 
@@ -272,15 +272,12 @@ const amount = Quantity.fromBigDecimal(
   Usd,
   BigDecimal.make(input.value, input.scale - 2),
 ); // 425 cents
-if (!Number.isSafeInteger(amount.value)) {
-  throw new RangeError("Expected safe integer cents");
-}
 const output = Quantity.toBigDecimal(amount).pipe(
   Option.map((bd) => BigDecimal.make(bd.value, bd.scale + 2)),
 ); // Some(decimal 4.25 dollars)
 ```
 
-The cent check can reject fractional or unsafe totals; it cannot detect every decimal that already rounded to a safe integer during conversion. Validate arbitrary-precision inputs before this lossy boundary when exact acceptance matters, and keep currency formatting and rounding as application policy. There is no scale option on the conversion API.
+The scale shifts are exact on the decimal side; conversion to a float can still lose precision outside the round-trip guarantee above. There is no scale option on the conversion API.
 
 ## Custom units
 
@@ -312,55 +309,9 @@ Keep display labels in your application. Changing the literal to `"Count"` chang
 
 The meaning of one base unit is also a wire contract. If `"[USD]"` counts cents, redefining it to count dollars silently changes the meaning of every stored value even though decoding still succeeds. Changing either an ID or a base scale needs an explicit migration: expand readers to accept the old and new contracts, convert and backfill stored values and tags, switch writers, then retire the old contract. Include derived products and rates: changing a numerator's scale affects its values differently from changing a denominator's scale, and repeated factors also matter. If changing scale, use a distinct versioned ID or an external payload version so readers can distinguish the representations; the unit string carries no scale metadata.
 
-### Cents-backed USD with checked boundaries
+### Dimensional safety versus exact arithmetic
 
-Use the existing `Quantity.make`, `per`, and `at` APIs with an application-owned convention: one `"USD"` unit means one cent. No display-scale metadata or currency module is implied. Here is a small application recipe:
-
-```ts
-import * as Length from "effect-units/Length";
-import * as Quantity from "effect-units/Quantity";
-import * as Unit from "effect-units/Unit";
-
-type Usd = Unit.Custom<"USD">;
-const Usd: Usd = Unit.custom("USD");
-
-type Money = Quantity.Quantity<Usd>;
-const MoneyFromStruct = Quantity.QuantityFromStruct(Usd); // wire format { unit: "[USD]", value: n }
-
-const cents = (n: number): Money => {
-  if (!Number.isSafeInteger(n)) {
-    throw new RangeError("Expected safe integer cents");
-  }
-  return Quantity.make(Usd, n);
-};
-const dollars = (n: number): Money => {
-  if (!Number.isSafeInteger(n)) {
-    throw new RangeError(
-      "Expected whole dollars; use cents for fractional dollars",
-    );
-  }
-  return cents(n * 100);
-};
-const inCents = (m: Money): number => {
-  if (!Number.isSafeInteger(m.value)) {
-    throw new RangeError("Expected safe integer cents");
-  }
-  return m.value;
-};
-const inDollars = (m: Money): number => m.value / 100;
-
-const pricePerMeter = Quantity.per(dollars(3), Length.meters(2)); // Quantity<Rate<Custom<"USD">, "Meters">>
-
-const cost = Quantity.at(pricePerMeter, Length.meters(10)); // Quantity<Custom<"USD">>
-inCents(cost); // 1500
-inDollars(cost); // 15
-```
-
-Integer cents are represented exactly throughout `[-Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER]` (±(2^53 − 1) cents). `cents` checks incoming amounts and `inCents` checks outgoing amounts, including values decoded with `MoneyFromStruct`: that codec checks the unit and number, not this application's safe-integer invariant. For bigint or decimal inputs, validate integer-ness and range in the original representation before converting to a number; these number checks cannot recover precision already lost upstream.
-
-The convenience `dollars` constructor intentionally accepts only whole dollars and checks the scaled result too; use `cents(425)` for $4.25. It is not a general decimal parser: multiplying arbitrary decimal numbers by 100 can introduce binary rounding errors. Parse decimal inputs exactly in your money library or with `Rational`, and choose an explicit policy for sub-cent amounts. `inDollars` is a numeric display crossing that may round, not a lossless storage or accounting boundary. Currency codes, symbols, locale formatting, decimal parsing, and rounding or allocation policies remain the application's responsibility.
-
-**Safe integer inputs do not make float arithmetic safe accounting.** `Quantity` does not preserve an integer or safe-range invariant: sums and products can overflow the safe range, and rates can produce fractional cents. For example, pricing one meter at 200 cents per three meters produces `200 / 3` cents, which `inCents` rejects. Even a final safe-integer result cannot prove intermediate computations were exact. Use [QuantityExact](#exact-quantities) or a money library as the system of record for accounting; exact rational arithmetic avoids float rounding and width limits but still needs an application policy for rounding to payable minor units. Custom-unit identity is tested in `test/Unit.test.ts`; quantity arithmetic, decimal crossings, and persistence are tested in `test/Quantity.test.ts`. `test/CustomUnitsExact.test.ts` shows an exact money-library boundary.
+Custom units supply dimensional safety, not numerical exactness. `Quantity` arithmetic can lose precision even when its inputs and final result are safe integers, so boundary checks cannot establish that a monetary calculation is correct. Use [QuantityExact](#exact-quantities) for exact arithmetic; converting its results to payable cents still requires an explicit application-owned rounding policy.
 
 ## Dimensionless quantities
 
