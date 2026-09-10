@@ -4,11 +4,13 @@ import {
   assertFalse,
   assertTrue,
   deepStrictEqual,
+  throws,
 } from "@effect/vitest/utils";
 import * as Array from "effect/Array";
 import * as Result from "effect/Result";
 import * as Equal from "effect/Equal";
 import * as FastCheck from "effect/testing/FastCheck";
+import * as Function from "effect/Function";
 import * as Schema from "effect/Schema";
 
 import { isCloseTo, double } from "./testUtils.ts";
@@ -470,6 +472,154 @@ describe("dimensionless", () => {
 });
 
 describe("schema", () => {
+  it("derives grid-constrained quantities from annotations", () => {
+    const MeasuredLength = Length.Length.annotate(
+      Quantity.arbitraryOnGrid(Length.Meters, {
+        step: 0.1,
+        min: -0.35,
+        max: 0.75,
+      }),
+    );
+    expectTypeOf(MeasuredLength.Type).toEqualTypeOf<Length.Length>();
+
+    FastCheck.assert(
+      FastCheck.property(
+        Schema.toArbitrary(MeasuredLength),
+        ({ unit, value }) => {
+          assertTrue(Unit.equals(unit, Length.Meters));
+          assertTrue(value >= -0.3);
+          assertTrue(value <= 0.7);
+          assertEquals(value, Number(value.toFixed(1)));
+        },
+      ),
+    );
+
+    const SingleValue = Length.Length.annotate(
+      Quantity.arbitraryOnGrid(Length.Meters, {
+        step: 0.1,
+        min: 0.3,
+        max: 0.3,
+      }),
+    );
+    FastCheck.assert(
+      FastCheck.property(Schema.toArbitrary(SingleValue), ({ value }) => {
+        assertEquals(value, 0.3);
+      }),
+    );
+
+    const RoundedBoundary = Length.Length.annotate(
+      Quantity.arbitraryOnGrid(Length.Meters, {
+        step: 0.1,
+        min: 0.1 + 0.2,
+        max: 0.4,
+      }),
+    );
+    FastCheck.assert(
+      FastCheck.property(Schema.toArbitrary(RoundedBoundary), ({ value }) => {
+        assertEquals(value, 0.4);
+      }),
+    );
+
+    for (const value of [-Number.MAX_VALUE, Number.MAX_VALUE]) {
+      const Extreme = Length.Length.annotate(
+        Quantity.arbitraryOnGrid(Length.Meters, {
+          step: Number.MAX_VALUE,
+          min: value,
+          max: value,
+        }),
+      );
+      FastCheck.assert(
+        FastCheck.property(Schema.toArbitrary(Extreme), (quantity) => {
+          assertEquals(quantity.value, value);
+        }),
+      );
+    }
+
+    const Tenths = Length.Length.annotate(
+      Quantity.arbitraryOnGrid(Length.Meters, {
+        step: 0.1,
+        min: 0.7,
+        max: 0.7,
+      }),
+    );
+    FastCheck.assert(
+      FastCheck.property(Schema.toArbitrary(Tenths), ({ value }) => {
+        assertEquals(value, 0.7);
+      }),
+    );
+
+    const Piped = Length.Length.annotate(
+      Function.pipe(
+        Length.Meters,
+        Quantity.arbitraryOnGrid({
+          step: 1e-2,
+          min: 0,
+          max: 0.02,
+        }),
+      ),
+    );
+    expectTypeOf(Piped.Type).toEqualTypeOf<Length.Length>();
+    const pipedValues = FastCheck.sample(Schema.toArbitrary(Piped), 50);
+    assertTrue(
+      Array.every(
+        pipedValues,
+        ({ value }) => value === 0 || value === 0.01 || value === 0.02,
+      ),
+    );
+  });
+
+  it("rejects invalid grid options", () => {
+    throws(() =>
+      Quantity.arbitraryOnGrid(Length.Meters, {
+        step: 0,
+        min: 0,
+        max: 1,
+      }),
+    );
+    throws(() =>
+      Quantity.arbitraryOnGrid(Length.Meters, {
+        step: -0.1,
+        min: 0,
+        max: 1,
+      }),
+    );
+    throws(() =>
+      Quantity.arbitraryOnGrid(Length.Meters, {
+        step: Number.NaN,
+        min: 0,
+        max: 1,
+      }),
+    );
+    throws(() =>
+      Quantity.arbitraryOnGrid(Length.Meters, {
+        step: 0.1,
+        min: Number.POSITIVE_INFINITY,
+        max: 1,
+      }),
+    );
+    throws(() =>
+      Quantity.arbitraryOnGrid(Length.Meters, {
+        step: 0.1,
+        min: 0,
+        max: Number.POSITIVE_INFINITY,
+      }),
+    );
+    throws(() =>
+      Quantity.arbitraryOnGrid(Length.Meters, {
+        step: 0.1,
+        min: 1,
+        max: 0,
+      }),
+    );
+    throws(() =>
+      Quantity.arbitraryOnGrid(Length.Meters, {
+        step: 0.1,
+        min: 0.11,
+        max: 0.19,
+      }),
+    );
+  });
+
   it("encodes and decodes a base-unit quantity", () => {
     FastCheck.assert(
       FastCheck.property(double, (n) => {
