@@ -121,6 +121,16 @@ const validCustomId = /^[A-Za-z][A-Za-z0-9]*$/;
  * the canonical encoding's grammar. Ids are expected to be developer-written
  * literals, so an invalid id throws (a defect, not a recoverable error).
  *
+ * The argument is a persistent identity, not a display name: it is encoded
+ * as `"[id]"` in quantity wire formats, including derived products and rates.
+ * Choose it like a database column name. `const Count = Unit.custom("Units")`
+ * can replace a binding named `Units` without changing stored identity;
+ * its type alias can likewise be renamed while keeping `Custom<"Units">`.
+ * Changing the id makes old payloads fail the new unit's schema. Changing
+ * what one base unit means (for example, cents to dollars) under the same id
+ * silently reinterprets stored values. Either change requires an explicit
+ * wire migration, including derived units; keep display labels separately.
+ *
  * A custom unit is always distinct from a {@link BaseUnit} with the same
  * name: `Unit.custom("Meters")` encodes as `"[Meters]"` and never equals
  * `"Meters"`.
