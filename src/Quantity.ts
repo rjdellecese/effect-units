@@ -341,6 +341,42 @@ export const equalsWithin: {
     Math.abs(a.value - b.value) <= Math.abs(tolerance.value),
 );
 
+/**
+ * Relative-tolerance equality: whether the absolute difference between `a`
+ * and `b`, divided by their mean magnitude, is no more than `tolerance`.
+ * This symmetric comparison is useful for two measurements of the same
+ * quantity. Two zeroes are equal despite having no relative magnitude;
+ * identical infinities are equal, while NaN and unequal infinities are not.
+ */
+export const equalsWithinRelative: {
+  <U extends Unit.Unit>(
+    b: Quantity<U>,
+    tolerance: Quantity<"Unitless">,
+  ): (a: Quantity<U>) => boolean;
+  <U extends Unit.Unit>(
+    a: Quantity<U>,
+    b: Quantity<NoInfer<U>>,
+    tolerance: Quantity<"Unitless">,
+  ): boolean;
+} = Function.dual(
+  3,
+  (
+    a: Quantity<Unit.Unit>,
+    b: Quantity<Unit.Unit>,
+    tolerance: Quantity<"Unitless">,
+  ): boolean => {
+    if (a.value === b.value) return true;
+
+    const magnitudeA = Math.abs(a.value);
+    const magnitudeB = Math.abs(b.value);
+    const scale = Math.max(magnitudeA, magnitudeB);
+    const difference = Math.abs(a.value / scale - b.value / scale);
+    const meanMagnitude = (magnitudeA / scale + magnitudeB / scale) / 2;
+
+    return difference / meanMagnitude <= Math.abs(tolerance.value);
+  },
+);
+
 export const multiply: {
   <U extends Unit.Unit>(b: number): (a: Quantity<U>) => Quantity<U>;
   <U extends Unit.Unit>(a: Quantity<U>, b: number): Quantity<U>;

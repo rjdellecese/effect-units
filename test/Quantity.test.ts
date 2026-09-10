@@ -782,6 +782,126 @@ describe("equalsWithin", () => {
   });
 });
 
+describe("equalsWithinRelative", () => {
+  it("compares the difference against the mean magnitude", () => {
+    assertTrue(
+      Quantity.equalsWithinRelative(
+        Length.meters(100),
+        Length.meters(101),
+        Dimensionless.percent(1),
+      ),
+    );
+    assertFalse(
+      Quantity.equalsWithinRelative(
+        Length.meters(100),
+        Length.meters(102),
+        Dimensionless.percent(1),
+      ),
+    );
+  });
+
+  it("is symmetric and supports data-last calls", () => {
+    const isWithinOnePercent = Quantity.equalsWithinRelative(
+      Length.meters(101),
+      Dimensionless.percent(1),
+    );
+
+    expectTypeOf(isWithinOnePercent).toEqualTypeOf<
+      (a: Quantity.Quantity<Length.Meters>) => boolean
+    >();
+    assertTrue(isWithinOnePercent(Length.meters(100)));
+    assertTrue(
+      Quantity.equalsWithinRelative(
+        Length.meters(101),
+        Length.meters(100),
+        Dimensionless.percent(1),
+      ),
+    );
+
+    if (globalThis.Boolean(false)) {
+      Quantity.equalsWithinRelative(
+        Length.meters(100),
+        Length.meters(101),
+        // @ts-expect-error Relative tolerance must be unitless.
+        Length.meters(1),
+      );
+      Quantity.equalsWithinRelative(
+        Length.meters(100),
+        // @ts-expect-error The compared quantities must have the same unit.
+        Mass.kilograms(100),
+        Dimensionless.percent(1),
+      );
+    }
+  });
+
+  it("handles zero magnitudes", () => {
+    assertTrue(
+      Quantity.equalsWithinRelative(
+        Length.zero,
+        Length.zero,
+        Dimensionless.fraction(0),
+      ),
+    );
+    assertFalse(
+      Quantity.equalsWithinRelative(
+        Length.zero,
+        Length.meters(1),
+        Dimensionless.fraction(1.99),
+      ),
+    );
+    assertTrue(
+      Quantity.equalsWithinRelative(
+        Length.zero,
+        Length.meters(1),
+        Dimensionless.fraction(2),
+      ),
+    );
+  });
+
+  it("avoids overflow and underflow at finite extremes", () => {
+    const tolerance = Dimensionless.fraction(2);
+
+    assertTrue(
+      Quantity.equalsWithinRelative(
+        Length.zero,
+        Length.meters(Number.MIN_VALUE),
+        tolerance,
+      ),
+    );
+    assertTrue(
+      Quantity.equalsWithinRelative(
+        Length.meters(Number.MAX_VALUE),
+        Length.meters(-Number.MAX_VALUE),
+        tolerance,
+      ),
+    );
+  });
+
+  it("is false for NaN and unequal infinities", () => {
+    const infinite = Length.meters(Infinity);
+    const tolerance = Dimensionless.percent(1);
+
+    assertFalse(
+      Quantity.equalsWithinRelative(
+        Quantity.make("Meters", NaN),
+        Length.meters(1),
+        tolerance,
+      ),
+    );
+    assertTrue(Quantity.equalsWithinRelative(infinite, infinite, tolerance));
+    assertFalse(
+      Quantity.equalsWithinRelative(
+        infinite,
+        Length.meters(-Infinity),
+        tolerance,
+      ),
+    );
+    assertFalse(
+      Quantity.equalsWithinRelative(infinite, Length.meters(1), tolerance),
+    );
+  });
+});
+
 describe("comparison", () => {
   it("orders quantities", () => {
     const short = Length.meters(1);
