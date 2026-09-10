@@ -1,9 +1,12 @@
+import * as BigDecimal from "effect/BigDecimal";
 import * as Equal from "effect/Equal";
 import * as Function from "effect/Function";
 import * as Hash from "effect/Hash";
 import type * as Inspectable from "effect/Inspectable";
+import * as Option from "effect/Option";
 import type * as Pipeable from "effect/Pipeable";
 import * as Predicate from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 
@@ -17,6 +20,7 @@ import {
   ValueObjectProto,
   valueEquals,
 } from "./internal/valueObject.ts";
+import * as Rational from "./Rational.ts";
 import * as Unit from "./Unit.ts";
 
 export const TypeId = Symbol.for("effect-units/Quantity");
@@ -67,6 +71,170 @@ export const QuantityFromStruct = <const U extends Unit.Unit>(unit: U) => {
   const { struct, transformation } = wire(unit);
   return struct.pipe(Schema.decodeTo(Quantity(unit), transformation));
 };
+
+export interface ArbitraryOnGridOptions {
+  /** The distance between adjacent generated values. Must be positive. */
+  readonly step: number;
+  /** The inclusive lower bound, expressed as a quantity value. */
+  readonly min: number;
+  /** The inclusive upper bound, expressed as a quantity value. */
+  readonly max: number;
+}
+
+interface Grid {
+  readonly step: Rational.Rational;
+  readonly minimum: number;
+  readonly maximum: number;
+}
+
+const gridError = (message: string): RangeError =>
+  new RangeError(`Quantity.arbitraryOnGrid: ${message}`);
+
+const isPositiveFinite = (n: number): boolean => Number.isFinite(n) && n > 0;
+
+/**
+ * The float on the human-decimal grid at `index`: `index × step` as a
+ * rational, correctly rounded. 7 on a tenths grid is `0.7`, not
+ * `0.7000000000000001`.
+ */
+const valueOnGrid =
+  (step: Rational.Rational) =>
+  (index: number): number => {
+    const value = Rational.multiply(
+      step,
+      Rational.fromBigInt(globalThis.BigInt(index)),
+    );
+    return Option.getOrElse(Rational.toNumber(value), () =>
+      Rational.isLessThan(value, Rational.zero)
+        ? Number.NEGATIVE_INFINITY
+        : Number.POSITIVE_INFINITY,
+    );
+  };
+
+const snapLowerIndex = (
+  valueAt: (index: number) => number,
+  min: number,
+  candidate: number,
+): number =>
+  valueAt(candidate - 1) >= min
+    ? candidate - 1
+    : valueAt(candidate) < min
+      ? candidate + 1
+      : candidate;
+
+const snapUpperIndex = (
+  valueAt: (index: number) => number,
+  max: number,
+  candidate: number,
+): number =>
+  valueAt(candidate + 1) <= max
+    ? candidate + 1
+    : valueAt(candidate) > max
+      ? candidate - 1
+      : candidate;
+
+/**
+ * Derives the integer index range whose generated values lie in
+ * `[min, max]`. Invalid developer-written options are a defect
+ * (`RangeError`), matching {@link Unit.custom}.
+ */
+const grid = ({
+  step,
+  min,
+  max,
+}: ArbitraryOnGridOptions): Result.Result<Grid, RangeError> =>
+  Result.gen(function* () {
+    const positiveStep = yield* Result.liftPredicate(
+      step,
+      isPositiveFinite,
+      () => gridError("step must be positive"),
+    );
+    const finiteMin = yield* Result.liftPredicate(min, Number.isFinite, () =>
+      gridError("min and max must be finite and min must not exceed max"),
+    );
+    const finiteMax = yield* Result.liftPredicate(
+      max,
+      (bound) => Number.isFinite(bound) && bound >= finiteMin,
+      () => gridError("min and max must be finite and min must not exceed max"),
+    );
+
+    const stepRational = Rational.fromBigDecimal(
+      BigDecimal.fromNumberUnsafe(positiveStep),
+    );
+    const valueAt = valueOnGrid(stepRational);
+    const lowerCandidate = Math.ceil(finiteMin / positiveStep);
+    const upperCandidate = Math.floor(finiteMax / positiveStep);
+
+    if (
+      !Number.isSafeInteger(lowerCandidate) ||
+      !Number.isSafeInteger(upperCandidate)
+    ) {
+      return yield* Result.fail(
+        gridError("bounds must contain a grid value with a safe integer index"),
+      );
+    }
+
+    const minimum = snapLowerIndex(valueAt, finiteMin, lowerCandidate);
+    const maximum = snapUpperIndex(valueAt, finiteMax, upperCandidate);
+
+    if (
+      !Number.isSafeInteger(minimum) ||
+      !Number.isSafeInteger(maximum) ||
+      minimum > maximum
+    ) {
+      return yield* Result.fail(
+        gridError("bounds must contain a grid value with a safe integer index"),
+      );
+    }
+
+    return { step: stepRational, minimum, maximum };
+  });
+
+/**
+ * Schema annotations for quantities constrained to a human-input grid.
+ *
+ * Generated values are multiples of `step` between `min` and `max`,
+ * inclusive. Generation starts from integers so shrinking stays on the grid;
+ * decimal steps are the exact rationals of their decimal representation, so
+ * a tenths grid yields `0.7` rather than `0.7000000000000001`. Dual, so
+ * either `arbitraryOnGrid(unit, options)` or
+ * `pipe(unit, arbitraryOnGrid(options))`.
+ *
+ * @example
+ * ```ts
+ * const MeasuredLength = Quantity(Meters).annotate(
+ *   arbitraryOnGrid(Meters, {
+ *     step: 0.01,
+ *     min: 0,
+ *     max: 100,
+ *   }),
+ * )
+ * ```
+ */
+export const arbitraryOnGrid: {
+  <const U extends Unit.Unit>(
+    options: ArbitraryOnGridOptions,
+  ): (unit: U) => Schema.Annotations.Declaration<Quantity<U>>;
+  <const U extends Unit.Unit>(
+    unit: U,
+    options: ArbitraryOnGridOptions,
+  ): Schema.Annotations.Declaration<Quantity<U>>;
+} = Function.dual(
+  2,
+  <U extends Unit.Unit>(
+    unit: U,
+    options: ArbitraryOnGridOptions,
+  ): Schema.Annotations.Declaration<Quantity<U>> => {
+    const { step, minimum, maximum } = Result.getOrThrow(grid(options));
+    const valueAt = valueOnGrid(step);
+    return {
+      toArbitrary: () => (fc) =>
+        fc
+          .integer({ min: minimum, max: maximum })
+          .map((n) => make(unit, valueAt(n))),
+    };
+  },
+);
 
 /**
  * A quantity is a plain 64-bit float tagged with a unit tree. Arithmetic
