@@ -28,10 +28,9 @@ jobs:
       - uses: ./.github/actions/setup
 
       - name: Create release pull request or publish
-        uses: changesets/action@v1
+        uses: changesets/action@v2
         with:
-          version: pnpm version-packages
-          publish: pnpm release
-          branch: ${{ github.ref_name }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          version-script: pnpm version-packages
+          publish-script: pnpm release
+          pr-base-branch: ${{ github.ref_name }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
