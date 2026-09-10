@@ -1,5 +1,20 @@
 # effect-units
 
+## 0.4.0
+
+### Minor Changes
+
+- 85ea25e: Add `QuantityFromValue` for finite bare-number wires, quantity-aware positive/non-negative schema combinators and inclusive lower-bound checks, and `Quantity.fromBigDecimal` / `toBigDecimal` crossings with explicit precision and range guarantees.
+
+  Document custom-unit IDs and base scales as persistence contracts, distinguish dimensional safety from exact arithmetic, and explain how to wrap an existing Effect schema without losing its validation.
+
+- 62e5a93: Add `Quantity.equalsWithinRelative` for comparing measurements with a unitless relative tolerance.
+- 7305650: Add `Quantity.arbitraryOnGrid` for deriving quantity schema arbitraries on human-input grids.
+
+### Patch Changes
+
+- 8dcd5db: Preserve concrete units when using compatible quantity operations in a point-free style.
+
 ## 0.3.0
 
 ### Minor Changes
