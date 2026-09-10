@@ -3,5 +3,4 @@ dist/
 coverage/
 *.tsbuildinfo
 tsconfig.vitest-temp.json
-.amp/portals/*
 .DS_Store
