@@ -8,13 +8,15 @@ import {
 } from "@effect/vitest/utils";
 import * as Array from "effect/Array";
 import * as BigDecimal from "effect/BigDecimal";
+import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as Equal from "effect/Equal";
-import * as FastCheck from "effect/testing/FastCheck";
 import * as Function from "effect/Function";
 import * as Option from "effect/Option";
+import * as FastCheck from "fast-check";
 import * as Schema from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 import { isCloseTo, double } from "./testUtils.ts";
 import * as Dimensionless from "../src/Dimensionless.ts";
@@ -24,6 +26,20 @@ import * as Quantity from "../src/Quantity.ts";
 import * as Unit from "../src/Unit.ts";
 
 const nonZeroDouble = double.filter((n) => n !== 0);
+const assertSchemaProperty = <T>(
+  schema: Schema.Schema<T>,
+  property: (value: T) => void,
+): void => {
+  const result = Effect.runSync(
+    Arbitrary.checkEffect(Arbitrary.schema(schema), (value) =>
+      Effect.try(() => {
+        property(value);
+        return true;
+      }),
+    ),
+  );
+  expect(Arbitrary.formatCheckFailure(result)).toBeUndefined();
+};
 const CustomRate = Unit.rate(Unit.custom("USD"), Unit.custom("Count"));
 type CustomRate = Quantity.Quantity<typeof CustomRate>;
 const customRate = (value: number): CustomRate =>
@@ -750,14 +766,12 @@ describe("schema", () => {
           Quantity.arbitraryOnGrid("Meters", { step: 0.1, min: -1, max: 1 }),
         ),
       );
-      FastCheck.assert(
-        FastCheck.property(Schema.toArbitrary(schema), (quantity) => {
-          expect(quantity.value).toBeGreaterThan(0);
-          expect(quantity.value).toBeLessThanOrEqual(1);
-          expect(quantity.value).toBe(Number(quantity.value.toFixed(1)));
-          expect(Unit.equals(quantity.unit, "Meters")).toBe(true);
-        }),
-      );
+      assertSchemaProperty(schema, (quantity) => {
+        expect(quantity.value).toBeGreaterThan(0);
+        expect(quantity.value).toBeLessThanOrEqual(1);
+        expect(quantity.value).toBe(Number(quantity.value.toFixed(1)));
+        expect(Unit.equals(quantity.unit, "Meters")).toBe(true);
+      });
     });
 
     it("checks positivity and non-negativity without changing wire types", () => {
@@ -1085,17 +1099,12 @@ describe("schema", () => {
     );
     expectTypeOf(MeasuredLength.Type).toEqualTypeOf<Length.Length>();
 
-    FastCheck.assert(
-      FastCheck.property(
-        Schema.toArbitrary(MeasuredLength),
-        ({ unit, value }) => {
-          assertTrue(Unit.equals(unit, Length.Meters));
-          assertTrue(value >= -0.3);
-          assertTrue(value <= 0.7);
-          assertEquals(value, Number(value.toFixed(1)));
-        },
-      ),
-    );
+    assertSchemaProperty(MeasuredLength, ({ unit, value }) => {
+      assertTrue(Unit.equals(unit, Length.Meters));
+      assertTrue(value >= -0.3);
+      assertTrue(value <= 0.7);
+      assertEquals(value, Number(value.toFixed(1)));
+    });
 
     const SingleValue = Length.Length.annotate(
       Quantity.arbitraryOnGrid(Length.Meters, {
@@ -1104,11 +1113,9 @@ describe("schema", () => {
         max: 0.3,
       }),
     );
-    FastCheck.assert(
-      FastCheck.property(Schema.toArbitrary(SingleValue), ({ value }) => {
-        assertEquals(value, 0.3);
-      }),
-    );
+    assertSchemaProperty(SingleValue, ({ value }) => {
+      assertEquals(value, 0.3);
+    });
 
     const RoundedBoundary = Length.Length.annotate(
       Quantity.arbitraryOnGrid(Length.Meters, {
@@ -1117,11 +1124,9 @@ describe("schema", () => {
         max: 0.4,
       }),
     );
-    FastCheck.assert(
-      FastCheck.property(Schema.toArbitrary(RoundedBoundary), ({ value }) => {
-        assertEquals(value, 0.4);
-      }),
-    );
+    assertSchemaProperty(RoundedBoundary, ({ value }) => {
+      assertEquals(value, 0.4);
+    });
 
     for (const value of [-Number.MAX_VALUE, Number.MAX_VALUE]) {
       const Extreme = Length.Length.annotate(
@@ -1131,11 +1136,9 @@ describe("schema", () => {
           max: value,
         }),
       );
-      FastCheck.assert(
-        FastCheck.property(Schema.toArbitrary(Extreme), (quantity) => {
-          assertEquals(quantity.value, value);
-        }),
-      );
+      assertSchemaProperty(Extreme, (quantity) => {
+        assertEquals(quantity.value, value);
+      });
     }
 
     const Tenths = Length.Length.annotate(
@@ -1145,11 +1148,9 @@ describe("schema", () => {
         max: 0.7,
       }),
     );
-    FastCheck.assert(
-      FastCheck.property(Schema.toArbitrary(Tenths), ({ value }) => {
-        assertEquals(value, 0.7);
-      }),
-    );
+    assertSchemaProperty(Tenths, ({ value }) => {
+      assertEquals(value, 0.7);
+    });
 
     const Piped = Length.Length.annotate(
       Function.pipe(
@@ -1162,7 +1163,9 @@ describe("schema", () => {
       ),
     );
     expectTypeOf(Piped.Type).toEqualTypeOf<Length.Length>();
-    const pipedValues = FastCheck.sample(Schema.toArbitrary(Piped), 50);
+    const pipedValues = Effect.runSync(
+      Arbitrary.sampleEffect(Arbitrary.schema(Piped), { count: 50 }),
+    );
     assertTrue(
       Array.every(
         pipedValues,

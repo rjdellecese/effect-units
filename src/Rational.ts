@@ -565,13 +565,15 @@ export const fromStringUnsafe = (s: string): Rational =>
  * {@link Rational}, so the two can never drift apart.
  */
 const stringTransformation = {
-  decode: SchemaGetter.transformOrFail((s: string) =>
+  decode: SchemaGetter.transformEffect((s: string, options) =>
     Option.match(fromString(s), {
       onNone: () =>
         Effect.fail(
-          new SchemaIssue.InvalidValue(Option.some(s), {
-            message: "not a canonical rational encoding",
-          }),
+          new SchemaIssue.InvalidValue(
+            { message: "not a canonical rational encoding" },
+            s,
+            options,
+          ),
         ),
       onSome: Effect.succeed,
     }),
@@ -591,10 +593,22 @@ const stringTransformation = {
 export const Rational = Schema.declare(isRational, {
   identifier: "Rational",
   toFormatter: () => format,
-  toArbitrary: () => (fc) =>
-    fc
-      .tuple(fc.bigInt(), fc.bigInt({ min: 1n }))
-      .map(([numerator, denominator]) => makeUnsafe(numerator, denominator)),
+  toCodecArbitrary: () =>
+    Schema.link<Rational>()(
+      Schema.Struct({
+        numerator: Schema.BigInt,
+        denominator: Schema.BigInt.check(Schema.isGreaterThanBigInt(0n)),
+      }),
+      {
+        decode: SchemaGetter.transform(({ numerator, denominator }) =>
+          makeUnsafe(numerator, denominator),
+        ),
+        encode: SchemaGetter.transform(({ numerator, denominator }) => ({
+          numerator,
+          denominator,
+        })),
+      },
+    ),
   toEquivalence: () => Equivalence,
   toCodecJson: () =>
     Schema.link<Rational>()(Schema.String, stringTransformation),

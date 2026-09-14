@@ -1,7 +1,7 @@
 import { it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Array from "effect/Array";
-import * as FastCheck from "effect/testing/FastCheck";
+import * as FastCheck from "fast-check";
 import { pipe } from "effect/Function";
 
 import type * as Quantity from "../src/Quantity.ts";

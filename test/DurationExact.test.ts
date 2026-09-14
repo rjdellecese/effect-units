@@ -3,7 +3,7 @@ import { assertEquals, assertTrue } from "@effect/vitest/utils";
 import * as DateTime from "effect/DateTime";
 import * as EffectDuration from "effect/Duration";
 import * as Equal from "effect/Equal";
-import * as FastCheck from "effect/testing/FastCheck";
+import * as FastCheck from "fast-check";
 import * as Option from "effect/Option";
 
 import { testExactAnchors, testExactRoundtrips } from "./testUtilsExact.ts";

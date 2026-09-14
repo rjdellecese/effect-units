@@ -10,17 +10,18 @@
     "@changesets/cli": "3.0.2",
     "@changesets/config": "4.0.0",
     "@effect/language-service": "0.87.1",
-    "@effect/vitest": "4.0.0-beta.102",
+    "@effect/vitest": "4.0.0-rc.115",
     "@types/node": "26.1.1",
-    "@vitest/coverage-v8": "4.1.10",
+    "@vitest/coverage-v8": "5.0.0",
     "dpdm": "4.2.0",
-    "effect": "4.0.0-beta.102",
+    "effect": "4.0.0-rc.115",
+    "fast-check": "4.10.0",
     "oxfmt": "0.58.0",
     "oxlint": "1.68.0",
     "syncpack": "15.3.2",
     "tsdown": "0.22.7",
     "typescript": "6.0.3",
-    "vitest": "4.1.10"
+    "vitest": "5.0.0"
   },
   "engines": {
     "node": ">=22"
@@ -51,7 +52,7 @@
   "license": "BSD-3-Clause",
   "packageManager": "pnpm@11.10.0",
   "peerDependencies": {
-    "effect": "^4.0.0-beta.102"
+    "effect": "^4.0.0-rc.115"
   },
   "publishConfig": {
     "access": "public"

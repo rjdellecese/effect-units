@@ -9,7 +9,7 @@ import {
 import * as Array from "effect/Array";
 import * as Result from "effect/Result";
 import * as Equal from "effect/Equal";
-import * as FastCheck from "effect/testing/FastCheck";
+import * as FastCheck from "fast-check";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
