@@ -5,7 +5,6 @@ import {
   deepStrictEqual,
 } from "@effect/vitest/utils";
 import * as Equal from "effect/Equal";
-import * as FastCheck from "fast-check";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
@@ -54,17 +53,12 @@ describe("TemperatureExact", () => {
     );
   });
 
-  it("plus and minus are inverses", () => {
-    FastCheck.assert(
-      FastCheck.property(rational, rational, (a, b) => {
-        const temperature = TemperatureExact.kelvins(a);
-        const delta = TemperatureExact.celsiusDegrees(b);
-        const raised = TemperatureExact.plus(temperature, delta);
-
-        assertTrue(
-          Equal.equals(TemperatureExact.minus(raised, temperature), delta),
-        );
-      }),
+  it.prop("plus and minus are inverses", [rational, rational], ([a, b]) => {
+    const temperature = TemperatureExact.kelvins(a);
+    const delta = TemperatureExact.celsiusDegrees(b);
+    const raised = TemperatureExact.plus(temperature, delta);
+    assertTrue(
+      Equal.equals(TemperatureExact.minus(raised, temperature), delta),
     );
   });
 
@@ -96,21 +90,16 @@ describe("TemperatureExact", () => {
     );
   });
 
-  it("encodes and decodes through the schema", () => {
-    FastCheck.assert(
-      FastCheck.property(rational, (r) => {
-        const temperature = TemperatureExact.kelvins(r);
-        const decoded = Schema.decodeSync(
-          TemperatureExact.TemperatureExactFromStruct,
-        )(
-          Schema.encodeSync(TemperatureExact.TemperatureExactFromStruct)(
-            temperature,
-          ),
-        );
-
-        assertTrue(Equal.equals(decoded, temperature));
-      }),
+  it.prop("encodes and decodes through the schema", [rational], ([r]) => {
+    const temperature = TemperatureExact.kelvins(r);
+    const decoded = Schema.decodeSync(
+      TemperatureExact.TemperatureExactFromStruct,
+    )(
+      Schema.encodeSync(TemperatureExact.TemperatureExactFromStruct)(
+        temperature,
+      ),
     );
+    assertTrue(Equal.equals(decoded, temperature));
   });
 
   it("carries a unit discriminator in the wire format", () => {
@@ -189,24 +178,19 @@ describe("TemperatureExact", () => {
       );
     });
 
-    it("roundtrips through the float module", () => {
-      FastCheck.assert(
-        FastCheck.property(rational, (r) => {
-          const temperature = TemperatureExact.kelvins(r);
-          const back = TemperatureExact.fromTemperature(
-            Option.getOrThrow(TemperatureExact.toTemperature(temperature)),
-          );
-
-          // One correct rounding out, exact back in.
-          assertTrue(
-            Equal.equals(
-              Rational.toNumberUnsafe(
-                TemperatureExact.inKelvins(Option.getOrThrow(back)),
-              ),
-              Rational.toNumberUnsafe(r),
-            ),
-          );
-        }),
+    it.prop("roundtrips through the float module", [rational], ([r]) => {
+      const temperature = TemperatureExact.kelvins(r);
+      const back = TemperatureExact.fromTemperature(
+        Option.getOrThrow(TemperatureExact.toTemperature(temperature)),
+      );
+      // One correct rounding out, exact back in.
+      assertTrue(
+        Equal.equals(
+          Rational.toNumberUnsafe(
+            TemperatureExact.inKelvins(Option.getOrThrow(back)),
+          ),
+          Rational.toNumberUnsafe(r),
+        ),
       );
     });
 

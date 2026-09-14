@@ -20,6 +20,7 @@ The package is built with tsdown (JavaScript output; `dts: false` delegates decl
 
 - Import Effect modules from their submodule paths (e.g. `import * as Schema from "effect/Schema"`), not from bare `"effect"`—enforced for value imports by Oxlint's `no-restricted-imports` (type-only imports are exempt from the lint rule, but follow the convention anyway).
 - Tests live in `test/*.test.ts` and use `@effect/vitest`; shared test helpers live alongside them in `test/` (excluded from the build and coverage).
+- Property tests use `it.prop` (or `it.effect.prop` for Effects) with schemas or native `effect/unstable/arbitrary/Arbitrary` generators. Preserve numeric bounds and exclusions when composing generators, and configure run counts with `{ arbitrary: { runs } }`.
 - Source modules are PascalCase (one module per unit/quantity); helpers are camelCase.
 - Import Effect modules unaliased even when the name shadows a global (`import * as String from "effect/String"`), and reach for the built-in through `globalThis` (`globalThis.String(n)`, `globalThis.BigInt(n)`). Alias only to avoid shadowing a local export—`order` for `effect/Order` next to an exported `Order`, `Equivalence_` next to an exported `Equivalence`.
 - Schemas follow the Effect v4 convention: the bare name is the identity schema and `XFromY` is the codec, named for its encoded form (`Unit`/`UnitFromString`, `Length`/`LengthFromStruct`). There is no `FromSelf`—that was the v3 spelling, and v4 dropped it.

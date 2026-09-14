@@ -1,7 +1,8 @@
+import * as Schema from "effect/Schema";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { describe, it } from "@effect/vitest";
 import { assertEquals, assertTrue } from "@effect/vitest/utils";
 import * as Equal from "effect/Equal";
-import * as FastCheck from "fast-check";
 
 import { isCloseTo } from "./testUtils.ts";
 import * as Constants from "../src/internal/constants.ts";
@@ -15,10 +16,18 @@ import * as Speed from "../src/Speed.ts";
 import * as Temperature from "../src/Temperature.ts";
 import * as Volume from "../src/Volume.ts";
 
-const rational = FastCheck.tuple(
-  FastCheck.bigInt({ min: -(2n ** 64n), max: 2n ** 64n }),
-  FastCheck.bigInt({ min: 1n, max: 2n ** 32n }),
-).map(([n, d]) => Rational.makeUnsafe(n, d));
+const rational = Arbitrary.all([
+  Arbitrary.schema(
+    Schema.BigInt.check(
+      Schema.isBetweenBigInt({ minimum: -(2n ** 64n), maximum: 2n ** 64n }),
+    ),
+  ),
+  Arbitrary.schema(
+    Schema.BigInt.check(
+      Schema.isBetweenBigInt({ minimum: 1n, maximum: 2n ** 32n }),
+    ),
+  ),
+]).pipe(Arbitrary.map(([n, d]) => Rational.makeUnsafe(n, d)));
 
 describe("float constants stay pinned to their historical bit patterns", () => {
   // Hardcoded literals, not imports: a change to either family must fail
@@ -102,19 +111,15 @@ describe("exact prefixes agree with Prefix", () => {
     }
   });
 
-  it("roundtrips exactly", () => {
-    FastCheck.assert(
-      FastCheck.property(rational, (r) => {
-        for (const prefix of ["Quetta", "Kilo", "Centi", "Quecto"] as const) {
-          assertTrue(
-            Equal.equals(
-              PrefixExact.toPrefixed(prefix, PrefixExact.toBase(prefix, r)),
-              r,
-            ),
-          );
-        }
-      }),
-    );
+  it.prop("roundtrips exactly", [rational], ([r]) => {
+    for (const prefix of ["Quetta", "Kilo", "Centi", "Quecto"] as const) {
+      assertTrue(
+        Equal.equals(
+          PrefixExact.toPrefixed(prefix, PrefixExact.toBase(prefix, r)),
+          r,
+        ),
+      );
+    }
   });
 });
 

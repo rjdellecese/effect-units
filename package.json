@@ -15,7 +15,6 @@
     "@vitest/coverage-v8": "5.0.0",
     "dpdm": "4.2.0",
     "effect": "4.0.0-rc.115",
-    "fast-check": "4.10.0",
     "oxfmt": "0.58.0",
     "oxlint": "1.68.0",
     "syncpack": "15.3.2",

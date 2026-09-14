@@ -1,8 +1,9 @@
+import * as Schema from "effect/Schema";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Array from "effect/Array";
 import * as Equal from "effect/Equal";
-import * as FastCheck from "fast-check";
 import { pipe } from "effect/Function";
 
 import * as Rational from "../src/Rational.ts";
@@ -12,14 +13,26 @@ import * as Rational from "../src/Rational.ts";
  * 1..2^32. Bounded to keep property runs fast, not because anything
  * overflows—exact arithmetic has no range limits.
  */
-export const rational = FastCheck.tuple(
-  FastCheck.bigInt({ min: -(2n ** 64n), max: 2n ** 64n }),
-  FastCheck.bigInt({ min: 1n, max: 2n ** 32n }),
-).map(([numerator, denominator]) =>
-  Rational.makeUnsafe(numerator, denominator),
+export const rational = Arbitrary.all([
+  Arbitrary.schema(
+    Schema.BigInt.check(
+      Schema.isBetweenBigInt({ minimum: -(2n ** 64n), maximum: 2n ** 64n }),
+    ),
+  ),
+  Arbitrary.schema(
+    Schema.BigInt.check(
+      Schema.isBetweenBigInt({ minimum: 1n, maximum: 2n ** 32n }),
+    ),
+  ),
+]).pipe(
+  Arbitrary.map(([numerator, denominator]) =>
+    Rational.makeUnsafe(numerator, denominator),
+  ),
 );
 
-export const nonZeroRational = rational.filter((r) => !Rational.isZero(r));
+export const nonZeroRational = rational.pipe(
+  Arbitrary.filter((r) => !Rational.isZero(r)),
+);
 
 /**
  * Registers a property test asserting that a constructor/extractor pair
@@ -30,13 +43,13 @@ export const testExactRoundtrip = <Q>(
   there: (r: Rational.Rational) => Q,
   back: (q: Q) => Rational.Rational,
 ): void => {
-  it(`roundtrips exactly between '${there.name}' and '${back.name}'`, () => {
-    FastCheck.assert(
-      FastCheck.property(rational, (r) => {
-        assertTrue(Equal.equals(pipe(r, there, back), r));
-      }),
-    );
-  });
+  it.prop(
+    `roundtrips exactly between '${there.name}' and '${back.name}'`,
+    [rational],
+    ([r]) => {
+      assertTrue(Equal.equals(pipe(r, there, back), r));
+    },
+  );
 };
 
 /**
