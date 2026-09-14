@@ -278,13 +278,15 @@ export const decode = (input: string): Option.Option<Unit> =>
  * {@link Unit}, so the two can never drift apart.
  */
 const stringTransformation = {
-  decode: SchemaGetter.transformOrFail((input: string) =>
+  decode: SchemaGetter.transformEffect((input: string, options) =>
     Option.match(decode(input), {
       onNone: () =>
         Effect.fail(
-          new SchemaIssue.InvalidValue(Option.some(input), {
-            message: "not a canonical unit encoding",
-          }),
+          new SchemaIssue.InvalidValue(
+            { message: "not a canonical unit encoding" },
+            input,
+            options,
+          ),
         ),
       onSome: Effect.succeed,
     }),

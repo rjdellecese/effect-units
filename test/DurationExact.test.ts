@@ -1,9 +1,10 @@
+import * as Schema from "effect/Schema";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { describe, it } from "@effect/vitest";
 import { assertEquals, assertTrue } from "@effect/vitest/utils";
 import * as DateTime from "effect/DateTime";
 import * as EffectDuration from "effect/Duration";
 import * as Equal from "effect/Equal";
-import * as FastCheck from "effect/testing/FastCheck";
 import * as Option from "effect/Option";
 
 import { testExactAnchors, testExactRoundtrips } from "./testUtilsExact.ts";
@@ -66,24 +67,23 @@ describe("DurationExact", () => {
       );
     });
 
-    it("roundtrips through effect/Duration exactly", () => {
-      FastCheck.assert(
-        FastCheck.property(
-          FastCheck.bigInt({ min: 0n, max: 2n ** 63n }),
-          (nanos) => {
-            const duration = Option.getOrThrow(
-              DurationExact.fromDuration(EffectDuration.nanos(nanos)),
-            );
-            const back = Option.getOrThrow(DurationExact.toDuration(duration));
-
-            assertEquals(
-              Option.getOrThrow(EffectDuration.toNanos(back)),
-              nanos,
-            );
-          },
+    it.prop(
+      "roundtrips through effect/Duration exactly",
+      [
+        Arbitrary.schema(
+          Schema.BigInt.check(
+            Schema.isBetweenBigInt({ minimum: 0n, maximum: 2n ** 63n }),
+          ),
         ),
-      );
-    });
+      ],
+      ([nanos]) => {
+        const duration = Option.getOrThrow(
+          DurationExact.fromDuration(EffectDuration.nanos(nanos)),
+        );
+        const back = Option.getOrThrow(DurationExact.toDuration(duration));
+        assertEquals(Option.getOrThrow(EffectDuration.toNanos(back)), nanos);
+      },
+    );
 
     it("toDuration rounds to nanoseconds under the given mode", () => {
       const third = DurationExact.seconds(Rational.makeUnsafe(1n, 3n));

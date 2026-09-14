@@ -1,7 +1,8 @@
+import * as Schema from "effect/Schema";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Array from "effect/Array";
-import * as FastCheck from "effect/testing/FastCheck";
 import { pipe } from "effect/Function";
 
 import type * as Quantity from "../src/Quantity.ts";
@@ -17,11 +18,9 @@ export interface Tolerance {
  * overflow to Infinity or underflow to a subnormal during a roundtrip
  * (magnitudes below 1e-30 collapse to zero).
  */
-export const double = FastCheck.double({
-  min: -1e30,
-  max: 1e30,
-  noNaN: true,
-}).map((n) => (Math.abs(n) < 1e-30 ? 0 : n));
+export const double = Arbitrary.schema(
+  Schema.Finite.check(Schema.isBetween({ minimum: -1e30, maximum: 1e30 })),
+).pipe(Arbitrary.map((n) => (Math.abs(n) < 1e-30 ? 0 : n)));
 
 /**
  * Float comparison within a relative tolerance, with an optional
@@ -56,13 +55,13 @@ export const testRoundtrip = <Q>(
   back: (q: Q) => number,
   tolerance: Tolerance = {},
 ): void => {
-  it(`roundtrips between '${there.name}' and '${back.name}'`, () => {
-    FastCheck.assert(
-      FastCheck.property(double, (n) => {
-        assertTrue(isCloseTo(pipe(n, there, back), n, tolerance));
-      }),
-    );
-  });
+  it.prop(
+    `roundtrips between '${there.name}' and '${back.name}'`,
+    [double],
+    ([n]) => {
+      assertTrue(isCloseTo(pipe(n, there, back), n, tolerance));
+    },
+  );
 };
 
 /**

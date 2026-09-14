@@ -1,3 +1,4 @@
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { describe, it } from "@effect/vitest";
 import {
   assertEquals,
@@ -10,44 +11,49 @@ import * as BigDecimal from "effect/BigDecimal";
 import * as BigInt_ from "effect/BigInt";
 import * as Result from "effect/Result";
 import * as Equal from "effect/Equal";
-import * as FastCheck from "effect/testing/FastCheck";
 import * as Hash from "effect/Hash";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 import * as Rational from "../src/Rational.ts";
 
-const bigIntArb = FastCheck.bigInt({ min: -(2n ** 64n), max: 2n ** 64n });
-const positiveBigIntArb = FastCheck.bigInt({ min: 1n, max: 2n ** 32n });
-
-const rational = FastCheck.tuple(bigIntArb, positiveBigIntArb).map(([n, d]) =>
-  Rational.makeUnsafe(n, d),
+const bigIntArb = Arbitrary.schema(
+  Schema.BigInt.check(
+    Schema.isBetweenBigInt({ minimum: -(2n ** 64n), maximum: 2n ** 64n }),
+  ),
+);
+const positiveBigIntArb = Arbitrary.schema(
+  Schema.BigInt.check(
+    Schema.isBetweenBigInt({ minimum: 1n, maximum: 2n ** 32n }),
+  ),
 );
 
-const nonZeroRational = rational.filter((r) => !Rational.isZero(r));
+const rational = Arbitrary.all([bigIntArb, positiveBigIntArb]).pipe(
+  Arbitrary.map(([n, d]) => Rational.makeUnsafe(n, d)),
+);
 
-const fullRangeDouble = FastCheck.double({
-  noDefaultInfinity: true,
-  noNaN: true,
-});
+const nonZeroRational = rational.pipe(
+  Arbitrary.filter((r) => !Rational.isZero(r)),
+);
+
+const fullRangeDouble = Arbitrary.schema(Schema.Finite);
 
 describe("make", () => {
-  it("reduces and normalizes the sign", () => {
-    FastCheck.assert(
-      FastCheck.property(bigIntArb, positiveBigIntArb, (n, d) => {
-        const r = Rational.makeUnsafe(n, d);
-
-        assertTrue(r.denominator > 0n);
-        assertEquals(
-          BigInt_.gcd(
-            r.numerator < 0n ? -r.numerator : r.numerator,
-            r.denominator,
-          ),
-          1n,
-        );
-      }),
-    );
-  });
+  it.prop(
+    "reduces and normalizes the sign",
+    [bigIntArb, positiveBigIntArb],
+    ([n, d]) => {
+      const r = Rational.makeUnsafe(n, d);
+      assertTrue(r.denominator > 0n);
+      assertEquals(
+        BigInt_.gcd(
+          r.numerator < 0n ? -r.numerator : r.numerator,
+          r.denominator,
+        ),
+        1n,
+      );
+    },
+  );
 
   it("equates equivalent fractions", () => {
     assertTrue(
@@ -76,94 +82,86 @@ describe("make", () => {
     throws(() => Rational.makeUnsafe(0n, 0n));
   });
 
-  it("make agrees with makeUnsafe on every valid denominator", () => {
-    FastCheck.assert(
-      FastCheck.property(bigIntArb, positiveBigIntArb, (n, d) => {
-        assertTrue(
-          Equal.equals(
-            Option.getOrThrow(Rational.make(n, d)),
-            Rational.makeUnsafe(n, d),
-          ),
-        );
-      }),
-    );
-    assertTrue(
-      Equal.equals(
-        Option.getOrThrow(Rational.make(3n)),
-        Rational.makeUnsafe(3n),
-      ),
-    );
-  });
+  it.prop(
+    "make agrees with makeUnsafe on every valid denominator",
+    [bigIntArb, positiveBigIntArb],
+    ([n, d]) => {
+      assertTrue(
+        Equal.equals(
+          Option.getOrThrow(Rational.make(n, d)),
+          Rational.makeUnsafe(n, d),
+        ),
+      );
+      assertTrue(
+        Equal.equals(
+          Option.getOrThrow(Rational.make(3n)),
+          Rational.makeUnsafe(3n),
+        ),
+      );
+    },
+  );
 });
 
 describe("field laws", () => {
-  it("sum is commutative and associative with identity zero", () => {
-    FastCheck.assert(
-      FastCheck.property(rational, rational, rational, (a, b, c) => {
-        assertTrue(Equal.equals(Rational.sum(a, b), Rational.sum(b, a)));
-        assertTrue(
-          Equal.equals(
-            Rational.sum(Rational.sum(a, b), c),
-            Rational.sum(a, Rational.sum(b, c)),
-          ),
-        );
-        assertTrue(Equal.equals(Rational.sum(a, Rational.zero), a));
-        assertTrue(
-          Equal.equals(Rational.sum(a, Rational.negate(a)), Rational.zero),
-        );
-      }),
+  it.prop(
+    "sum is commutative and associative with identity zero",
+    [rational, rational, rational],
+    ([a, b, c]) => {
+      assertTrue(Equal.equals(Rational.sum(a, b), Rational.sum(b, a)));
+      assertTrue(
+        Equal.equals(
+          Rational.sum(Rational.sum(a, b), c),
+          Rational.sum(a, Rational.sum(b, c)),
+        ),
+      );
+      assertTrue(Equal.equals(Rational.sum(a, Rational.zero), a));
+      assertTrue(
+        Equal.equals(Rational.sum(a, Rational.negate(a)), Rational.zero),
+      );
+    },
+  );
+
+  it.prop(
+    "multiply is commutative and associative with identity one",
+    [rational, rational, rational],
+    ([a, b, c]) => {
+      assertTrue(
+        Equal.equals(Rational.multiply(a, b), Rational.multiply(b, a)),
+      );
+      assertTrue(
+        Equal.equals(
+          Rational.multiply(Rational.multiply(a, b), c),
+          Rational.multiply(a, Rational.multiply(b, c)),
+        ),
+      );
+      assertTrue(Equal.equals(Rational.multiply(a, Rational.one), a));
+    },
+  );
+
+  it.prop("multiplicative inverses cancel", [nonZeroRational], ([a]) => {
+    assertTrue(
+      Equal.equals(
+        Rational.multiply(a, Rational.reciprocalUnsafe(a)),
+        Rational.one,
+      ),
     );
   });
 
-  it("multiply is commutative and associative with identity one", () => {
-    FastCheck.assert(
-      FastCheck.property(rational, rational, rational, (a, b, c) => {
-        assertTrue(
-          Equal.equals(Rational.multiply(a, b), Rational.multiply(b, a)),
-        );
-        assertTrue(
-          Equal.equals(
-            Rational.multiply(Rational.multiply(a, b), c),
-            Rational.multiply(a, Rational.multiply(b, c)),
-          ),
-        );
-        assertTrue(Equal.equals(Rational.multiply(a, Rational.one), a));
-      }),
-    );
-  });
+  it.prop(
+    "multiplication distributes over addition",
+    [rational, rational, rational],
+    ([a, b, c]) => {
+      assertTrue(
+        Equal.equals(
+          Rational.multiply(a, Rational.sum(b, c)),
+          Rational.sum(Rational.multiply(a, b), Rational.multiply(a, c)),
+        ),
+      );
+    },
+  );
 
-  it("multiplicative inverses cancel", () => {
-    FastCheck.assert(
-      FastCheck.property(nonZeroRational, (a) => {
-        assertTrue(
-          Equal.equals(
-            Rational.multiply(a, Rational.reciprocalUnsafe(a)),
-            Rational.one,
-          ),
-        );
-      }),
-    );
-  });
-
-  it("multiplication distributes over addition", () => {
-    FastCheck.assert(
-      FastCheck.property(rational, rational, rational, (a, b, c) => {
-        assertTrue(
-          Equal.equals(
-            Rational.multiply(a, Rational.sum(b, c)),
-            Rational.sum(Rational.multiply(a, b), Rational.multiply(a, c)),
-          ),
-        );
-      }),
-    );
-  });
-
-  it("subtract inverts sum", () => {
-    FastCheck.assert(
-      FastCheck.property(rational, rational, (a, b) => {
-        assertTrue(Equal.equals(Rational.subtract(Rational.sum(a, b), b), a));
-      }),
-    );
+  it.prop("subtract inverts sum", [rational, rational], ([a, b]) => {
+    assertTrue(Equal.equals(Rational.subtract(Rational.sum(a, b), b), a));
   });
 
   it("sumAll and multiplyAll fold with their identities", () => {
@@ -191,20 +189,19 @@ describe("field laws", () => {
 });
 
 describe("division", () => {
-  it("divide is None exactly on zero divisors", () => {
-    FastCheck.assert(
-      FastCheck.property(rational, nonZeroRational, (a, b) => {
-        const quotient = Rational.divide(a, b);
-
-        assertTrue(Option.isSome(quotient));
-        assertTrue(
-          Equal.equals(Rational.multiply(Option.getOrThrow(quotient), b), a),
-        );
-      }),
-    );
-    assertTrue(Option.isNone(Rational.divide(Rational.one, Rational.zero)));
-    assertTrue(Option.isNone(Rational.reciprocal(Rational.zero)));
-  });
+  it.prop(
+    "divide is None exactly on zero divisors",
+    [rational, nonZeroRational],
+    ([a, b]) => {
+      const quotient = Rational.divide(a, b);
+      assertTrue(Option.isSome(quotient));
+      assertTrue(
+        Equal.equals(Rational.multiply(Option.getOrThrow(quotient), b), a),
+      );
+      assertTrue(Option.isNone(Rational.divide(Rational.one, Rational.zero)));
+      assertTrue(Option.isNone(Rational.reciprocal(Rational.zero)));
+    },
+  );
 
   it("unsafe forms throw on zero", () => {
     throws(() => Rational.divideUnsafe(Rational.one, Rational.zero));
@@ -213,16 +210,16 @@ describe("division", () => {
 });
 
 describe("order", () => {
-  it("agrees with the sign of the difference", () => {
-    FastCheck.assert(
-      FastCheck.property(rational, rational, (a, b) => {
-        assertEquals(
-          Rational.Order(a, b),
-          Rational.sign(Rational.subtract(a, b)),
-        );
-      }),
-    );
-  });
+  it.prop(
+    "agrees with the sign of the difference",
+    [rational, rational],
+    ([a, b]) => {
+      assertEquals(
+        Rational.Order(a, b),
+        Rational.sign(Rational.subtract(a, b)),
+      );
+    },
+  );
 
   it("derives comparisons, min, max, clamp, and between", () => {
     const half = Rational.makeUnsafe(1n, 2n);
@@ -259,16 +256,16 @@ describe("guards", () => {
 });
 
 describe("number conversions", () => {
-  it("fromNumber is exact for every finite double", () => {
-    FastCheck.assert(
-      FastCheck.property(fullRangeDouble, (x) => {
-        assertEquals(
-          Rational.toNumberUnsafe(Rational.fromNumberUnsafe(x)),
-          x === 0 ? 0 : x,
-        );
-      }),
-    );
-  });
+  it.prop(
+    "fromNumber is exact for every finite double",
+    [fullRangeDouble],
+    ([x]) => {
+      assertEquals(
+        Rational.toNumberUnsafe(Rational.fromNumberUnsafe(x)),
+        x === 0 ? 0 : x,
+      );
+    },
+  );
 
   it("fromNumber produces known dyadic expansions", () => {
     assertTrue(
@@ -486,21 +483,22 @@ describe("round", () => {
 });
 
 describe("BigDecimal interop", () => {
-  const bigDecimalArb = FastCheck.tuple(
+  const bigDecimalArb = Arbitrary.all([
     bigIntArb,
-    FastCheck.integer({ min: -5, max: 20 }),
-  ).map(([value, scale]) => BigDecimal.make(value, scale));
+    Arbitrary.schema(
+      Schema.Int.check(Schema.isBetween({ minimum: -5, maximum: 20 })),
+    ),
+  ]).pipe(Arbitrary.map(([value, scale]) => BigDecimal.make(value, scale)));
 
-  it("fromBigDecimal is exact and toBigDecimalExact inverts it", () => {
-    FastCheck.assert(
-      FastCheck.property(bigDecimalArb, (bd) => {
-        const exact = Rational.toBigDecimalExact(Rational.fromBigDecimal(bd));
-
-        assertTrue(Option.isSome(exact));
-        assertTrue(BigDecimal.equals(Option.getOrThrow(exact), bd));
-      }),
-    );
-  });
+  it.prop(
+    "fromBigDecimal is exact and toBigDecimalExact inverts it",
+    [bigDecimalArb],
+    ([bd]) => {
+      const exact = Rational.toBigDecimalExact(Rational.fromBigDecimal(bd));
+      assertTrue(Option.isSome(exact));
+      assertTrue(BigDecimal.equals(Option.getOrThrow(exact), bd));
+    },
+  );
 
   it("toBigDecimalExact is None for non-terminating expansions", () => {
     assertTrue(
@@ -540,15 +538,10 @@ describe("BigDecimal interop", () => {
 });
 
 describe("format and fromString", () => {
-  it("roundtrips through the canonical encoding", () => {
-    FastCheck.assert(
-      FastCheck.property(rational, (r) => {
-        const decoded = Rational.fromString(Rational.format(r));
-
-        assertTrue(Option.isSome(decoded));
-        assertTrue(Equal.equals(Option.getOrThrow(decoded), r));
-      }),
-    );
+  it.prop("roundtrips through the canonical encoding", [rational], ([r]) => {
+    const decoded = Rational.fromString(Rational.format(r));
+    assertTrue(Option.isSome(decoded));
+    assertTrue(Equal.equals(Option.getOrThrow(decoded), r));
   });
 
   it("formats integers without a denominator", () => {
@@ -582,19 +575,27 @@ describe("format and fromString", () => {
 });
 
 describe("schema", () => {
-  it("roundtrips through the string schema", () => {
-    FastCheck.assert(
-      FastCheck.property(rational, (r) => {
-        const encoded = Schema.encodeSync(Rational.RationalFromString)(r);
+  it.prop(
+    "generates normalized rationals from the identity schema",
+    [Rational.Rational],
+    ([r]) => {
+      assertTrue(Rational.isRational(r));
+      assertTrue(r.denominator > 0n);
+      assertEquals(
+        BigInt_.gcd(
+          r.numerator < 0n ? -r.numerator : r.numerator,
+          r.denominator,
+        ),
+        1n,
+      );
+    },
+  );
 
-        assertEquals(encoded, Rational.format(r));
-        assertTrue(
-          Equal.equals(
-            Schema.decodeSync(Rational.RationalFromString)(encoded),
-            r,
-          ),
-        );
-      }),
+  it.prop("roundtrips through the string schema", [rational], ([r]) => {
+    const encoded = Schema.encodeSync(Rational.RationalFromString)(r);
+    assertEquals(encoded, Rational.format(r));
+    assertTrue(
+      Equal.equals(Schema.decodeSync(Rational.RationalFromString)(encoded), r),
     );
   });
 

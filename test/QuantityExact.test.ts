@@ -9,7 +9,6 @@ import {
 import * as Array from "effect/Array";
 import * as Result from "effect/Result";
 import * as Equal from "effect/Equal";
-import * as FastCheck from "effect/testing/FastCheck";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
@@ -105,139 +104,117 @@ describe("arithmetic", () => {
     }
   });
 
-  it("sum and subtract are exact inverses", () => {
-    FastCheck.assert(
-      FastCheck.property(rational, rational, (a, b) => {
-        assertTrue(
-          Equal.equals(
-            QuantityExact.subtract(
-              QuantityExact.sum(meters(a), meters(b)),
-              meters(b),
-            ),
-            meters(a),
+  it.prop(
+    "sum and subtract are exact inverses",
+    [rational, rational],
+    ([a, b]) => {
+      assertTrue(
+        Equal.equals(
+          QuantityExact.subtract(
+            QuantityExact.sum(meters(a), meters(b)),
+            meters(b),
           ),
-        );
-      }),
-    );
-  });
+          meters(a),
+        ),
+      );
+    },
+  );
 
-  it("multiply and divide by a scalar are exact inverses", () => {
-    FastCheck.assert(
-      FastCheck.property(rational, nonZeroRational, (a, s) => {
-        const scaled = QuantityExact.multiply(meters(a), s);
-        const back = QuantityExact.divide(scaled, s);
+  it.prop(
+    "multiply and divide by a scalar are exact inverses",
+    [rational, nonZeroRational],
+    ([a, s]) => {
+      const scaled = QuantityExact.multiply(meters(a), s);
+      const back = QuantityExact.divide(scaled, s);
+      assertTrue(Option.isSome(back));
+      assertTrue(Equal.equals(Option.getOrThrow(back), meters(a)));
+      assertTrue(Equal.equals(QuantityExact.multiply(s, meters(a)), scaled));
+    },
+  );
 
-        assertTrue(Option.isSome(back));
-        assertTrue(Equal.equals(Option.getOrThrow(back), meters(a)));
-        assertTrue(Equal.equals(QuantityExact.multiply(s, meters(a)), scaled));
-      }),
-    );
-  });
+  it.prop(
+    "times and over are exact inverses",
+    [rational, nonZeroRational],
+    ([a, b]) => {
+      const product = QuantityExact.times(meters(a), kilograms(b));
+      assertTrue(
+        Unit.equals(product.unit, Unit.product("Meters", "Kilograms")),
+      );
+      const left = QuantityExact.over(product, kilograms(b));
+      assertTrue(Option.isSome(left));
+      assertTrue(Equal.equals(Option.getOrThrow(left), meters(a)));
+    },
+  );
 
-  it("times and over are exact inverses", () => {
-    FastCheck.assert(
-      FastCheck.property(rational, nonZeroRational, (a, b) => {
-        const product = QuantityExact.times(meters(a), kilograms(b));
+  it.prop(
+    "over_ recovers the right factor exactly",
+    [nonZeroRational, rational],
+    ([a, b]) => {
+      const product = QuantityExact.times(meters(a), kilograms(b));
+      const right = QuantityExact.over_(product, meters(a));
+      assertTrue(Option.isSome(right));
+      assertTrue(Equal.equals(Option.getOrThrow(right), kilograms(b)));
+    },
+  );
 
-        assertTrue(
-          Unit.equals(product.unit, Unit.product("Meters", "Kilograms")),
-        );
+  it.prop(
+    "the unsafe over forms peel the same factors as their Option twins",
+    [nonZeroRational, nonZeroRational],
+    ([a, b]) => {
+      const product = QuantityExact.times(meters(a), kilograms(b));
+      assertTrue(
+        Equal.equals(
+          QuantityExact.overUnsafe(product, kilograms(b)),
+          meters(a),
+        ),
+      );
+      assertTrue(
+        Equal.equals(
+          QuantityExact.over_Unsafe(product, meters(a)),
+          kilograms(b),
+        ),
+      );
+    },
+  );
 
-        const left = QuantityExact.over(product, kilograms(b));
-
-        assertTrue(Option.isSome(left));
-        assertTrue(Equal.equals(Option.getOrThrow(left), meters(a)));
-      }),
-    );
-  });
-
-  it("over_ recovers the right factor exactly", () => {
-    FastCheck.assert(
-      FastCheck.property(nonZeroRational, rational, (a, b) => {
-        const product = QuantityExact.times(meters(a), kilograms(b));
-        const right = QuantityExact.over_(product, meters(a));
-
-        assertTrue(Option.isSome(right));
-        assertTrue(Equal.equals(Option.getOrThrow(right), kilograms(b)));
-      }),
-    );
-  });
-
-  it("the unsafe over forms peel the same factors as their Option twins", () => {
-    FastCheck.assert(
-      FastCheck.property(nonZeroRational, nonZeroRational, (a, b) => {
-        const product = QuantityExact.times(meters(a), kilograms(b));
-
-        assertTrue(
-          Equal.equals(
-            QuantityExact.overUnsafe(product, kilograms(b)),
-            meters(a),
-          ),
-        );
-        assertTrue(
-          Equal.equals(
-            QuantityExact.over_Unsafe(product, meters(a)),
-            kilograms(b),
-          ),
-        );
-      }),
-    );
-  });
-
-  it("squared and cubed compose units and values", () => {
-    FastCheck.assert(
-      FastCheck.property(rational, (a) => {
-        const sq = QuantityExact.squared(meters(a));
-        const cu = QuantityExact.cubed(meters(a));
-
-        assertTrue(Unit.equals(sq.unit, Unit.squared("Meters")));
-        assertTrue(Equal.equals(sq.value, Rational.multiply(a, a)));
-        assertTrue(Unit.equals(cu.unit, Unit.cubed("Meters")));
-        assertTrue(Equal.equals(cu.value, Rational.multiplyAll([a, a, a])));
-      }),
-    );
+  it.prop("squared and cubed compose units and values", [rational], ([a]) => {
+    const sq = QuantityExact.squared(meters(a));
+    const cu = QuantityExact.cubed(meters(a));
+    assertTrue(Unit.equals(sq.unit, Unit.squared("Meters")));
+    assertTrue(Equal.equals(sq.value, Rational.multiply(a, a)));
+    assertTrue(Unit.equals(cu.unit, Unit.cubed("Meters")));
+    assertTrue(Equal.equals(cu.value, Rational.multiplyAll([a, a, a])));
   });
 });
 
 describe("rates", () => {
-  it("at inverts per exactly", () => {
-    FastCheck.assert(
-      FastCheck.property(rational, nonZeroRational, (a, b) => {
-        const rate = QuantityExact.perUnsafe(meters(a), seconds(b));
-
-        assertTrue(Unit.equals(rate.unit, Unit.rate("Meters", "Seconds")));
-        assertTrue(Equal.equals(QuantityExact.at(rate, seconds(b)), meters(a)));
-      }),
-    );
+  it.prop("at inverts per exactly", [rational, nonZeroRational], ([a, b]) => {
+    const rate = QuantityExact.perUnsafe(meters(a), seconds(b));
+    assertTrue(Unit.equals(rate.unit, Unit.rate("Meters", "Seconds")));
+    assertTrue(Equal.equals(QuantityExact.at(rate, seconds(b)), meters(a)));
   });
 
-  it("at_ inverts at exactly", () => {
-    FastCheck.assert(
-      FastCheck.property(nonZeroRational, rational, (r, i) => {
-        const rate = QuantityExact.perUnsafe(meters(r), seconds(Rational.one));
-        const dependent = QuantityExact.at(rate, seconds(i));
-        const recovered = QuantityExact.at_(dependent, rate);
-
-        assertTrue(Option.isSome(recovered));
-        assertTrue(Equal.equals(Option.getOrThrow(recovered), seconds(i)));
-      }),
-    );
+  it.prop("at_ inverts at exactly", [nonZeroRational, rational], ([r, i]) => {
+    const rate = QuantityExact.perUnsafe(meters(r), seconds(Rational.one));
+    const dependent = QuantityExact.at(rate, seconds(i));
+    const recovered = QuantityExact.at_(dependent, rate);
+    assertTrue(Option.isSome(recovered));
+    assertTrue(Equal.equals(Option.getOrThrow(recovered), seconds(i)));
   });
 
-  it("for_ matches at with flipped arguments", () => {
-    FastCheck.assert(
-      FastCheck.property(nonZeroRational, rational, (r, i) => {
-        const rate = QuantityExact.perUnsafe(meters(r), seconds(Rational.one));
-
-        assertTrue(
-          Equal.equals(
-            QuantityExact.for_(seconds(i), rate),
-            QuantityExact.at(rate, seconds(i)),
-          ),
-        );
-      }),
-    );
-  });
+  it.prop(
+    "for_ matches at with flipped arguments",
+    [nonZeroRational, rational],
+    ([r, i]) => {
+      const rate = QuantityExact.perUnsafe(meters(r), seconds(Rational.one));
+      assertTrue(
+        Equal.equals(
+          QuantityExact.for_(seconds(i), rate),
+          QuantityExact.at(rate, seconds(i)),
+        ),
+      );
+    },
+  );
 
   it("division by zero is None for the whole division family", () => {
     const zeroSeconds = seconds(Rational.zero);
@@ -286,16 +263,15 @@ describe("dimensionless", () => {
   const three = Rational.makeUnsafe(3n);
   const ten = Rational.makeUnsafe(10n);
 
-  it("ratio collapses same-unit division to Unitless exactly", () => {
-    FastCheck.assert(
-      FastCheck.property(rational, nonZeroRational, (a, b) => {
-        const r = QuantityExact.ratioUnsafe(meters(a), meters(b));
-
-        assertTrue(Unit.equals(r.unit, "Unitless"));
-        assertTrue(Rational.equals(r.value, Rational.divideUnsafe(a, b)));
-      }),
-    );
-  });
+  it.prop(
+    "ratio collapses same-unit division to Unitless exactly",
+    [rational, nonZeroRational],
+    ([a, b]) => {
+      const r = QuantityExact.ratioUnsafe(meters(a), meters(b));
+      assertTrue(Unit.equals(r.unit, "Unitless"));
+      assertTrue(Rational.equals(r.value, Rational.divideUnsafe(a, b)));
+    },
+  );
 
   it("ratio erases the units it came from", () => {
     assertTrue(
@@ -306,27 +282,25 @@ describe("dimensionless", () => {
     );
   });
 
-  it("times and over are exact inverses through a dimensionless factor", () => {
-    FastCheck.assert(
-      FastCheck.property(rational, nonZeroRational, (n, f) => {
-        const factor = DimensionlessExact.fraction(f);
-        const scaled: QuantityExact.QuantityExact<"Meters"> =
-          QuantityExact.times(meters(n), factor);
-        const recovered = QuantityExact.over(scaled, factor);
-
-        assertTrue(Option.isSome(recovered));
-        assertTrue(Equal.equals(Option.getOrThrow(recovered), meters(n)));
-        assertTrue(
-          Equal.equals(QuantityExact.over_(scaled, factor), recovered),
-        );
-
-        // Either argument may be the dimensionless one.
-        const flipped: QuantityExact.QuantityExact<"Meters"> =
-          QuantityExact.times(factor, meters(n));
-        assertTrue(Equal.equals(flipped, scaled));
-      }),
-    );
-  });
+  it.prop(
+    "times and over are exact inverses through a dimensionless factor",
+    [rational, nonZeroRational],
+    ([n, f]) => {
+      const factor = DimensionlessExact.fraction(f);
+      const scaled: QuantityExact.QuantityExact<"Meters"> = QuantityExact.times(
+        meters(n),
+        factor,
+      );
+      const recovered = QuantityExact.over(scaled, factor);
+      assertTrue(Option.isSome(recovered));
+      assertTrue(Equal.equals(Option.getOrThrow(recovered), meters(n)));
+      assertTrue(Equal.equals(QuantityExact.over_(scaled, factor), recovered));
+      // Either argument may be the dimensionless one.
+      const flipped: QuantityExact.QuantityExact<"Meters"> =
+        QuantityExact.times(factor, meters(n));
+      assertTrue(Equal.equals(flipped, scaled));
+    },
+  );
 
   it("scales by a third with nothing lost", () => {
     // The float track cannot do this: 10 * (1/3) * 3 is not 10.
@@ -443,36 +417,35 @@ describe("equality and comparison", () => {
     assertTrue(Equal.equals(QuantityExact.max(short, long), long));
   });
 
-  it("agrees with the float module's comparisons on shared values", () => {
-    FastCheck.assert(
-      FastCheck.property(double, double, (x, y) => {
-        assertEquals(
-          QuantityExact.isLessThan(
-            meters(Rational.fromNumberUnsafe(x)),
-            meters(Rational.fromNumberUnsafe(y)),
-          ),
-          x < y,
-        );
-      }),
-    );
-  });
+  it.prop(
+    "agrees with the float module's comparisons on shared values",
+    [double, double],
+    ([x, y]) => {
+      assertEquals(
+        QuantityExact.isLessThan(
+          meters(Rational.fromNumberUnsafe(x)),
+          meters(Rational.fromNumberUnsafe(y)),
+        ),
+        x < y,
+      );
+    },
+  );
 });
 
 describe("interop with the float module", () => {
-  it("fromQuantity then toQuantity is the identity on finite quantities", () => {
-    FastCheck.assert(
-      FastCheck.property(double, (x) => {
-        const q = Quantity.make("Meters", x);
-
-        assertTrue(
-          Equal.equals(
-            QuantityExact.toQuantityUnsafe(QuantityExact.fromQuantityUnsafe(q)),
-            q,
-          ),
-        );
-      }),
-    );
-  });
+  it.prop(
+    "fromQuantity then toQuantity is the identity on finite quantities",
+    [double],
+    ([x]) => {
+      const q = Quantity.make("Meters", x);
+      assertTrue(
+        Equal.equals(
+          QuantityExact.toQuantityUnsafe(QuantityExact.fromQuantityUnsafe(q)),
+          q,
+        ),
+      );
+    },
+  );
 
   it("fromQuantity is None on NaN and infinities", () => {
     assertTrue(

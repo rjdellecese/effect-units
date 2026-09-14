@@ -234,10 +234,14 @@ export const arbitraryOnGrid: {
     const { step, minimum, maximum } = Result.getOrThrow(grid(options));
     const valueAt = valueOnGrid(step);
     return {
-      toArbitrary: () => (fc) =>
-        fc
-          .integer({ min: minimum, max: maximum })
-          .map((n) => make(unit, valueAt(n))),
+      toCodecArbitrary: () =>
+        Schema.link<Quantity<U>>()(
+          Schema.Int.check(Schema.isBetween({ minimum, maximum })),
+          SchemaTransformation.transform({
+            decode: (n) => make(unit, valueAt(n)),
+            encode: ({ value }) => Math.round(value / options.step),
+          }),
+        ),
     };
   },
 );

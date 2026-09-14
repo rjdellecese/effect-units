@@ -1,6 +1,7 @@
+import * as Schema from "effect/Schema";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { describe, it } from "@effect/vitest";
 import { assertEquals, assertTrue } from "@effect/vitest/utils";
-import * as FastCheck from "effect/testing/FastCheck";
 
 import * as Angle from "../src/Angle.ts";
 import { isCloseTo, testAnchors, testRoundtrips } from "./testUtils.ts";
@@ -26,36 +27,40 @@ describe("Angle", () => {
   });
 
   describe("dms", () => {
-    it("roundtrips through toDms and fromDms", () => {
-      FastCheck.assert(
-        FastCheck.property(
-          FastCheck.double({ min: -1e6, max: 1e6, noNaN: true }),
-          (n) => {
-            const angle = Angle.radians(n);
-            const reconstructed = Angle.fromDms(Angle.toDms(angle));
-
-            assertTrue(
-              isCloseTo(reconstructed.value, n, { relativeTolerance: 1e-6 }),
-            );
-          },
+    it.prop(
+      "roundtrips through toDms and fromDms",
+      [
+        Arbitrary.schema(
+          Schema.Finite.check(
+            Schema.isBetween({ minimum: -1e6, maximum: 1e6 }),
+          ),
         ),
-      );
-    });
+      ],
+      ([n]) => {
+        const angle = Angle.radians(n);
+        const reconstructed = Angle.fromDms(Angle.toDms(angle));
+        assertTrue(
+          isCloseTo(reconstructed.value, n, { relativeTolerance: 1e-6 }),
+        );
+      },
+    );
 
-    it("produces parts in range", () => {
-      FastCheck.assert(
-        FastCheck.property(
-          FastCheck.double({ min: -1e6, max: 1e6, noNaN: true }),
-          (n) => {
-            const dms = Angle.toDms(Angle.radians(n));
-
-            assertTrue(dms.degrees >= 0);
-            assertTrue(dms.minutes >= 0 && dms.minutes < 60);
-            assertTrue(dms.seconds >= 0 && dms.seconds < 60);
-          },
+    it.prop(
+      "produces parts in range",
+      [
+        Arbitrary.schema(
+          Schema.Finite.check(
+            Schema.isBetween({ minimum: -1e6, maximum: 1e6 }),
+          ),
         ),
-      );
-    });
+      ],
+      ([n]) => {
+        const dms = Angle.toDms(Angle.radians(n));
+        assertTrue(dms.degrees >= 0);
+        assertTrue(dms.minutes >= 0 && dms.minutes < 60);
+        assertTrue(dms.seconds >= 0 && dms.seconds < 60);
+      },
+    );
 
     it("converts a known value", () => {
       const angle = Angle.fromDms({
@@ -103,24 +108,24 @@ describe("Angle", () => {
   });
 
   describe("normalize", () => {
-    it("returns a value in (-π, π] differing by a whole number of turns", () => {
-      const twoPi = 2 * Math.PI;
-
-      FastCheck.assert(
-        FastCheck.property(
-          FastCheck.double({ min: -1e6, max: 1e6, noNaN: true }),
-          (n) => {
-            const normalized = Angle.normalize(Angle.radians(n));
-
-            assertTrue(normalized.value <= Math.PI);
-            assertTrue(normalized.value > -Math.PI - 1e-9);
-
-            const remainder = Math.abs((n - normalized.value) % twoPi);
-            assertTrue(remainder < 1e-6 || Math.abs(remainder - twoPi) < 1e-6);
-          },
+    it.prop(
+      "returns a value in (-π, π] differing by a whole number of turns",
+      [
+        Arbitrary.schema(
+          Schema.Finite.check(
+            Schema.isBetween({ minimum: -1e6, maximum: 1e6 }),
+          ),
         ),
-      );
-    });
+      ],
+      ([n]) => {
+        const twoPi = 2 * Math.PI;
+        const normalized = Angle.normalize(Angle.radians(n));
+        assertTrue(normalized.value <= Math.PI);
+        assertTrue(normalized.value > -Math.PI - 1e-9);
+        const remainder = Math.abs((n - normalized.value) % twoPi);
+        assertTrue(remainder < 1e-6 || Math.abs(remainder - twoPi) < 1e-6);
+      },
+    );
 
     it("normalizes 1.5 turns to half a turn", () => {
       assertTrue(

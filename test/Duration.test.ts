@@ -1,8 +1,9 @@
+import * as Schema from "effect/Schema";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { describe, it } from "@effect/vitest";
 import { assertEquals, assertTrue } from "@effect/vitest/utils";
 import * as DateTime from "effect/DateTime";
 import * as EffectDuration from "effect/Duration";
-import * as FastCheck from "effect/testing/FastCheck";
 import * as Option from "effect/Option";
 
 import * as Duration from "../src/Duration.ts";
@@ -29,25 +30,23 @@ describe("Duration", () => {
   ]);
 
   describe("interop", () => {
-    it("roundtrips through effect/Duration", () => {
-      FastCheck.assert(
-        FastCheck.property(
-          FastCheck.integer({ min: 0, max: 2 ** 48 }),
-          (millis) => {
-            const duration = Duration.fromDuration(
-              EffectDuration.millis(millis),
-            );
-            const back = Duration.toDuration(duration).pipe(Option.getOrThrow);
-
-            assertTrue(
-              isCloseTo(EffectDuration.toMillis(back), millis, {
-                relativeTolerance: 1e-12,
-              }),
-            );
-          },
+    it.prop(
+      "roundtrips through effect/Duration",
+      [
+        Arbitrary.schema(
+          Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 2 ** 48 })),
         ),
-      );
-    });
+      ],
+      ([millis]) => {
+        const duration = Duration.fromDuration(EffectDuration.millis(millis));
+        const back = Duration.toDuration(duration).pipe(Option.getOrThrow);
+        assertTrue(
+          isCloseTo(EffectDuration.toMillis(back), millis, {
+            relativeTolerance: 1e-12,
+          }),
+        );
+      },
+    );
 
     it("fromDuration converts infinite durations to Infinity", () => {
       assertEquals(

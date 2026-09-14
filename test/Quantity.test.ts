@@ -8,13 +8,14 @@ import {
 } from "@effect/vitest/utils";
 import * as Array from "effect/Array";
 import * as BigDecimal from "effect/BigDecimal";
+import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as Equal from "effect/Equal";
-import * as FastCheck from "effect/testing/FastCheck";
 import * as Function from "effect/Function";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 import { isCloseTo, double } from "./testUtils.ts";
 import * as Dimensionless from "../src/Dimensionless.ts";
@@ -23,7 +24,7 @@ import * as Mass from "../src/Mass.ts";
 import * as Quantity from "../src/Quantity.ts";
 import * as Unit from "../src/Unit.ts";
 
-const nonZeroDouble = double.filter((n) => n !== 0);
+const nonZeroDouble = double.pipe(Arbitrary.filter((n) => n !== 0));
 const CustomRate = Unit.rate(Unit.custom("USD"), Unit.custom("Count"));
 type CustomRate = Quantity.Quantity<typeof CustomRate>;
 const customRate = (value: number): CustomRate =>
@@ -108,24 +109,29 @@ describe("fromBigDecimal / toBigDecimal", () => {
     expect(Unit.equals(quantity.unit, rate)).toBe(true);
   });
 
-  it("round-trips up to 15 significant decimal digits in a normal finite range", () => {
-    FastCheck.assert(
-      FastCheck.property(
-        FastCheck.bigInt({
-          min: -999_999_999_999_999n,
-          max: 999_999_999_999_999n,
-        }),
-        FastCheck.integer({ min: -293, max: 307 }),
-        (coefficient, scale) => {
-          const decimal = BigDecimal.make(coefficient, scale);
-          const quantity = Quantity.fromBigDecimal("Meters", decimal);
-          const recovered = Option.getOrThrow(Quantity.toBigDecimal(quantity));
-          expect(BigDecimal.equals(recovered, decimal)).toBe(true);
-        },
+  it.prop(
+    "round-trips up to 15 significant decimal digits in a normal finite range",
+    [
+      Arbitrary.schema(
+        Schema.BigInt.check(
+          Schema.isBetweenBigInt({
+            minimum: -999_999_999_999_999n,
+            maximum: 999_999_999_999_999n,
+          }),
+        ),
       ),
-      { numRuns: 5000 },
-    );
-  });
+      Arbitrary.schema(
+        Schema.Int.check(Schema.isBetween({ minimum: -293, maximum: 307 })),
+      ),
+    ],
+    ([coefficient, scale]) => {
+      const decimal = BigDecimal.make(coefficient, scale);
+      const quantity = Quantity.fromBigDecimal("Meters", decimal);
+      const recovered = Option.getOrThrow(Quantity.toBigDecimal(quantity));
+      expect(BigDecimal.equals(recovered, decimal)).toBe(true);
+    },
+    { arbitrary: { runs: 5000 } },
+  );
 
   it("handles overflow, underflow, and precision beyond the round-trip guarantee", () => {
     for (const [input, value] of [
@@ -153,35 +159,32 @@ describe("fromBigDecimal / toBigDecimal", () => {
     }
   });
 
-  it("round-trips normal-range boundary decimals and finite double inputs", () => {
-    for (const input of [
-      "2.22507385850721e-308",
-      "-2.22507385850721e-308",
-      "1.79769313486231e308",
-      "-1.79769313486231e308",
-      "0.000",
-      "1.2300",
-    ]) {
-      const decimal = BigDecimal.fromStringUnsafe(input);
-      const recovered = Option.getOrThrow(
-        Quantity.toBigDecimal(Quantity.fromBigDecimal("Meters", decimal)),
+  it.prop(
+    "round-trips normal-range boundary decimals and finite double inputs",
+    [Arbitrary.schema(Schema.Finite)],
+    ([value]) => {
+      for (const input of [
+        "2.22507385850721e-308",
+        "-2.22507385850721e-308",
+        "1.79769313486231e308",
+        "-1.79769313486231e308",
+        "0.000",
+        "1.2300",
+      ]) {
+        const decimal = BigDecimal.fromStringUnsafe(input);
+        const recovered = Option.getOrThrow(
+          Quantity.toBigDecimal(Quantity.fromBigDecimal("Meters", decimal)),
+        );
+        expect(BigDecimal.equals(recovered, decimal)).toBe(true);
+      }
+      const quantity = Quantity.make("Meters", value);
+      const decimal = Option.getOrThrow(Quantity.toBigDecimal(quantity));
+      expect(Quantity.fromBigDecimal("Meters", decimal).value).toBe(
+        quantity.value,
       );
-      expect(BigDecimal.equals(recovered, decimal)).toBe(true);
-    }
-    FastCheck.assert(
-      FastCheck.property(
-        FastCheck.double({ noNaN: true, noDefaultInfinity: true }),
-        (value) => {
-          const quantity = Quantity.make("Meters", value);
-          const decimal = Option.getOrThrow(Quantity.toBigDecimal(quantity));
-          expect(Quantity.fromBigDecimal("Meters", decimal).value).toBe(
-            quantity.value,
-          );
-        },
-      ),
-      { numRuns: 1000 },
-    );
-  });
+    },
+    { arbitrary: { runs: 1000 } },
+  );
 
   it("uses shortest decimal printing rather than the exact binary fraction", () => {
     const decimal = Option.getOrThrow(
@@ -262,97 +265,79 @@ describe("multiply", () => {
   ];
 
   Array.forEach(baseQuantities, (baseQuantity) => {
-    it(`number * Quantity (${baseQuantity.label})`, () => {
-      FastCheck.assert(
-        FastCheck.property(double, double, (a, b) => {
-          const quantityProduct = Quantity.multiply(
-            baseQuantity.constructor(a),
-            b,
-          );
+    it.prop(
+      `number * Quantity (${baseQuantity.label})`,
+      [double, double],
+      ([a, b]) => {
+        const quantityProduct = Quantity.multiply(
+          baseQuantity.constructor(a),
+          b,
+        );
+        assertTrue(isCloseTo(quantityProduct.value, a * b));
+      },
+    );
 
-          assertTrue(isCloseTo(quantityProduct.value, a * b));
-        }),
-      );
-    });
-
-    it(`Quantity * number (${baseQuantity.label})`, () => {
-      FastCheck.assert(
-        FastCheck.property(double, double, (a, b) => {
-          const quantityProduct = Quantity.multiply(
-            a,
-            baseQuantity.constructor(b),
-          );
-
-          assertTrue(isCloseTo(quantityProduct.value, a * b));
-        }),
-      );
-    });
+    it.prop(
+      `Quantity * number (${baseQuantity.label})`,
+      [double, double],
+      ([a, b]) => {
+        const quantityProduct = Quantity.multiply(
+          a,
+          baseQuantity.constructor(b),
+        );
+        assertTrue(isCloseTo(quantityProduct.value, a * b));
+      },
+    );
   });
 });
 
 describe("times", () => {
-  it("multiplies values and forms a Product unit", () => {
-    FastCheck.assert(
-      FastCheck.property(double, double, (a, b) => {
-        const product = Quantity.times(Length.meters(a), Mass.kilograms(b));
+  it.prop(
+    "multiplies values and forms a Product unit",
+    [double, double],
+    ([a, b]) => {
+      const product = Quantity.times(Length.meters(a), Mass.kilograms(b));
+      assertEquals(product.value, a * b);
+      assertTrue(
+        Unit.equals(product.unit, Unit.product(Length.Meters, Mass.Kilograms)),
+      );
+    },
+  );
 
-        assertEquals(product.value, a * b);
-        assertTrue(
-          Unit.equals(
-            product.unit,
-            Unit.product(Length.Meters, Mass.Kilograms),
-          ),
-        );
-      }),
-    );
-  });
+  it.prop(
+    "over recovers the left factor",
+    [double, nonZeroDouble],
+    ([a, b]) => {
+      const product = Quantity.times(Length.meters(a), Mass.kilograms(b));
+      const recovered = Quantity.over(product, Mass.kilograms(b));
+      assertTrue(Unit.equals(recovered.unit, Length.Meters));
+      assertTrue(isCloseTo(recovered.value, a));
+    },
+  );
 
-  it("over recovers the left factor", () => {
-    FastCheck.assert(
-      FastCheck.property(double, nonZeroDouble, (a, b) => {
-        const product = Quantity.times(Length.meters(a), Mass.kilograms(b));
-        const recovered = Quantity.over(product, Mass.kilograms(b));
-
-        assertTrue(Unit.equals(recovered.unit, Length.Meters));
-        assertTrue(isCloseTo(recovered.value, a));
-      }),
-    );
-  });
-
-  it("over_ recovers the right factor", () => {
-    FastCheck.assert(
-      FastCheck.property(nonZeroDouble, double, (a, b) => {
-        const product = Quantity.times(Length.meters(a), Mass.kilograms(b));
-        const recovered = Quantity.over_(product, Length.meters(a));
-
-        assertTrue(Unit.equals(recovered.unit, Mass.Kilograms));
-        assertTrue(isCloseTo(recovered.value, b));
-      }),
-    );
-  });
+  it.prop(
+    "over_ recovers the right factor",
+    [nonZeroDouble, double],
+    ([a, b]) => {
+      const product = Quantity.times(Length.meters(a), Mass.kilograms(b));
+      const recovered = Quantity.over_(product, Length.meters(a));
+      assertTrue(Unit.equals(recovered.unit, Mass.Kilograms));
+      assertTrue(isCloseTo(recovered.value, b));
+    },
+  );
 });
 
 describe("squared/cubed", () => {
-  it("squared multiplies a quantity by itself", () => {
-    FastCheck.assert(
-      FastCheck.property(double, (a) => {
-        const squared = Quantity.squared(Length.meters(a));
-
-        assertEquals(squared.value, a * a);
-        assertTrue(Unit.equals(squared.unit, Unit.squared(Length.Meters)));
-      }),
-    );
+  it.prop("squared multiplies a quantity by itself", [double], ([a]) => {
+    const squared = Quantity.squared(Length.meters(a));
+    assertEquals(squared.value, a * a);
+    assertTrue(Unit.equals(squared.unit, Unit.squared(Length.Meters)));
   });
 
-  it("cubed multiplies a quantity by itself twice", () => {
-    FastCheck.assert(
-      FastCheck.property(double, (a) => {
-        const cubed = Quantity.cubed(Length.meters(a));
-
-        assertEquals(cubed.value, a * a * a);
-        assertTrue(Unit.equals(cubed.unit, Unit.cubed(Length.Meters)));
-      }),
-    );
+  it.prop("cubed multiplies a quantity by itself twice", [double], ([a]) => {
+    const cubed = Quantity.cubed(Length.meters(a));
+    assertEquals(cubed.value, a * a * a);
+    assertTrue(Unit.equals(cubed.unit, Unit.cubed(Length.Meters)));
   });
 });
 
@@ -385,16 +370,15 @@ describe("rates", () => {
     assertTrue(Unit.equals(result.unit, unit));
   });
 
-  it("per divides values and forms a Rate unit", () => {
-    FastCheck.assert(
-      FastCheck.property(double, nonZeroDouble, (a, b) => {
-        const rate = Quantity.per(Length.meters(a), seconds(b));
-
-        assertEquals(rate.value, a / b);
-        assertTrue(Unit.equals(rate.unit, Unit.rate(Length.Meters, "Seconds")));
-      }),
-    );
-  });
+  it.prop(
+    "per divides values and forms a Rate unit",
+    [double, nonZeroDouble],
+    ([a, b]) => {
+      const rate = Quantity.per(Length.meters(a), seconds(b));
+      assertEquals(rate.value, a / b);
+      assertTrue(Unit.equals(rate.unit, Unit.rate(Length.Meters, "Seconds")));
+    },
+  );
 
   it("per by zero is Infinity", () => {
     const rate = Quantity.per(Length.meters(1), seconds(0));
@@ -403,66 +387,57 @@ describe("rates", () => {
     assertTrue(Quantity.isNaN(Quantity.per(Length.meters(0), seconds(0))));
   });
 
-  it("at multiplies a rate by an independent quantity", () => {
-    // Compile-time inference check: `at` on a Rate<"Meters", "Seconds">
-    // quantity infers Quantity<"Meters">.
-    const inferred: Quantity.Quantity<Length.Meters> = Quantity.at(
-      Quantity.make(Unit.rate(Length.Meters, "Seconds"), 1),
-      seconds(1),
-    );
-    assertEquals(inferred.value, 1);
+  it.prop(
+    "at multiplies a rate by an independent quantity",
+    [double, double],
+    ([r, i]) => {
+      // Compile-time inference check: `at` on a Rate<"Meters", "Seconds">
+      // quantity infers Quantity<"Meters">.
+      const inferred: Quantity.Quantity<Length.Meters> = Quantity.at(
+        Quantity.make(Unit.rate(Length.Meters, "Seconds"), 1),
+        seconds(1),
+      );
+      assertEquals(inferred.value, 1);
+      const rate = Quantity.make(Unit.rate(Length.Meters, "Seconds"), r);
+      const dependent = Quantity.at(rate, seconds(i));
+      assertEquals(dependent.value, r * i);
+      assertTrue(Unit.equals(dependent.unit, Length.Meters));
+    },
+  );
 
-    FastCheck.assert(
-      FastCheck.property(double, double, (r, i) => {
-        const rate = Quantity.make(Unit.rate(Length.Meters, "Seconds"), r);
-        const dependent = Quantity.at(rate, seconds(i));
+  it.prop(
+    "for_ matches at with flipped arguments",
+    [double, double],
+    ([r, i]) => {
+      const rate = Quantity.make(Unit.rate(Length.Meters, "Seconds"), r);
+      assertTrue(
+        Equal.equals(
+          Quantity.for_(seconds(i), rate),
+          Quantity.at(rate, seconds(i)),
+        ),
+      );
+    },
+  );
 
-        assertEquals(dependent.value, r * i);
-        assertTrue(Unit.equals(dependent.unit, Length.Meters));
-      }),
-    );
-  });
-
-  it("for_ matches at with flipped arguments", () => {
-    FastCheck.assert(
-      FastCheck.property(double, double, (r, i) => {
-        const rate = Quantity.make(Unit.rate(Length.Meters, "Seconds"), r);
-
-        assertTrue(
-          Equal.equals(
-            Quantity.for_(seconds(i), rate),
-            Quantity.at(rate, seconds(i)),
-          ),
-        );
-      }),
-    );
-  });
-
-  it("at_ inverts at", () => {
-    FastCheck.assert(
-      FastCheck.property(nonZeroDouble, double, (r, i) => {
-        const rate = Quantity.make(Unit.rate(Length.Meters, "Seconds"), r);
-        const dependent = Quantity.at(rate, seconds(i));
-        const recovered = Quantity.at_(dependent, rate);
-
-        assertTrue(Unit.equals(recovered.unit, "Seconds"));
-        assertTrue(isCloseTo(recovered.value, i));
-      }),
-    );
+  it.prop("at_ inverts at", [nonZeroDouble, double], ([r, i]) => {
+    const rate = Quantity.make(Unit.rate(Length.Meters, "Seconds"), r);
+    const dependent = Quantity.at(rate, seconds(i));
+    const recovered = Quantity.at_(dependent, rate);
+    assertTrue(Unit.equals(recovered.unit, "Seconds"));
+    assertTrue(isCloseTo(recovered.value, i));
   });
 });
 
 describe("dimensionless", () => {
-  it("ratio collapses same-unit division to Unitless", () => {
-    FastCheck.assert(
-      FastCheck.property(double, nonZeroDouble, (a, b) => {
-        const r = Quantity.ratio(Length.meters(a), Length.meters(b));
-
-        assertTrue(Unit.equals(r.unit, "Unitless"));
-        assertEquals(r.value, a / b);
-      }),
-    );
-  });
+  it.prop(
+    "ratio collapses same-unit division to Unitless",
+    [double, nonZeroDouble],
+    ([a, b]) => {
+      const r = Quantity.ratio(Length.meters(a), Length.meters(b));
+      assertTrue(Unit.equals(r.unit, "Unitless"));
+      assertEquals(r.value, a / b);
+    },
+  );
 
   it("ratio erases the units it came from", () => {
     assertTrue(
@@ -499,16 +474,12 @@ describe("dimensionless", () => {
     assertTrue(Equal.equals(flipped, scaled));
   });
 
-  it("times by one is the identity", () => {
-    FastCheck.assert(
-      FastCheck.property(double, (n) => {
-        assertTrue(
-          Equal.equals(
-            Quantity.times(Length.meters(n), Dimensionless.one),
-            Length.meters(n),
-          ),
-        );
-      }),
+  it.prop("times by one is the identity", [double], ([n]) => {
+    assertTrue(
+      Equal.equals(
+        Quantity.times(Length.meters(n), Dimensionless.one),
+        Length.meters(n),
+      ),
     );
   });
 
@@ -538,23 +509,22 @@ describe("dimensionless", () => {
     assertTrue(Unit.equals(area.unit, Unit.squared(Length.Meters)));
   });
 
-  it("over and over_ divide by a dimensionless factor without peeling", () => {
-    FastCheck.assert(
-      FastCheck.property(double, nonZeroDouble, (n, f) => {
-        const factor = Dimensionless.fraction(f);
-        const scaled = Quantity.times(Length.meters(n), factor);
-        const divided: Quantity.Quantity<Length.Meters> = Quantity.over(
-          scaled,
-          factor,
-        );
-
-        assertTrue(isCloseTo(divided.value, n));
-        // For a pure number there is no left or right factor to choose
-        // between, so over_ does the same thing.
-        assertTrue(Equal.equals(Quantity.over_(scaled, factor), divided));
-      }),
-    );
-  });
+  it.prop(
+    "over and over_ divide by a dimensionless factor without peeling",
+    [double, nonZeroDouble],
+    ([n, f]) => {
+      const factor = Dimensionless.fraction(f);
+      const scaled = Quantity.times(Length.meters(n), factor);
+      const divided: Quantity.Quantity<Length.Meters> = Quantity.over(
+        scaled,
+        factor,
+      );
+      assertTrue(isCloseTo(divided.value, n));
+      // For a pure number there is no left or right factor to choose
+      // between, so over_ does the same thing.
+      assertTrue(Equal.equals(Quantity.over_(scaled, factor), divided));
+    },
+  );
 
   it("does not fold a custom unit that happens to be named Unitless", () => {
     // Custom leaves are distinct from base units with the same name, so this
@@ -744,21 +714,22 @@ describe("schema", () => {
   });
 
   describe("quantity refinements", () => {
-    it("preserves existing arbitrary annotations while applying checks", () => {
-      const schema = Quantity.positive(
-        Length.Length.annotate(
-          Quantity.arbitraryOnGrid("Meters", { step: 0.1, min: -1, max: 1 }),
+    it.prop(
+      "preserves existing arbitrary annotations while applying checks",
+      [
+        Quantity.positive(
+          Length.Length.annotate(
+            Quantity.arbitraryOnGrid("Meters", { step: 0.1, min: -1, max: 1 }),
+          ),
         ),
-      );
-      FastCheck.assert(
-        FastCheck.property(Schema.toArbitrary(schema), (quantity) => {
-          expect(quantity.value).toBeGreaterThan(0);
-          expect(quantity.value).toBeLessThanOrEqual(1);
-          expect(quantity.value).toBe(Number(quantity.value.toFixed(1)));
-          expect(Unit.equals(quantity.unit, "Meters")).toBe(true);
-        }),
-      );
-    });
+      ],
+      ([quantity]) => {
+        expect(quantity.value).toBeGreaterThan(0);
+        expect(quantity.value).toBeLessThanOrEqual(1);
+        expect(quantity.value).toBe(Number(quantity.value.toFixed(1)));
+        expect(Unit.equals(quantity.unit, "Meters")).toBe(true);
+      },
+    );
 
     it("checks positivity and non-negativity without changing wire types", () => {
       const positive = Quantity.positive(Quantity.QuantityFromValue(Count));
@@ -1075,82 +1046,94 @@ describe("schema", () => {
     }
   });
 
-  it("derives grid-constrained quantities from annotations", () => {
-    const MeasuredLength = Length.Length.annotate(
-      Quantity.arbitraryOnGrid(Length.Meters, {
-        step: 0.1,
-        min: -0.35,
-        max: 0.75,
-      }),
-    );
-    expectTypeOf(MeasuredLength.Type).toEqualTypeOf<Length.Length>();
-
-    FastCheck.assert(
-      FastCheck.property(
-        Schema.toArbitrary(MeasuredLength),
-        ({ unit, value }) => {
-          assertTrue(Unit.equals(unit, Length.Meters));
-          assertTrue(value >= -0.3);
-          assertTrue(value <= 0.7);
-          assertEquals(value, Number(value.toFixed(1)));
-        },
-      ),
-    );
-
-    const SingleValue = Length.Length.annotate(
-      Quantity.arbitraryOnGrid(Length.Meters, {
-        step: 0.1,
-        min: 0.3,
-        max: 0.3,
-      }),
-    );
-    FastCheck.assert(
-      FastCheck.property(Schema.toArbitrary(SingleValue), ({ value }) => {
-        assertEquals(value, 0.3);
-      }),
-    );
-
-    const RoundedBoundary = Length.Length.annotate(
-      Quantity.arbitraryOnGrid(Length.Meters, {
-        step: 0.1,
-        min: 0.1 + 0.2,
-        max: 0.4,
-      }),
-    );
-    FastCheck.assert(
-      FastCheck.property(Schema.toArbitrary(RoundedBoundary), ({ value }) => {
-        assertEquals(value, 0.4);
-      }),
-    );
-
-    for (const value of [-Number.MAX_VALUE, Number.MAX_VALUE]) {
-      const Extreme = Length.Length.annotate(
+  it.prop(
+    "derives grid-constrained quantities from annotations",
+    [
+      Length.Length.annotate(
         Quantity.arbitraryOnGrid(Length.Meters, {
-          step: Number.MAX_VALUE,
-          min: value,
-          max: value,
+          step: 0.1,
+          min: -0.35,
+          max: 0.75,
         }),
-      );
-      FastCheck.assert(
-        FastCheck.property(Schema.toArbitrary(Extreme), (quantity) => {
-          assertEquals(quantity.value, value);
+      ),
+    ],
+    ([quantity]) => {
+      expectTypeOf(quantity).toEqualTypeOf<Length.Length>();
+      const { unit, value } = quantity;
+      assertTrue(Unit.equals(unit, Length.Meters));
+      assertTrue(value >= -0.3);
+      assertTrue(value <= 0.7);
+      assertEquals(value, Number(value.toFixed(1)));
+    },
+  );
+
+  it.prop(
+    "generates a grid containing a single value",
+    [
+      Length.Length.annotate(
+        Quantity.arbitraryOnGrid(Length.Meters, {
+          step: 0.1,
+          min: 0.3,
+          max: 0.3,
         }),
-      );
-    }
+      ),
+    ],
+    ([{ value }]) => {
+      assertEquals(value, 0.3);
+    },
+  );
 
-    const Tenths = Length.Length.annotate(
-      Quantity.arbitraryOnGrid(Length.Meters, {
-        step: 0.1,
-        min: 0.7,
-        max: 0.7,
-      }),
-    );
-    FastCheck.assert(
-      FastCheck.property(Schema.toArbitrary(Tenths), ({ value }) => {
-        assertEquals(value, 0.7);
-      }),
-    );
+  it.prop(
+    "keeps grid values within a rounded boundary",
+    [
+      Length.Length.annotate(
+        Quantity.arbitraryOnGrid(Length.Meters, {
+          step: 0.1,
+          min: 0.1 + 0.2,
+          max: 0.4,
+        }),
+      ),
+    ],
+    ([{ value }]) => {
+      assertEquals(value, 0.4);
+    },
+  );
 
+  for (const value of [-Number.MAX_VALUE, Number.MAX_VALUE]) {
+    it.prop(
+      `generates the extreme grid value ${value}`,
+      [
+        Length.Length.annotate(
+          Quantity.arbitraryOnGrid(Length.Meters, {
+            step: Number.MAX_VALUE,
+            min: value,
+            max: value,
+          }),
+        ),
+      ],
+      ([quantity]) => {
+        assertEquals(quantity.value, value);
+      },
+    );
+  }
+
+  it.prop(
+    "generates decimal tenths without multiplication drift",
+    [
+      Length.Length.annotate(
+        Quantity.arbitraryOnGrid(Length.Meters, {
+          step: 0.1,
+          min: 0.7,
+          max: 0.7,
+        }),
+      ),
+    ],
+    ([{ value }]) => {
+      assertEquals(value, 0.7);
+    },
+  );
+
+  it("samples grid annotations built in a pipe", () => {
     const Piped = Length.Length.annotate(
       Function.pipe(
         Length.Meters,
@@ -1162,7 +1145,9 @@ describe("schema", () => {
       ),
     );
     expectTypeOf(Piped.Type).toEqualTypeOf<Length.Length>();
-    const pipedValues = FastCheck.sample(Schema.toArbitrary(Piped), 50);
+    const pipedValues = Effect.runSync(
+      Arbitrary.sampleEffect(Arbitrary.schema(Piped), { count: 50 }),
+    );
     assertTrue(
       Array.every(
         pipedValues,
@@ -1223,17 +1208,12 @@ describe("schema", () => {
     );
   });
 
-  it("encodes and decodes a base-unit quantity", () => {
-    FastCheck.assert(
-      FastCheck.property(double, (n) => {
-        const quantity = Length.meters(n);
-        const encoded = Schema.encodeSync(Length.LengthFromStruct)(quantity);
-        const decoded = Schema.decodeSync(Length.LengthFromStruct)(encoded);
-
-        assertEquals(encoded.unit, "Meters");
-        assertTrue(Equal.equals(decoded, quantity));
-      }),
-    );
+  it.prop("encodes and decodes a base-unit quantity", [double], ([n]) => {
+    const quantity = Length.meters(n);
+    const encoded = Schema.encodeSync(Length.LengthFromStruct)(quantity);
+    const decoded = Schema.decodeSync(Length.LengthFromStruct)(encoded);
+    assertEquals(encoded.unit, "Meters");
+    assertTrue(Equal.equals(decoded, quantity));
   });
 
   it("encodes and decodes a rate quantity, freezing the wire format", () => {

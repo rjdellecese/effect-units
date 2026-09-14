@@ -1,7 +1,6 @@
 import { describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Equal from "effect/Equal";
-import * as FastCheck from "effect/testing/FastCheck";
 
 import * as Angle from "../src/Angle.ts";
 import * as AngularSpeed from "../src/AngularSpeed.ts";
@@ -41,16 +40,12 @@ describe("AngularSpeed", () => {
     );
   });
 
-  it("treats revolutions as turns", () => {
-    FastCheck.assert(
-      FastCheck.property(double, (n) => {
-        assertTrue(
-          Equal.equals(
-            AngularSpeed.revolutionsPerSecond(n),
-            AngularSpeed.turnsPerSecond(n),
-          ),
-        );
-      }),
+  it.prop("treats revolutions as turns", [double], ([n]) => {
+    assertTrue(
+      Equal.equals(
+        AngularSpeed.revolutionsPerSecond(n),
+        AngularSpeed.turnsPerSecond(n),
+      ),
     );
   });
 });

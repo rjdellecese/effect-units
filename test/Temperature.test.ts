@@ -5,7 +5,6 @@ import {
   deepStrictEqual,
 } from "@effect/vitest/utils";
 import * as Equal from "effect/Equal";
-import * as FastCheck from "effect/testing/FastCheck";
 import * as Schema from "effect/Schema";
 
 import { double, isCloseTo, testRoundtrips } from "./testUtils.ts";
@@ -53,20 +52,15 @@ describe("Temperature", () => {
     );
   });
 
-  it("plus and minus are inverses", () => {
-    FastCheck.assert(
-      FastCheck.property(double, double, (a, b) => {
-        const temperature = Temperature.kelvins(a);
-        const delta = Temperature.celsiusDegrees(b);
-        const raised = Temperature.plus(temperature, delta);
-
-        assertTrue(
-          isCloseTo(Temperature.minus(raised, temperature).value, delta.value, {
-            // Adding then subtracting a large temperature absorbs deltas far
-            // below its own magnitude.
-            absoluteTolerance: 1e-9 * Math.max(Math.abs(a), 1),
-          }),
-        );
+  it.prop("plus and minus are inverses", [double, double], ([a, b]) => {
+    const temperature = Temperature.kelvins(a);
+    const delta = Temperature.celsiusDegrees(b);
+    const raised = Temperature.plus(temperature, delta);
+    assertTrue(
+      isCloseTo(Temperature.minus(raised, temperature).value, delta.value, {
+        // Adding then subtracting a large temperature absorbs deltas far
+        // below its own magnitude.
+        absoluteTolerance: 1e-9 * Math.max(Math.abs(a), 1),
       }),
     );
   });
@@ -97,17 +91,12 @@ describe("Temperature", () => {
     );
   });
 
-  it("encodes and decodes through the schema", () => {
-    FastCheck.assert(
-      FastCheck.property(double, (n) => {
-        const temperature = Temperature.kelvins(n);
-        const decoded = Schema.decodeSync(Temperature.TemperatureFromStruct)(
-          Schema.encodeSync(Temperature.TemperatureFromStruct)(temperature),
-        );
-
-        assertTrue(Equal.equals(decoded, temperature));
-      }),
+  it.prop("encodes and decodes through the schema", [double], ([n]) => {
+    const temperature = Temperature.kelvins(n);
+    const decoded = Schema.decodeSync(Temperature.TemperatureFromStruct)(
+      Schema.encodeSync(Temperature.TemperatureFromStruct)(temperature),
     );
+    assertTrue(Equal.equals(decoded, temperature));
   });
 
   it("carries a unit discriminator in the wire format", () => {
