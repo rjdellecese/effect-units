@@ -1,6 +1,6 @@
 # Repo Overview
 
-effect-units is a single-package TypeScript library providing typed quantities and unit conversions for Effect (requires Node >= 22, pnpm). It targets Effect v4's release candidates: `effect` is pinned exactly in devDependencies and declared as `^4.0.0-rc.115` in peerDependencies, and `@effect/vitest` is unified-versioned with it, so the two move together.
+effect-units is a single-package TypeScript library providing typed quantities and unit conversions for Effect (requires Node >= 22, pnpm). It targets Effect v4's release candidates: `effect` is pinned exactly in devDependencies and declared as `^4.0.0-rc.117` in peerDependencies, and `@effect/vitest` is unified-versioned with it, so the two move together.
 
 ## Build System
 
