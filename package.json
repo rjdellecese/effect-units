@@ -10,11 +10,11 @@
     "@changesets/cli": "3.0.2",
     "@changesets/config": "4.0.0",
     "@effect/language-service": "0.87.1",
-    "@effect/vitest": "4.0.0-rc.115",
+    "@effect/vitest": "4.0.0-rc.117",
     "@types/node": "26.1.1",
     "@vitest/coverage-v8": "5.0.0",
     "dpdm": "4.2.0",
-    "effect": "4.0.0-rc.115",
+    "effect": "4.0.0-rc.117",
     "oxfmt": "0.58.0",
     "oxlint": "1.68.0",
     "syncpack": "15.3.2",
@@ -51,7 +51,7 @@
   "license": "BSD-3-Clause",
   "packageManager": "pnpm@11.10.0",
   "peerDependencies": {
-    "effect": "^4.0.0-rc.115"
+    "effect": "^4.0.0-rc.117"
   },
   "publishConfig": {
     "access": "public"
