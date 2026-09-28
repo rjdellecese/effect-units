@@ -15,7 +15,7 @@ import * as Function from "effect/Function";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import * as Arbitrary from "effect/Arbitrary";
 
 import { isCloseTo, double } from "./testUtils.ts";
 import * as Dimensionless from "../src/Dimensionless.ts";

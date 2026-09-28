@@ -1,0 +1,3 @@
+minimumReleaseAgeExclude:
+  - "@effect/vitest@4.0.0-rc.118"
+  - effect@4.0.0-rc.118
