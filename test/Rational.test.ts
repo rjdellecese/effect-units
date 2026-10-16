@@ -500,6 +500,12 @@ describe("BigDecimal interop", () => {
     },
   );
 
+  it("roundtrips BigDecimals with large scales exactly", () => {
+    const bd = BigDecimal.make(1n, 20000);
+    const exact = Rational.toBigDecimalExact(Rational.fromBigDecimal(bd));
+    assertTrue(BigDecimal.equals(Option.getOrThrow(exact), bd));
+  });
+
   it("toBigDecimalExact is None for non-terminating expansions", () => {
     assertTrue(
       Option.isNone(Rational.toBigDecimalExact(Rational.makeUnsafe(1n, 3n))),

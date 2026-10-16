@@ -500,8 +500,13 @@ const factorOut = (
   n: bigint,
   prime: bigint,
   count = 0,
-): readonly [rest: bigint, count: number] =>
-  n % prime === 0n ? factorOut(n / prime, prime, count + 1) : [n, count];
+): readonly [rest: bigint, count: number] => {
+  while (n % prime === 0n) {
+    n /= prime;
+    count += 1;
+  }
+  return [n, count];
+};
 
 export const toBigDecimalExact = (
   self: Rational,
