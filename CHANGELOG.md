@@ -1,5 +1,11 @@
 # effect-units
 
+## 1.0.1
+
+### Patch Changes
+
+- 647e4bf: Fix stack overflows when converting terminating rationals with large decimal scales to exact BigDecimals.
+
 ## 1.0.0
 
 ### Major Changes
