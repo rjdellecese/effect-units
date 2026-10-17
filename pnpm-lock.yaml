@@ -18,8 +18,8 @@ importers:
         specifier: 0.87.1
         version: 0.87.1
       '@effect/vitest':
-        specifier: 4.0.3
-        version: 4.0.3(effect@4.0.3)(vitest@5.0.0)
+        specifier: 4.0.5
+        version: 4.0.5(effect@4.0.5)(vitest@5.0.0)
       '@types/node':
         specifier: 26.1.1
         version: 26.1.1
@@ -30,8 +30,8 @@ importers:
         specifier: 4.2.0
         version: 4.2.0
       effect:
-        specifier: 4.0.3
-        version: 4.0.3
+        specifier: 4.0.5
+        version: 4.0.5
       oxfmt:
         specifier: 0.58.0
         version: 0.58.0
@@ -147,10 +147,10 @@ packages:
     resolution: {integrity: sha512-kcljlJmEgqg5mFAM6UShJYJjMqJb3TbHHxrK8Qoubvwugc0aVWpRkbdgQvK5b17puOt3BKXXKOmcV+oQt0oQqQ==}
     hasBin: true
 
-  '@effect/vitest@4.0.3':
-    resolution: {integrity: sha512-jsIkpssf0CFuOeycW2sQZkWx0qzlsRv+JIkzd9qQpoFDcHC9JZFSdIjEBAhsdp20pDy4Y/b2vT/ew7wXZxvEig==}
+  '@effect/vitest@4.0.5':
+    resolution: {integrity: sha512-q64paZ/i4V2NiRhTyqCmT2KiDbFjlxc2EZrZca8GGt+Nf8844946HyJM5bPk/q+YeRkFSxIrlCs+J+LSfky/wA==}
     peerDependencies:
-      effect: ^4.0.3
+      effect: ^4.0.5
       vitest: '>=5.0.0 <6.0.0'
 
   '@emnapi/core@1.11.1':
@@ -793,8 +793,8 @@ packages:
       oxc-resolver:
         optional: true
 
-  effect@4.0.3:
-    resolution: {integrity: sha512-LoWn/Uwwx0JjHSDmBAAahx8sB+klzM6vsZovnbYowBNw6B4QScJLRLBByO61plvNiycx7HPN8FnsWUCu0eXW5w==}
+  effect@4.0.5:
+    resolution: {integrity: sha512-BY4/28NlpOd99yzmV741xbVGmp+1U7tks4oB7F/Png64bTa5tm5eCA6W0RiXsnuLDDoJpjfVSo4Dnq4BZb/89Q==}
 
   emoji-regex@10.6.0:
     resolution: {integrity: sha512-toUI84YS5YmxW219erniWD0CIVOo46xGKColeNQRgOzDorgBi1v4D71/OFzgD9GO2UGKIv1C3Sp8DAn0+j5w7A==}
@@ -1543,9 +1543,9 @@ snapshots:
 
   '@effect/language-service@0.87.1': {}
 
-  '@effect/vitest@4.0.3(effect@4.0.3)(vitest@5.0.0)':
+  '@effect/vitest@4.0.5(effect@4.0.5)(vitest@5.0.0)':
     dependencies:
-      effect: 4.0.3
+      effect: 4.0.5
       vitest: 5.0.0(@types/node@26.1.1)(@vitest/coverage-v8@5.0.0)(vite@8.1.4(@types/node@26.1.1)(yaml@2.9.0))
 
   '@emnapi/core@1.11.1':
@@ -1943,7 +1943,7 @@ snapshots:
 
   dts-resolver@3.0.0: {}
 
-  effect@4.0.3: {}
+  effect@4.0.5: {}
 
   emoji-regex@10.6.0: {}
 
