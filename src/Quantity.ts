@@ -523,10 +523,8 @@ export const divide: {
   <U extends Unit.Unit>(b: number): (a: Quantity<U>) => Quantity<U>;
   <U extends Unit.Unit>(a: Quantity<U>, b: number): Quantity<U>;
   <Q>(a: QuantityInput<Q>, b: number): Quantity<QuantityUnit<Q>>;
-} = Function.dual(
-  2,
-  (a: Quantity<Unit.Unit>, b: number): Quantity<Unit.Unit> =>
-    make(a.unit, a.value / b),
+} = Function.dual(2, (a: Quantity<Unit.Unit>, b: number): Quantity<Unit.Unit> =>
+  make(a.unit, a.value / b),
 );
 
 export const sum: {

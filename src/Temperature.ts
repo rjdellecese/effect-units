@@ -151,18 +151,16 @@ export const inFahrenheitDegrees = (d: Delta) => d.value / fiveNinths;
 export const plus: {
   (delta: Delta): (t: Temperature) => Temperature;
   (t: Temperature, delta: Delta): Temperature;
-} = Function.dual(
-  2,
-  (t: Temperature, delta: Delta): Temperature => make(t.value + delta.value),
+} = Function.dual(2, (t: Temperature, delta: Delta): Temperature =>
+  make(t.value + delta.value),
 );
 
 /** The delta from `b` up to `a` (i.e. `a` minus `b`). */
 export const minus: {
   (b: Temperature): (a: Temperature) => Delta;
   (a: Temperature, b: Temperature): Delta;
-} = Function.dual(
-  2,
-  (a: Temperature, b: Temperature): Delta => celsiusDegrees(a.value - b.value),
+} = Function.dual(2, (a: Temperature, b: Temperature): Delta =>
+  celsiusDegrees(a.value - b.value),
 );
 
 // Comparison
