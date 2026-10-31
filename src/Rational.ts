@@ -165,34 +165,28 @@ export const isBetween = order.isBetween(Order);
 export const sum: {
   (b: Rational): (a: Rational) => Rational;
   (a: Rational, b: Rational): Rational;
-} = Function.dual(
-  2,
-  (a: Rational, b: Rational): Rational =>
-    reduce(
-      a.numerator * b.denominator + b.numerator * a.denominator,
-      a.denominator * b.denominator,
-    ),
+} = Function.dual(2, (a: Rational, b: Rational): Rational =>
+  reduce(
+    a.numerator * b.denominator + b.numerator * a.denominator,
+    a.denominator * b.denominator,
+  ),
 );
 
 export const subtract: {
   (b: Rational): (a: Rational) => Rational;
   (a: Rational, b: Rational): Rational;
-} = Function.dual(
-  2,
-  (a: Rational, b: Rational): Rational =>
-    reduce(
-      a.numerator * b.denominator - b.numerator * a.denominator,
-      a.denominator * b.denominator,
-    ),
+} = Function.dual(2, (a: Rational, b: Rational): Rational =>
+  reduce(
+    a.numerator * b.denominator - b.numerator * a.denominator,
+    a.denominator * b.denominator,
+  ),
 );
 
 export const multiply: {
   (b: Rational): (a: Rational) => Rational;
   (a: Rational, b: Rational): Rational;
-} = Function.dual(
-  2,
-  (a: Rational, b: Rational): Rational =>
-    reduce(a.numerator * b.numerator, a.denominator * b.denominator),
+} = Function.dual(2, (a: Rational, b: Rational): Rational =>
+  reduce(a.numerator * b.numerator, a.denominator * b.denominator),
 );
 
 export const negate = (r: Rational): Rational =>
@@ -227,19 +221,16 @@ export const reciprocalUnsafe = (r: Rational): Rational => {
 export const divide: {
   (b: Rational): (a: Rational) => Option.Option<Rational>;
   (a: Rational, b: Rational): Option.Option<Rational>;
-} = Function.dual(
-  2,
-  (a: Rational, b: Rational): Option.Option<Rational> =>
-    Option.map(reciprocal(b), (rb) => multiply(a, rb)),
+} = Function.dual(2, (a: Rational, b: Rational): Option.Option<Rational> =>
+  Option.map(reciprocal(b), (rb) => multiply(a, rb)),
 );
 
 /** Throws a `RangeError` when the divisor is zero. */
 export const divideUnsafe: {
   (b: Rational): (a: Rational) => Rational;
   (a: Rational, b: Rational): Rational;
-} = Function.dual(
-  2,
-  (a: Rational, b: Rational): Rational => multiply(a, reciprocalUnsafe(b)),
+} = Function.dual(2, (a: Rational, b: Rational): Rational =>
+  multiply(a, reciprocalUnsafe(b)),
 );
 
 export const sumAll = (collection: Iterable<Rational>): Rational =>

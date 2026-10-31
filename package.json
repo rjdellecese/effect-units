@@ -7,20 +7,20 @@
     "url": "https://github.com/rjdellecese/effect-units/issues"
   },
   "devDependencies": {
-    "@changesets/cli": "3.0.2",
-    "@changesets/config": "4.0.0",
-    "@effect/language-service": "0.87.1",
-    "@effect/vitest": "4.0.6",
-    "@types/node": "26.1.1",
-    "@vitest/coverage-v8": "5.0.0",
-    "dpdm": "4.2.0",
-    "effect": "4.0.6",
-    "oxfmt": "0.58.0",
-    "oxlint": "1.68.0",
-    "syncpack": "15.3.2",
-    "tsdown": "0.22.7",
+    "@changesets/cli": "3.0.3",
+    "@changesets/config": "4.0.1",
+    "@effect/language-service": "0.87.5",
+    "@effect/vitest": "4.1.0",
+    "@types/node": "26.6.6",
+    "@vitest/coverage-v8": "5.0.5",
+    "dpdm": "4.3.0",
+    "effect": "4.1.0",
+    "oxfmt": "0.75.0",
+    "oxlint": "1.90.0",
+    "syncpack": "15.3.3",
+    "tsdown": "0.22.14",
     "typescript": "6.0.3",
-    "vitest": "5.0.0"
+    "vitest": "5.0.5"
   },
   "engines": {
     "node": ">=22"
