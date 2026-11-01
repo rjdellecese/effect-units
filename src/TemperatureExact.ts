@@ -169,20 +169,16 @@ export const inFahrenheitDegrees = (d: Delta) =>
 export const plus: {
   (delta: Delta): (t: TemperatureExact) => TemperatureExact;
   (t: TemperatureExact, delta: Delta): TemperatureExact;
-} = Function.dual(
-  2,
-  (t: TemperatureExact, delta: Delta): TemperatureExact =>
-    make(Rational.sum(t.value, delta.value)),
+} = Function.dual(2, (t: TemperatureExact, delta: Delta): TemperatureExact =>
+  make(Rational.sum(t.value, delta.value)),
 );
 
 /** The delta from `b` up to `a` (i.e. `a` minus `b`). */
 export const minus: {
   (b: TemperatureExact): (a: TemperatureExact) => Delta;
   (a: TemperatureExact, b: TemperatureExact): Delta;
-} = Function.dual(
-  2,
-  (a: TemperatureExact, b: TemperatureExact): Delta =>
-    celsiusDegrees(Rational.subtract(a.value, b.value)),
+} = Function.dual(2, (a: TemperatureExact, b: TemperatureExact): Delta =>
+  celsiusDegrees(Rational.subtract(a.value, b.value)),
 );
 
 // Comparison
