@@ -10,17 +10,17 @@
     "@changesets/cli": "3.0.3",
     "@changesets/config": "4.0.1",
     "@effect/language-service": "0.87.5",
-    "@effect/vitest": "4.1.0",
+    "@effect/vitest": "4.1.2",
     "@types/node": "26.6.6",
-    "@vitest/coverage-v8": "5.0.5",
+    "@vitest/coverage-v8": "5.1.0",
     "dpdm": "4.3.0",
-    "effect": "4.1.0",
-    "oxfmt": "0.75.0",
-    "oxlint": "1.90.0",
+    "effect": "4.1.2",
+    "oxfmt": "0.77.0",
+    "oxlint": "1.92.0",
     "syncpack": "15.3.3",
-    "tsdown": "0.22.14",
+    "tsdown": "0.23.7",
     "typescript": "6.0.3",
-    "vitest": "5.0.5"
+    "vitest": "5.1.0"
   },
   "engines": {
     "node": ">=22"
