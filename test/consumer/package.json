@@ -2,15 +2,15 @@
   "name": "effect-units-consumer",
   "private": true,
   "devDependencies": {
-    "@types/node": "26.6.6",
-    "typescript": "6.0.3"
+    "@effect/tsgo": "0.73.2",
+    "@types/node": "26.6.6"
   },
   "dependencies": {
     "effect": "4.0.0",
     "effect-units": "file:./effect-units.tgz"
   },
   "scripts": {
-    "test": "tsc -p tsconfig.node.json && tsc -p tsconfig.bundler.json && node --test dist/*.test.mjs"
+    "test": "effect-tsgo tsrs -p tsconfig.node.json && effect-tsgo tsrs -p tsconfig.bundler.json && node --test dist/*.test.mjs"
   },
   "type": "module"
 }
