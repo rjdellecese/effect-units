@@ -36,7 +36,15 @@
         "name": "@effect/language-service",
         "diagnosticSeverity": {
           "deterministicKeys": "error"
-        }
+        },
+        "overrides": [
+          {
+            "include": ["test/**/*.ts"],
+            "options": {
+              "allowedUnstableApis": ["@effect/vitest", "effect/Arbitrary"]
+            }
+          }
+        ]
       }
     ]
   }

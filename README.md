@@ -153,6 +153,8 @@ pnpm add effect-units effect
 
 `effect` is a peer dependency.
 
+The npm package includes the compiled JavaScript and declarations; consumers do not need the build compiler. Building from source (including a Git install) requires a platform supported by [`@effect/tsgo`'s bundled `tsrs`](https://github.com/Effect-TS/tsgo). On Alpine Linux (musl) or 32-bit Windows, use the published npm package instead.
+
 ## Modules
 
 ### Core

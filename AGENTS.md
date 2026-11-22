@@ -4,13 +4,14 @@ effect-units is a single-package TypeScript library providing typed quantities a
 
 ## Build System
 
-The package is built with tsdown (JavaScript output; `dts: false` delegates declarations to tsc) plus TypeScript: `tsc -b tsconfig.src.json` emits the `.d.ts` declarations. `tsconfig.json` is the noEmit typecheck project covering all sources, tests, and root config files; both extend `tsconfig.base.json`. Relative imports use `.ts` extensions (`import * as Unit from "./Unit.ts"`, the Effect v4 convention): `rewriteRelativeImportExtensions` rewrites them to `.js` in tsdown's JavaScript output, declarations keep the `.ts` specifiers (which consumers' TypeScript resolves), and NodeNext module resolution makes tsc error on any extensionless relative import.
+The package is built with tsdown for JavaScript and `effect-tsgo tsrs -b tsconfig.src.json` for declarations. Use the TypeScript 7 compiler bundled with the exact stable `@effect/tsgo` pin, even when that bundled compiler is a prerelease. There is no separate TypeScript installation or patch step. `tsconfig.json` is the noEmit project covering all sources, tests, and root config files; both projects extend `tsconfig.base.json`. Relative imports use `.ts` extensions (`import * as Unit from "./Unit.ts"`, the Effect v4 convention): tsdown emits `.js` specifiers, declarations keep the `.ts` specifiers (which consumers' TypeScript resolves), and NodeNext resolution rejects extensionless relative imports.
 
 ### Key Commands
 
-- `pnpm build` - Build `dist/` (tsdown JavaScript + tsc declarations)
-- `pnpm test` - Run the Vitest suite (includes type-level tests and coverage)
-- `pnpm typecheck` - Typecheck sources and tests via `tsc -b`
+- `pnpm build` - Build `dist/` (tsdown JavaScript + tsrs declarations)
+- `pnpm test` - Typecheck the tests with tsrs, then run Vitest with coverage
+- `pnpm typecheck` - Typecheck sources, tests, and root configs with tsrs
+- `pnpm exec effect-tsgo tsrs --lsp --stdio` - Start the same compiler's language server for editors
 - `pnpm lint`/`pnpm lint:fix` - Lint (Oxlint + Syncpack); `lint:fix` writes fixes
 - `pnpm format`/`pnpm format:check` - Format (Oxfmt + Syncpack); `format` writes, `format:check` only checks
 - `pnpm circular` - Fail on runtime import cycles (dpdm; type-only cycles are ignored)

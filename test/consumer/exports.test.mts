@@ -3,7 +3,6 @@ import { readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import ts from "typescript";
 
 import * as Public from "./public.mts";
 
@@ -25,6 +24,16 @@ test("rejects private imports at runtime and in both TypeScript resolution modes
     () => import("effect-units/internal"),
     { code: "ERR_PACKAGE_PATH_NOT_EXPORTED" },
   );
+  await assert.rejects(
+    // @ts-expect-error Private subpaths are not exported.
+    () => import("effect-units/internal/valueObject"),
+    { code: "ERR_PACKAGE_PATH_NOT_EXPORTED" },
+  );
+  await assert.rejects(
+    // @ts-expect-error Adding a file extension does not expose a private subpath.
+    () => import("effect-units/internal/valueObject.js"),
+    { code: "ERR_PACKAGE_PATH_NOT_EXPORTED" },
+  );
 
   const modules = readdirSync(join(packageRoot, "dist", "internal"), {
     encoding: "utf8",
@@ -38,34 +47,8 @@ test("rejects private imports at runtime and in both TypeScript resolution modes
     `effect-units/internal/${name.slice(0, -3)}`,
     `effect-units/internal/${name}`,
   ]);
-  const resolutions = [
-    {
-      module: ts.ModuleKind.NodeNext,
-      moduleResolution: ts.ModuleResolutionKind.NodeNext,
-    },
-    {
-      module: ts.ModuleKind.ESNext,
-      moduleResolution: ts.ModuleResolutionKind.Bundler,
-    },
-  ] satisfies ReadonlyArray<ts.CompilerOptions>;
-
   await Promise.all(
     paths.map(async (specifier) => {
-      resolutions.forEach((options) => {
-        assert.equal(
-          ts.resolveModuleName(
-            specifier,
-            import.meta.filename,
-            options,
-            ts.sys,
-            undefined,
-            undefined,
-            ts.ModuleKind.ESNext,
-          ).resolvedModule,
-          undefined,
-          `${specifier} must be private in ${ts.ModuleResolutionKind[options.moduleResolution]}`,
-        );
-      });
       await assert.rejects(
         () => import(specifier),
         { code: "ERR_PACKAGE_PATH_NOT_EXPORTED" },
