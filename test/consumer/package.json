@@ -2,8 +2,8 @@
   "name": "effect-units-consumer",
   "private": true,
   "devDependencies": {
-    "@effect/tsgo": "0.73.2",
-    "@types/node": "26.6.6"
+    "@effect/tsgo": "0.73.7",
+    "@types/node": "26.6.11"
   },
   "dependencies": {
     "effect": "4.0.0",
